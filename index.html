@@ -140,7 +140,7 @@
       .cards {
         display: grid;
         gap: 18px;
-        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
       }
       a.card {
         display: flex;
@@ -227,7 +227,7 @@
     </nav>
 
     <main>
-      <p class="kicker">Two interactive explainers</p>
+      <p class="kicker">Three interactive explainers</p>
       <h1>Everything in a media file is <em>numbers on a grid</em>.</h1>
       <p class="lede">
         Digital audio and video have a reputation for being an elite specialty.
@@ -242,8 +242,24 @@
       </p>
 
       <div class="cards">
+        <a class="card" href="/waves">
+          <div class="num">01 — start here</div>
+          <h2>Waves, for programmers</h2>
+          <p>
+            Amplitude, frequency, phase, superposition, spectrum and
+            wavelength, each defined and demonstrated. Ends with the
+            spectrogram window tradeoff.
+          </p>
+          <div class="tags">
+            <span class="tag">phase</span>
+            <span class="tag">spectrum</span>
+            <span class="tag">spectrogram</span>
+          </div>
+          <div class="go">Read →</div>
+        </a>
+
         <a class="card" href="/sampling">
-          <div class="num">01 — the one deep idea</div>
+          <div class="num">02 — the one deep idea</div>
           <h2>Sampling, for programmers</h2>
           <p>
             The Nyquist–Shannon theorem, made interactive. Why a finite list of
@@ -259,7 +275,7 @@
         </a>
 
         <a class="card" href="/primer">
-          <div class="num">02 — the long tail</div>
+          <div class="num">03 — the long tail</div>
           <h2>A digital media primer for geeks</h2>
           <p>
             Bit depth and dynamic range, why adding noise on purpose makes audio
