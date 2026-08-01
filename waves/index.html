@@ -362,7 +362,7 @@ footer a{color:var(--ink-2)}
 )
 
 <span class="c">// wave returns the value of the tone at time t, in seconds.</span>
-<span class="k">func</span> wave(t float64) float64 {
+<span class="k">func</span> wave(t <span class="k">float64</span>) <span class="k">float64</span> {
 	<span class="k">return</span> amplitude * math.Sin(<span class="n">2</span>*math.Pi*(frequency*t+phase))
 }
 
@@ -374,10 +374,30 @@ footer a{color:var(--ink-2)}
 
 	<span class="c">// One full cycle, sampled at eight evenly spaced instants.</span>
 	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="n">8</span>; n++ {
-		t := float64(n) * period / <span class="n">8</span>
+		t := <span class="k">float64</span>(n) * period / <span class="n">8</span>
 		fmt.Printf(<span class="s">"t = %.3f s   value = %+.3f\n"</span>, t, wave(t))
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="k">const</span> amplitude = <span class="n">1.0</span>; <span class="c">// peak swing away from rest, in whatever unit the wave carries</span>
+<span class="k">const</span> frequency = <span class="n">2.0</span>; <span class="c">// complete cycles per second, in hertz</span>
+<span class="k">const</span> phase = <span class="n">0.0</span>;     <span class="c">// starting position within the cycle, in turns (1.0 = a full cycle)</span>
+
+<span class="c">// wave returns the value of the tone at time t, in seconds.</span>
+<span class="k">function</span> wave(t) {
+  <span class="k">return</span> amplitude * Math.sin(<span class="n">2</span> * Math.PI * (frequency * t + phase));
+}
+
+<span class="k">const</span> period = <span class="n">1</span> / frequency; <span class="c">// seconds per cycle: the reciprocal of frequency</span>
+
+console.log(<span class="s">`amplitude ${amplitude.toFixed(2)}, frequency ${frequency.toFixed(2)} Hz, period ${period.toFixed(3)} s`</span>);
+
+<span class="c">// One full cycle, sampled at eight evenly spaced instants.</span>
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; <span class="n">8</span>; n++) {
+  <span class="k">const</span> t = (n * period) / <span class="n">8</span>;
+  <span class="k">const</span> v = wave(t);
+  console.log(<span class="s">`t = ${t.toFixed(3)} s   value = ${v &lt; 0 ? "" : "+"}${v.toFixed(3)}`</span>);
+}
+</code></pre>
   <div class="prose">
     <p>The output shows the wave passing through zero, rising to the amplitude, and returning —
     one full cycle across eight evenly spaced instants.</p>
@@ -453,10 +473,10 @@ footer a{color:var(--ink-2)}
 
 <span class="c">// peakOfSum returns the largest absolute value reached by wave A plus wave B,</span>
 <span class="c">// where B is shifted by diff turns relative to A.</span>
-<span class="k">func</span> peakOfSum(diff float64) float64 {
+<span class="k">func</span> peakOfSum(diff <span class="k">float64</span>) <span class="k">float64</span> {
 	peak := <span class="n">0.0</span>
 	<span class="k">for</span> i := <span class="n">0</span>; i &lt;= steps; i++ {
-		t := span * float64(i) / steps
+		t := span * <span class="k">float64</span>(i) / steps
 		a := math.Sin(<span class="n">2</span> * math.Pi * frequency * t)
 		b := math.Sin(<span class="n">2</span> * math.Pi * (frequency*t + diff))
 		<span class="k">if</span> s := math.Abs(a + b); s &gt; peak {
@@ -469,11 +489,38 @@ footer a{color:var(--ink-2)}
 <span class="k">func</span> main() {
 	<span class="c">// Each wave alone peaks at 1.0. Their sum peaks anywhere from 2.0 to 0.0,</span>
 	<span class="c">// decided entirely by the phase difference.</span>
-	<span class="k">for</span> _, diff := <span class="k">range</span> []float64{<span class="n">0</span>, <span class="n">0.125</span>, <span class="n">0.25</span>, <span class="n">0.375</span>, <span class="n">0.5</span>} {
-		fmt.Printf(<span class="s">"phase difference %.3f turns (%<span class="n">3.</span>0f deg)   peak of sum %.3f\n"</span>,
+	<span class="k">for</span> _, diff := <span class="k">range</span> []<span class="k">float64</span>{<span class="n">0</span>, <span class="n">0.125</span>, <span class="n">0.25</span>, <span class="n">0.375</span>, <span class="n">0.5</span>} {
+		fmt.Printf(<span class="s">"phase difference %.3f turns (%3.0f deg)   peak of sum %.3f\n"</span>,
 			diff, diff*<span class="n">360</span>, peakOfSum(diff))
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="k">const</span> frequency = <span class="n">2.0</span>; <span class="c">// both waves are 2 Hz; only their phase differs</span>
+<span class="k">const</span> steps = <span class="n">2000</span>;    <span class="c">// how many instants to check when searching for the peak</span>
+<span class="k">const</span> span = <span class="n">1.0</span>;      <span class="c">// seconds to search over: two full cycles at 2 Hz</span>
+
+<span class="c">// peakOfSum returns the largest absolute value reached by wave A plus wave B,</span>
+<span class="c">// where B is shifted by diff turns relative to A.</span>
+<span class="k">function</span> peakOfSum(diff) {
+  <span class="k">let</span> peak = <span class="n">0</span>;
+  <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt;= steps; i++) {
+    <span class="k">const</span> t = (span * i) / steps;
+    <span class="k">const</span> a = Math.sin(<span class="n">2</span> * Math.PI * frequency * t);
+    <span class="k">const</span> b = Math.sin(<span class="n">2</span> * Math.PI * (frequency * t + diff));
+    <span class="k">const</span> s = Math.abs(a + b);
+    <span class="k">if</span> (s &gt; peak) {
+      peak = s;
+    }
+  }
+  <span class="k">return</span> peak;
+}
+
+<span class="c">// Each wave alone peaks at 1.0. Their sum peaks anywhere from 2.0 to 0.0,</span>
+<span class="c">// decided entirely by the phase difference.</span>
+<span class="k">for</span> (<span class="k">const</span> diff <span class="k">of</span> [<span class="n">0</span>, <span class="n">0.125</span>, <span class="n">0.25</span>, <span class="n">0.375</span>, <span class="n">0.5</span>]) {
+  <span class="k">const</span> deg = String(Math.round(diff * <span class="n">360</span>)).padStart(<span class="n">3</span>);
+  console.log(<span class="s">`phase difference ${diff.toFixed(3)} turns (${deg} deg)   peak of sum ${peakOfSum(diff).toFixed(3)}`</span>);
+}
+</code></pre>
   <div class="prose">
     <p>At 0 turns the peaks coincide and the amplitudes add to 2.0. At 0.5 turns one wave is
     positive wherever the other is negative, and the sum is zero everywhere. The values in between
@@ -552,10 +599,10 @@ footer a{color:var(--ink-2)}
 
 <span class="c">// square sums the first n odd harmonics of a square wave.</span>
 <span class="c">// Harmonic k has amplitude 4/(pi*k), and only odd k are present.</span>
-<span class="k">func</span> square(t float64, n int) float64 {
+<span class="k">func</span> square(t <span class="k">float64</span>, n <span class="k">int</span>) <span class="k">float64</span> {
 	sum := <span class="n">0.0</span>
 	<span class="k">for</span> k := <span class="n">1</span>; k &lt;= n; k += <span class="n">2</span> {
-		sum += <span class="n">4</span> / (math.Pi * float64(k)) * math.Sin(<span class="n">2</span>*math.Pi*fundamental*float64(k)*t)
+		sum += <span class="n">4</span> / (math.Pi * <span class="k">float64</span>(k)) * math.Sin(<span class="n">2</span>*math.Pi*fundamental*<span class="k">float64</span>(k)*t)
 	}
 	<span class="k">return</span> sum
 }
@@ -565,10 +612,10 @@ footer a{color:var(--ink-2)}
 	<span class="c">// Each partial sum overshoots that level near the step. The overshoot narrows</span>
 	<span class="c">// as terms are added but settles at about 9% of the jump rather than vanishing.</span>
 	<span class="k">const</span> step = <span class="n">2.0</span> <span class="c">// height of the square wave's jump, from -1 to +1</span>
-	<span class="k">for</span> _, n := <span class="k">range</span> []int{<span class="n">1</span>, <span class="n">3</span>, <span class="n">9</span>, <span class="n">33</span>, <span class="n">129</span>} {
+	<span class="k">for</span> _, n := <span class="k">range</span> []<span class="k">int</span>{<span class="n">1</span>, <span class="n">3</span>, <span class="n">9</span>, <span class="n">33</span>, <span class="n">129</span>} {
 		peak := <span class="n">0.0</span>
 		<span class="k">for</span> i := <span class="n">0</span>; i &lt;= steps; i++ {
-			t := float64(i) / steps / fundamental
+			t := <span class="k">float64</span>(i) / steps / fundamental
 			<span class="k">if</span> v := square(t, n); v &gt; peak {
 				peak = v
 			}
@@ -576,7 +623,37 @@ footer a{color:var(--ink-2)}
 		fmt.Printf(<span class="s">"harmonics up to %3d   peak %.4f   overshoot %.2f%% of the jump\n"</span>,
 			n, peak, (peak-<span class="n">1</span>)/step*<span class="n">100</span>)
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="k">const</span> fundamental = <span class="n">1.0</span>; <span class="c">// frequency of the lowest component, in hertz</span>
+<span class="k">const</span> steps = <span class="n">4000</span>;      <span class="c">// instants examined across one period</span>
+
+<span class="c">// square sums the first n odd harmonics of a square wave.</span>
+<span class="c">// Harmonic k has amplitude 4/(pi*k), and only odd k are present.</span>
+<span class="k">function</span> square(t, n) {
+  <span class="k">let</span> sum = <span class="n">0</span>;
+  <span class="k">for</span> (<span class="k">let</span> k = <span class="n">1</span>; k &lt;= n; k += <span class="n">2</span>) {
+    sum += (<span class="n">4</span> / (Math.PI * k)) * Math.sin(<span class="n">2</span> * Math.PI * fundamental * k * t);
+  }
+  <span class="k">return</span> sum;
+}
+
+<span class="c">// A true square wave steps from -1 to +1, a jump of 2.0, and holds at 1.0.</span>
+<span class="c">// Each partial sum overshoots that level near the step. The overshoot narrows</span>
+<span class="c">// as terms are added but settles at about 9% of the jump rather than vanishing.</span>
+<span class="k">const</span> step = <span class="n">2.0</span>; <span class="c">// height of the square wave's jump, from -1 to +1</span>
+<span class="k">for</span> (<span class="k">const</span> n <span class="k">of</span> [<span class="n">1</span>, <span class="n">3</span>, <span class="n">9</span>, <span class="n">33</span>, <span class="n">129</span>]) {
+  <span class="k">let</span> peak = <span class="n">0</span>;
+  <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt;= steps; i++) {
+    <span class="k">const</span> t = i / steps / fundamental;
+    <span class="k">const</span> v = square(t, n);
+    <span class="k">if</span> (v &gt; peak) {
+      peak = v;
+    }
+  }
+  <span class="k">const</span> pct = (((peak - <span class="n">1</span>) / step) * <span class="n">100</span>).toFixed(<span class="n">2</span>);
+  console.log(<span class="s">`harmonics up to ${String(n).padStart(3)}   peak ${peak.toFixed(4)}   overshoot ${pct}% of the jump`</span>);
+}
+</code></pre>
   <div class="prose">
     <p>The peak falls from 27% above the target to about 8.9% and then stops. Adding more terms
     moves the overshoot closer to the step but does not reduce its height.</p>
@@ -651,25 +728,25 @@ footer a{color:var(--ink-2)}
 
 <span class="c">// dft returns the magnitude of each frequency bin in x.</span>
 <span class="c">// Bin k corresponds to k*sampleRate/n hertz.</span>
-<span class="k">func</span> dft(x []float64) []float64 {
-	mag := <span class="k">make</span>([]float64, <span class="k">len</span>(x)/<span class="n">2</span>)
+<span class="k">func</span> dft(x []<span class="k">float64</span>) []<span class="k">float64</span> {
+	mag := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(x)/<span class="n">2</span>)
 	<span class="k">for</span> k := <span class="k">range</span> mag {
-		sum := complex(<span class="n">0</span>, <span class="n">0</span>)
+		sum := <span class="k">complex</span>(<span class="n">0</span>, <span class="n">0</span>)
 		<span class="k">for</span> t, v := <span class="k">range</span> x {
-			angle := -<span class="n">2</span> * math.Pi * float64(k) * float64(t) / float64(<span class="k">len</span>(x))
-			sum += complex(v, <span class="n">0</span>) * cmplx.Exp(complex(<span class="n">0</span>, angle))
+			angle := -<span class="n">2</span> * math.Pi * <span class="k">float64</span>(k) * <span class="k">float64</span>(t) / <span class="k">float64</span>(<span class="k">len</span>(x))
+			sum += <span class="k">complex</span>(v, <span class="n">0</span>) * cmplx.Exp(<span class="k">complex</span>(<span class="n">0</span>, angle))
 		}
 		<span class="c">// Scale so a sine of amplitude A reports A in its bin.</span>
-		mag[k] = <span class="n">2</span> * cmplx.Abs(sum) / float64(<span class="k">len</span>(x))
+		mag[k] = <span class="n">2</span> * cmplx.Abs(sum) / <span class="k">float64</span>(<span class="k">len</span>(x))
 	}
 	<span class="k">return</span> mag
 }
 
 <span class="k">func</span> main() {
 	<span class="c">// A signal built from two known ingredients, so the answer is checkable.</span>
-	signal := <span class="k">make</span>([]float64, n)
+	signal := <span class="k">make</span>([]<span class="k">float64</span>, n)
 	<span class="k">for</span> i := <span class="k">range</span> signal {
-		t := float64(i) / sampleRate
+		t := <span class="k">float64</span>(i) / sampleRate
 		signal[i] = <span class="n">1.0</span>*math.Sin(<span class="n">2</span>*math.Pi*<span class="n">4</span>*t) + <span class="n">0.5</span>*math.Sin(<span class="n">2</span>*math.Pi*<span class="n">11</span>*t)
 	}
 
@@ -678,11 +755,48 @@ footer a{color:var(--ink-2)}
 
 	<span class="k">for</span> k, m := <span class="k">range</span> dft(signal) {
 		<span class="k">if</span> m &lt; <span class="n">0.01</span> { <span class="c">// skip bins holding no meaningful energy</span>
-			continue
+			<span class="k">continue</span>
 		}
-		fmt.Printf(<span class="s">"%<span class="n">5.</span>1f Hz   magnitude %.3f\n"</span>, float64(k)*binWidth, m)
+		fmt.Printf(<span class="s">"%5.1f Hz   magnitude %.3f\n"</span>, <span class="k">float64</span>(k)*binWidth, m)
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="k">const</span> sampleRate = <span class="n">64.0</span>; <span class="c">// measurements per second</span>
+<span class="k">const</span> n = <span class="n">64</span>;            <span class="c">// number of measurements; one full second of signal</span>
+
+<span class="c">// dft returns the magnitude of each frequency bin in x.</span>
+<span class="c">// Bin k corresponds to k*sampleRate/n hertz.</span>
+<span class="k">function</span> dft(x) {
+  <span class="k">const</span> mag = <span class="k">new</span> Array(Math.floor(x.length / <span class="n">2</span>));
+  <span class="k">for</span> (<span class="k">let</span> k = <span class="n">0</span>; k &lt; mag.length; k++) {
+    <span class="k">let</span> re = <span class="n">0</span>, im = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">let</span> t = <span class="n">0</span>; t &lt; x.length; t++) {
+      <span class="k">const</span> angle = (-<span class="n">2</span> * Math.PI * k * t) / x.length;
+      re += x[t] * Math.cos(angle);
+      im += x[t] * Math.sin(angle);
+    }
+    <span class="c">// Scale so a sine of amplitude A reports A in its bin.</span>
+    mag[k] = (<span class="n">2</span> * Math.hypot(re, im)) / x.length;
+  }
+  <span class="k">return</span> mag;
+}
+
+<span class="c">// A signal built from two known ingredients, so the answer is checkable.</span>
+<span class="k">const</span> signal = <span class="k">new</span> Array(n);
+<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; n; i++) {
+  <span class="k">const</span> t = i / sampleRate;
+  signal[i] = <span class="n">1.0</span> * Math.sin(<span class="n">2</span> * Math.PI * <span class="n">4</span> * t) + <span class="n">0.5</span> * Math.sin(<span class="n">2</span> * Math.PI * <span class="n">11</span> * t);
+}
+
+<span class="k">const</span> binWidth = sampleRate / n; <span class="c">// hertz covered by each bin</span>
+console.log(<span class="s">`bin width ${binWidth.toFixed(2)} Hz\n`</span>);
+
+dft(signal).forEach(<span class="k">function</span> (m, k) {
+  <span class="k">if</span> (m &lt; <span class="n">0.01</span>) { <span class="c">// skip bins holding no meaningful energy</span>
+    <span class="k">return</span>;
+  }
+  console.log(<span class="s">`${(k * binWidth).toFixed(1).padStart(5)} Hz   magnitude ${m.toFixed(3)}`</span>);
+});
+</code></pre>
   <div class="prose">
     <p>The output reports 1.000 at 4 Hz and 0.500 at 11 Hz, matching the two components used to
     build the signal. This is the discrete Fourier transform written directly from its definition.
@@ -776,8 +890,8 @@ footer a{color:var(--ink-2)}
 	<span class="k">const</span> frequency = <span class="n">440.0</span> <span class="c">// hertz: concert A</span>
 
 	media := []<span class="k">struct</span> {
-		name  string
-		speed float64
+		name  <span class="k">string</span>
+		speed <span class="k">float64</span>
 	}{
 		{<span class="s">"air"</span>, speedInAir},
 		{<span class="s">"water"</span>, speedInWater},
@@ -787,10 +901,31 @@ footer a{color:var(--ink-2)}
 
 	<span class="k">for</span> _, m := <span class="k">range</span> media {
 		wavelength := m.speed / frequency <span class="c">// metres per cycle</span>
-		fmt.Printf(<span class="s">"%-18s %<span class="n">12.</span>1f m/s   wavelength %<span class="n">10.</span>3f m\n"</span>,
+		fmt.Printf(<span class="s">"%-18s %12.1f m/s   wavelength %10.3f m\n"</span>,
 			m.name, m.speed, wavelength)
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="c">// Propagation speeds in metres per second. Wavelength depends on the medium,</span>
+<span class="c">// so the same frequency is a different length in each of these.</span>
+<span class="k">const</span> speedInAir = <span class="n">343.0</span>;         <span class="c">// dry air at 20 degrees Celsius</span>
+<span class="k">const</span> speedInWater = <span class="n">1481.0</span>;      <span class="c">// fresh water at 20 degrees Celsius</span>
+<span class="k">const</span> speedInSteel = <span class="n">5960.0</span>;      <span class="c">// longitudinal waves in steel</span>
+<span class="k">const</span> speedOfLight = <span class="n">299792458.0</span>; <span class="c">// electromagnetic waves in vacuum</span>
+
+<span class="k">const</span> frequency = <span class="n">440.0</span>; <span class="c">// hertz: concert A</span>
+
+<span class="k">const</span> media = [
+  { name: <span class="s">"air"</span>, speed: speedInAir },
+  { name: <span class="s">"water"</span>, speed: speedInWater },
+  { name: <span class="s">"steel"</span>, speed: speedInSteel },
+  { name: <span class="s">"vacuum (as radio)"</span>, speed: speedOfLight },
+];
+
+<span class="k">for</span> (<span class="k">const</span> m <span class="k">of</span> media) {
+  <span class="k">const</span> wavelength = m.speed / frequency; <span class="c">// metres per cycle</span>
+  console.log(<span class="s">`${m.name.padEnd(18)} ${m.speed.toFixed(1).padStart(12)} m/s   wavelength ${wavelength.toFixed(3).padStart(10)} m`</span>);
+}
+</code></pre>
 </section>
 
 <hr class="rule">
@@ -876,16 +1011,31 @@ footer a{color:var(--ink-2)}
 	<span class="c">// The window length fixes both resolutions at once, in opposite directions.</span>
 	fmt.Printf(<span class="s">"%8s %12s %14s %10s\n"</span>, <span class="s">"samples"</span>, <span class="s">"window span"</span>, <span class="s">"bin spacing"</span>, <span class="s">"product"</span>)
 
-	<span class="k">for</span> _, n := <span class="k">range</span> []int{<span class="n">16</span>, <span class="n">64</span>, <span class="n">256</span>, <span class="n">1024</span>} {
-		span := float64(n) / sampleRate     <span class="c">// seconds of signal inside one window</span>
-		binWidth := sampleRate / float64(n) <span class="c">// hertz between adjacent bins</span>
+	<span class="k">for</span> _, n := <span class="k">range</span> []<span class="k">int</span>{<span class="n">16</span>, <span class="n">64</span>, <span class="n">256</span>, <span class="n">1024</span>} {
+		span := <span class="k">float64</span>(n) / sampleRate     <span class="c">// seconds of signal inside one window</span>
+		binWidth := sampleRate / <span class="k">float64</span>(n) <span class="c">// hertz between adjacent bins</span>
 
 		<span class="c">// The product is 1 for every window length. Improving one resolution</span>
 		<span class="c">// always costs exactly as much of the other.</span>
-		fmt.Printf(<span class="s">"%8d %<span class="n">9.</span>3f s %<span class="n">11.</span>2f Hz %<span class="n">10.</span>2f\n"</span>,
+		fmt.Printf(<span class="s">"%8d %9.3f s %11.2f Hz %10.2f\n"</span>,
 			n, span, binWidth, span*binWidth)
 	}
-}</code></pre>
+}
+</code><code class="js" hidden><span class="k">const</span> sampleRate = <span class="n">1000.0</span>; <span class="c">// measurements per second</span>
+
+<span class="c">// A spectrogram computes one spectrum per window of the signal.</span>
+<span class="c">// The window length fixes both resolutions at once, in opposite directions.</span>
+console.log(<span class="s">`${"samples".padStart(8)} ${"window span".padStart(12)} ${"bin spacing".padStart(14)} ${"product".padStart(10)}`</span>);
+
+<span class="k">for</span> (<span class="k">const</span> n <span class="k">of</span> [<span class="n">16</span>, <span class="n">64</span>, <span class="n">256</span>, <span class="n">1024</span>]) {
+  <span class="k">const</span> span = n / sampleRate;     <span class="c">// seconds of signal inside one window</span>
+  <span class="k">const</span> binWidth = sampleRate / n; <span class="c">// hertz between adjacent bins</span>
+
+  <span class="c">// The product is 1 for every window length. Improving one resolution</span>
+  <span class="c">// always costs exactly as much of the other.</span>
+  console.log(<span class="s">`${String(n).padStart(8)} ${span.toFixed(3).padStart(9)} s ${binWidth.toFixed(2).padStart(11)} Hz ${(span * binWidth).toFixed(2).padStart(10)}`</span>);
+}
+</code></pre>
   <div class="prose">
     <p>Each of the four signals in Figure 6 responds differently. <em>Tones only</em> does not
     change over time, so its spectrogram is a set of horizontal lines and a long window is simply
@@ -1862,19 +2012,18 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
     "pre{tab-size:4;-moz-tab-size:4}",
     ".codewrap{position:relative}",
     ".codewrap>pre{margin:0}",
-    ".copybtn{position:absolute;top:9px;right:52px;z-index:2;",
-    "  font:600 11.5px/1 var(--sans,system-ui,sans-serif);letter-spacing:.03em;",
+    ".ptools{position:absolute;top:9px;right:9px;z-index:2;display:flex;gap:4px}",
+    ".ptools button{font:600 11px/1 var(--sans,system-ui,sans-serif);letter-spacing:.03em;",
     "  color:var(--muted);background:var(--surface-2);border:1px solid var(--border);",
-    "  border-radius:7px;padding:6px 10px;cursor:pointer;opacity:.75;",
+    "  border-radius:7px;padding:6px 10px;cursor:pointer;opacity:.85;",
     "  transition:opacity .12s,color .12s,border-color .12s}",
-    ".codewrap:hover .copybtn{opacity:1}",
-    ".copybtn:hover{color:var(--ink);border-color:var(--border-strong)}",
-    ".copybtn:focus-visible{outline:2px solid var(--s1);outline-offset:2px;opacity:1}",
+    ".codewrap:hover .ptools button{opacity:1}",
+    ".ptools button:hover{color:var(--ink);border-color:var(--border-strong)}",
+    ".ptools button:focus-visible{outline:2px solid var(--s1);outline-offset:2px;opacity:1}",
     ".copybtn.done{color:var(--good);border-color:var(--good)}",
-    "@media(max-width:720px){.copybtn{opacity:1;padding:5px 9px}}",
-    ".langtag{position:absolute;top:12px;right:12px;z-index:2;pointer-events:none;",
-    "  font:600 10.5px/1 var(--mono,ui-monospace,monospace);letter-spacing:.08em;",
-    "  text-transform:uppercase;color:var(--muted);opacity:.7}"
+    ".langbtn{text-transform:uppercase;font-size:10.5px;letter-spacing:.08em}",
+    ".langbtn.on{color:var(--ink);border-color:var(--border-strong)}",
+    "@media(max-width:720px){.ptools button{opacity:1;padding:5px 9px}}"
   ].join("");
 
   var style = document.createElement("style");
@@ -1882,7 +2031,7 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
   document.head.appendChild(style);
 
   function textOf(pre) {
-    var code = pre.querySelector("code");
+    var code = pre.querySelector("code:not([hidden])") || pre.querySelector("code");
     return (code || pre).innerText.replace(/\s+$/, "") + "\n";
   }
 
@@ -1913,16 +2062,14 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
     pre.parentNode.insertBefore(wrap, pre);
     wrap.appendChild(pre);
 
+    var tools = document.createElement("div");
+    tools.className = "ptools";
+
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "copybtn";
     btn.textContent = "Copy";
     btn.setAttribute("aria-label", "Copy this code example to the clipboard");
-
-    var lang = document.createElement("span");
-    lang.className = "langtag";
-    lang.textContent = "go";
-    wrap.appendChild(lang);
 
     var timer = null;
     btn.addEventListener("click", function () {
@@ -1939,7 +2086,24 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
       }, 1600);
     });
 
-    wrap.appendChild(btn);
+    tools.appendChild(btn);
+
+    var codes = pre.querySelectorAll("code");
+    for (var i = 0; i < codes.length; i++) (function (code) {
+      var t = document.createElement("button");
+      t.type = "button";
+      t.className = "langbtn" + (code.hidden ? "" : " on");
+      t.textContent = code.className;
+      t.addEventListener("click", function () {
+        for (var j = 0; j < codes.length; j++) codes[j].hidden = codes[j] !== code;
+        var bs = tools.querySelectorAll(".langbtn");
+        for (var j = 0; j < bs.length; j++) bs[j].classList.remove("on");
+        t.classList.add("on");
+      });
+      tools.appendChild(t);
+    })(codes[i]);
+
+    wrap.appendChild(tools);
   }
 
   function init() {

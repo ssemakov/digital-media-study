@@ -150,11 +150,13 @@ pre .n{color:var(--s4)}
 pre .bad{color:var(--critical)}
 pre .ok{color:var(--good)}
 pre{position:relative;tab-size:4;-moz-tab-size:4}
-pre .copy{position:absolute;top:8px;right:52px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
-pre:hover .copy,pre .copy:focus{opacity:1}
-pre .lang{position:absolute;top:8px;right:12px;font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.7;pointer-events:none}
-pre .copy:hover{color:var(--ink)}
-pre .copy.done{color:var(--good)}
+pre .ptools{position:absolute;top:8px;right:8px;display:flex;gap:4px}
+pre .ptools button{font:600 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer}
+pre .ptools button:hover{color:var(--ink)}
+pre .ptools .langbtn.on{color:var(--ink);border-color:var(--border-strong)}
+pre .ptools .copy{opacity:0;transition:opacity .15s}
+pre:hover .ptools .copy,pre .ptools .copy:focus{opacity:1}
+pre .ptools .copy.done{color:var(--good)}
 
 /* ============================ figures ============================ */
 figure{margin:30px 0;background:var(--surface);border:1px solid var(--border);
@@ -317,7 +319,7 @@ footer a{color:var(--ink-2)}
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> (
 	<span class="s">"fmt"</span>
@@ -326,19 +328,33 @@ footer a{color:var(--ink-2)}
 
 <span class="c">// this is all "sampling" means</span>
 <span class="k">func</span> main() {
-	fs := <span class="n">4.0</span>
-	N := <span class="n">8</span>
-	T := <span class="n">1</span> / fs
-	samples := <span class="k">make</span>([]<span class="k">float64</span>, N)
+	fs := <span class="n">4.0</span>                     <span class="c">// sampling frequency: measurements per second, in hertz</span>
+	N := <span class="n">8</span>                        <span class="c">// how many samples to take</span>
+	T := <span class="n">1</span> / fs                   <span class="c">// sampling period: seconds between measurements</span>
+	samples := <span class="k">make</span>([]<span class="k">float64</span>, N) <span class="c">// the recording: N numbers, nothing else</span>
 	<span class="k">for</span> n := <span class="n">0</span>; n &lt; N; n++ {
-		samples[n] = measure(<span class="k">float64</span>(n) * T)
+		samples[n] = measure(<span class="k">float64</span>(n) * T) <span class="c">// read the signal at t = n*T</span>
 	}
 	fmt.Println(samples)
 }
 
-<span class="c">// a 1 Hz tone, sampled</span>
+<span class="c">// a 1 Hz tone, standing in for whatever is being measured</span>
 <span class="k">func</span> measure(t <span class="k">float64</span>) <span class="k">float64</span> {
-	<span class="k">return</span> math.Sin(<span class="n">2</span> * math.Pi * t)
+	<span class="k">return</span> math.Sin(<span class="n">2</span> * math.Pi * t) <span class="c">// one full cycle per second</span>
+}
+</code><code class="js" hidden><span class="c">// this is all "sampling" means</span>
+<span class="k">const</span> fs = <span class="n">4.0</span>;               <span class="c">// sampling frequency: measurements per second, in hertz</span>
+<span class="k">const</span> N = <span class="n">8</span>;                  <span class="c">// how many samples to take</span>
+<span class="k">const</span> T = <span class="n">1</span> / fs;             <span class="c">// sampling period: seconds between measurements</span>
+<span class="k">const</span> samples = <span class="k">new</span> Array(N); <span class="c">// the recording: N numbers, nothing else</span>
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; N; n++) {
+  samples[n] = measure(n * T); <span class="c">// read the signal at t = n*T</span>
+}
+console.log(samples);
+
+<span class="c">// a 1 Hz tone, standing in for whatever is being measured</span>
+<span class="k">function</span> measure(t) {
+  <span class="k">return</span> Math.sin(<span class="n">2</span> * Math.PI * t); <span class="c">// one full cycle per second</span>
 }
 </code></pre>
 
@@ -500,16 +516,17 @@ footer a{color:var(--ink-2)}
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> <span class="s">"fmt"</span>
 
+<span class="c">// aliasOf reports where a tone at f hertz appears after sampling at fs hertz.</span>
 <span class="k">func</span> aliasOf(f, fs <span class="k">int</span>) <span class="k">int</span> {
 	r := ((f % fs) + fs) % fs <span class="c">// wrap into [0, fs)</span>
 	<span class="k">if</span> r &lt;= fs/<span class="n">2</span> {
-		<span class="k">return</span> r
+		<span class="k">return</span> r <span class="c">// below half the sample rate: representable as-is</span>
 	}
-	<span class="k">return</span> fs - r <span class="c">// mirror the top half back down</span>
+	<span class="k">return</span> fs - r <span class="c">// above it: mirrored back down into the band</span>
 }
 
 <span class="k">func</span> main() {
@@ -517,6 +534,18 @@ footer a{color:var(--ink-2)}
 	fmt.Println(aliasOf(<span class="n">4800</span>, <span class="n">4000</span>))  <span class="c">// -&gt; 800  (a different tone, same result)</span>
 	fmt.Println(aliasOf(<span class="n">11200</span>, <span class="n">4000</span>)) <span class="c">// -&gt; 800  (and another)</span>
 }
+</code><code class="js" hidden><span class="c">// aliasOf reports where a tone at f hertz appears after sampling at fs hertz.</span>
+<span class="k">function</span> aliasOf(f, fs) {
+  <span class="k">const</span> r = ((f % fs) + fs) % fs; <span class="c">// wrap into [0, fs)</span>
+  <span class="k">if</span> (r &lt;= fs / <span class="n">2</span>) {
+    <span class="k">return</span> r; <span class="c">// below half the sample rate: representable as-is</span>
+  }
+  <span class="k">return</span> fs - r; <span class="c">// above it: mirrored back down into the band</span>
+}
+
+console.log(aliasOf(<span class="n">3200</span>, <span class="n">4000</span>));  <span class="c">// -&gt; 800</span>
+console.log(aliasOf(<span class="n">4800</span>, <span class="n">4000</span>));  <span class="c">// -&gt; 800  (a different tone, same result)</span>
+console.log(aliasOf(<span class="n">11200</span>, <span class="n">4000</span>)); <span class="c">// -&gt; 800  (and another)</span>
 </code></pre>
 
     <p>Texture addressing provides a useful analogy: frequency is not
@@ -628,16 +657,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> (
 	<span class="s">"fmt"</span>
 	<span class="s">"math"</span>
 )
 
+<span class="c">// sinc is the ideal interpolation kernel: 1 at its centre, 0 at every other sample instant.</span>
 <span class="k">func</span> sinc(u <span class="k">float64</span>) <span class="k">float64</span> {
 	<span class="k">if</span> u == <span class="n">0</span> {
-		<span class="k">return</span> <span class="n">1</span>
+		<span class="k">return</span> <span class="n">1</span> <span class="c">// the centre of the kernel</span>
 	}
 	<span class="k">return</span> math.Sin(math.Pi*u) / (math.Pi * u)
 }
@@ -646,16 +676,36 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 <span class="k">func</span> valueAt(t <span class="k">float64</span>, samples []<span class="k">float64</span>, T <span class="k">float64</span>) <span class="k">float64</span> {
 	sum := <span class="n">0.0</span>
 	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(samples); n++ {
-		sum += samples[n] * sinc((t-<span class="k">float64</span>(n)*T)/T)
+		sum += samples[n] * sinc((t-<span class="k">float64</span>(n)*T)/T) <span class="c">// each sample, weighted by its distance from t</span>
 	}
 	<span class="k">return</span> sum
 }
 
 <span class="k">func</span> main() {
-	T := <span class="n">1.0</span>
-	samples := []<span class="k">float64</span>{<span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">-1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">-1</span>}
-	fmt.Println(valueAt(<span class="n">2.5</span>, samples, T))
+	T := <span class="n">1.0</span>                                       <span class="c">// sampling period: seconds between samples</span>
+	samples := []<span class="k">float64</span>{<span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, -<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, -<span class="n">1</span>} <span class="c">// a sampled sine, four samples per cycle</span>
+	fmt.Println(valueAt(<span class="n">2.5</span>, samples, T))          <span class="c">// reconstruct halfway between two samples</span>
 }
+</code><code class="js" hidden><span class="c">// sinc is the ideal interpolation kernel: 1 at its centre, 0 at every other sample instant.</span>
+<span class="k">function</span> sinc(u) {
+  <span class="k">if</span> (u === <span class="n">0</span>) {
+    <span class="k">return</span> <span class="n">1</span>; <span class="c">// the centre of the kernel</span>
+  }
+  <span class="k">return</span> Math.sin(Math.PI * u) / (Math.PI * u);
+}
+
+<span class="c">// the value at ANY time t, exactly, from the samples alone</span>
+<span class="k">function</span> valueAt(t, samples, T) {
+  <span class="k">let</span> sum = <span class="n">0</span>;
+  <span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; samples.length; n++) {
+    sum += samples[n] * sinc((t - n * T) / T); <span class="c">// each sample, weighted by its distance from t</span>
+  }
+  <span class="k">return</span> sum;
+}
+
+<span class="k">const</span> T = <span class="n">1.0</span>;                                   <span class="c">// sampling period: seconds between samples</span>
+<span class="k">const</span> samples = [<span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, -<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, -<span class="n">1</span>];      <span class="c">// a sampled sine, four samples per cycle</span>
+console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span class="c">// reconstruct halfway between two samples</span>
 </code></pre>
 
     <p>Replacing <code>sinc</code> with a box gives nearest-neighbour interpolation. Replacing it with
@@ -878,7 +928,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> <span class="s">"fmt"</span>
 
@@ -887,7 +937,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(x))
 	<span class="k">for</span> i := <span class="k">range</span> x {
 		sum, count := <span class="n">0.0</span>, <span class="n">0</span>
-		<span class="k">for</span> j := i - width; j &lt;= i+width; j++ {
+		<span class="k">for</span> j := i - width; j &lt;= i+width; j++ { <span class="c">// average the 2*width+1 samples around i</span>
 			<span class="k">if</span> j &gt;= <span class="n">0</span> &amp;&amp; j &lt; <span class="k">len</span>(x) {
 				sum += x[j]
 				count++
@@ -899,11 +949,11 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 }
 
 <span class="k">func</span> main() {
-	input := <span class="k">make</span>([]<span class="k">float64</span>, <span class="n">32</span>)
+	input := <span class="k">make</span>([]<span class="k">float64</span>, <span class="n">32</span>) <span class="c">// the signal at the original rate</span>
 	<span class="k">for</span> i := <span class="k">range</span> input {
 		input[i] = <span class="k">float64</span>(i % <span class="n">2</span>) <span class="c">// fastest possible wiggle: 0,1,0,1,...</span>
 	}
-	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/<span class="n">4</span>)
+	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/<span class="n">4</span>) <span class="c">// keep every 4th sample: rate drops by 4</span>
 
 	<span class="c">// WRONG — this is exactly the "filter off" button above</span>
 	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(out); n++ {
@@ -920,6 +970,42 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 	<span class="ok">// now the samples you threw away really were redundant</span>
 	fmt.Println(<span class="s">"right:"</span>, out) <span class="ok">// ~0.5: reports "too fast to represent"</span>
 }
+</code><code class="js" hidden><span class="c">// a plain moving-average low-pass: crude, but it removes the fast wiggle</span>
+<span class="k">function</span> lowPass(x, width) {
+  <span class="k">const</span> out = <span class="k">new</span> Array(x.length);
+  <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; x.length; i++) {
+    <span class="k">let</span> sum = <span class="n">0</span>, count = <span class="n">0</span>;
+    <span class="k">for</span> (<span class="k">let</span> j = i - width; j &lt;= i + width; j++) { <span class="c">// average the 2*width+1 samples around i</span>
+      <span class="k">if</span> (j &gt;= <span class="n">0</span> &amp;&amp; j &lt; x.length) {
+        sum += x[j];
+        count++;
+      }
+    }
+    out[i] = sum / count;
+  }
+  <span class="k">return</span> out;
+}
+
+<span class="k">const</span> input = <span class="k">new</span> Array(<span class="n">32</span>); <span class="c">// the signal at the original rate</span>
+<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; input.length; i++) {
+  input[i] = i % <span class="n">2</span>; <span class="c">// fastest possible wiggle: 0,1,0,1,...</span>
+}
+<span class="k">const</span> out = <span class="k">new</span> Array(input.length / <span class="n">4</span>); <span class="c">// keep every 4th sample: rate drops by 4</span>
+
+<span class="c">// WRONG — this is exactly the "filter off" button above</span>
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) {
+  out[n] = input[n * <span class="n">4</span>];
+}
+<span class="bad">// anything above the NEW half-rate is now permanently disguised as something slower</span>
+console.log(<span class="s">"wrong:"</span>, out); <span class="bad">// all 0s: the wiggle became a false DC level</span>
+
+<span class="c">// RIGHT — remove what the new rate can't represent, THEN drop samples</span>
+<span class="k">const</span> filtered = lowPass(input, <span class="n">2</span>); <span class="c">// cutoff near the new half-rate</span>
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) {
+  out[n] = filtered[n * <span class="n">4</span>];
+}
+<span class="ok">// now the samples you threw away really were redundant</span>
+console.log(<span class="s">"right:"</span>, out); <span class="ok">// ~0.5: reports "too fast to represent"</span>
 </code></pre>
 
     <p>The same error appears when shrinking an image by taking every N-th pixel instead
@@ -2298,26 +2384,38 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
 
 })();
 
-/* copy button on every code block */
+/* language selector + copy button on every code block */
 document.querySelectorAll("pre").forEach(function (pre) {
-  var code = pre.querySelector("code");
-  if (!code) return;
-  var lang = document.createElement("span");
-  lang.className = "lang";
-  lang.textContent = "go";
-  pre.appendChild(lang);
+  var codes = Array.prototype.slice.call(pre.querySelectorAll("code"));
+  if (!codes.length) return;
+  var tools = document.createElement("div");
+  tools.className = "ptools";
   var b = document.createElement("button");
   b.className = "copy";
   b.type = "button";
   b.textContent = "Copy";
   b.addEventListener("click", function () {
+    var code = pre.querySelector("code:not([hidden])") || codes[0];
     navigator.clipboard.writeText(code.innerText).then(function () {
       b.textContent = "Copied";
       b.classList.add("done");
       setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); }, 1200);
     });
   });
-  pre.appendChild(b);
+  tools.appendChild(b);
+  codes.forEach(function (code) {
+    var t = document.createElement("button");
+    t.type = "button";
+    t.className = "langbtn" + (code.hidden ? "" : " on");
+    t.textContent = code.className;
+    t.addEventListener("click", function () {
+      codes.forEach(function (c) { c.hidden = c !== code; });
+      tools.querySelectorAll(".langbtn").forEach(function (x) { x.classList.remove("on"); });
+      t.classList.add("on");
+    });
+    tools.appendChild(t);
+  });
+  pre.appendChild(tools);
 });
 
 </script>

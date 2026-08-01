@@ -150,11 +150,13 @@ pre .n{color:var(--s4)}
 pre .bad{color:var(--critical)}
 pre .ok{color:var(--good)}
 pre{position:relative;tab-size:4;-moz-tab-size:4}
-pre .copy{position:absolute;top:8px;right:52px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
-pre:hover .copy,pre .copy:focus{opacity:1}
-pre .lang{position:absolute;top:8px;right:12px;font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.7;pointer-events:none}
-pre .copy:hover{color:var(--ink)}
-pre .copy.done{color:var(--good)}
+pre .ptools{position:absolute;top:8px;right:8px;display:flex;gap:4px}
+pre .ptools button{font:600 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer}
+pre .ptools button:hover{color:var(--ink)}
+pre .ptools .langbtn.on{color:var(--ink);border-color:var(--border-strong)}
+pre .ptools .copy{opacity:0;transition:opacity .15s}
+pre:hover .ptools .copy,pre .ptools .copy:focus{opacity:1}
+pre .ptools .copy.done{color:var(--good)}
 
 /* ============================ figures ============================ */
 figure{margin:30px 0;background:var(--surface);border:1px solid var(--border);
@@ -367,17 +369,22 @@ footer a{color:var(--ink-2)}
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> <span class="s">"fmt"</span>
 
 <span class="k">func</span> main() {
-	sampleRate := <span class="n">44100</span> <span class="c">// CD audio</span>
-	bits := <span class="n">16</span>
-	channels := <span class="n">2</span>
-	bytesPerSecond := sampleRate * (bits / <span class="n">8</span>) * channels
-	fmt.Println(bytesPerSecond, <span class="s">"B/s"</span>) <span class="c">// 176400 B/s  ≈ 1.41 Mbit/s, ≈ 10 MB per minute</span>
+	sampleRate := <span class="n">44100</span>                                  <span class="c">// samples per second: CD audio</span>
+	bits := <span class="n">16</span>                                           <span class="c">// bits per sample</span>
+	channels := <span class="n">2</span>                                        <span class="c">// stereo</span>
+	bytesPerSecond := sampleRate * (bits / <span class="n">8</span>) * channels <span class="c">// bits/8 = bytes per sample</span>
+	fmt.Println(bytesPerSecond, <span class="s">"B/s"</span>)                   <span class="c">// 176400 B/s  = 1.41 Mbit/s, or 10 MB per minute</span>
 }
+</code><code class="js" hidden><span class="k">const</span> sampleRate = <span class="n">44100</span>; <span class="c">// samples per second: CD audio</span>
+<span class="k">const</span> bits = <span class="n">16</span>;          <span class="c">// bits per sample</span>
+<span class="k">const</span> channels = <span class="n">2</span>;       <span class="c">// stereo</span>
+<span class="k">const</span> bytesPerSecond = sampleRate * (bits / <span class="n">8</span>) * channels; <span class="c">// bits/8 = bytes per sample</span>
+console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 176400 B/s  = 1.41 Mbit/s, or 10 MB per minute</span>
 </code></pre>
   </div>
 
@@ -574,7 +581,7 @@ footer a{color:var(--ink-2)}
   </div>
 
   <div class="prose">
-<pre><code><span class="k">package</span> main
+<pre><code class="go"><span class="k">package</span> main
 
 <span class="k">import</span> (
 	<span class="s">"fmt"</span>
@@ -583,18 +590,29 @@ footer a{color:var(--ink-2)}
 )
 
 <span class="k">func</span> main() {
-	x := <span class="n">0.3</span>      <span class="c">// input sample, -1..1</span>
-	levels := <span class="n">8.0</span> <span class="c">// quantiser step count</span>
+	x := <span class="n">0.3</span>      <span class="c">// input sample, in the range -1..1</span>
+	levels := <span class="n">8.0</span> <span class="c">// quantiser step count: how many values the format can store</span>
 
-	<span class="c">// naive: correlated error, audible distortion</span>
+	<span class="c">// naive: round to the nearest step; error is correlated, audible distortion</span>
 	out := math.Round(x*levels) / levels
 
 	<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
-	d := (rand.Float64() + rand.Float64() - <span class="n">1</span>) / levels <span class="c">// triangular, ±1 LSB</span>
+	d := (rand.Float64() + rand.Float64() - <span class="n">1</span>) / levels <span class="c">// triangular noise, plus or minus 1 LSB</span>
 	outDithered := math.Round((x+d)*levels) / levels
 
 	fmt.Println(out, outDithered)
 }
+</code><code class="js" hidden><span class="k">const</span> x = <span class="n">0.3</span>;      <span class="c">// input sample, in the range -1..1</span>
+<span class="k">const</span> levels = <span class="n">8.0</span>; <span class="c">// quantiser step count: how many values the format can store</span>
+
+<span class="c">// naive: round to the nearest step; error is correlated, audible distortion</span>
+<span class="k">const</span> out = Math.round(x * levels) / levels;
+
+<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
+<span class="k">const</span> d = (Math.random() + Math.random() - <span class="n">1</span>) / levels; <span class="c">// triangular noise, plus or minus 1 LSB</span>
+<span class="k">const</span> outDithered = Math.round((x + d) * levels) / levels;
+
+console.log(out, outDithered);
 </code></pre>
 
     <p>The noise decorrelates the error from the signal, which converts distortion into a constant,
@@ -2677,26 +2695,38 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
 
 })();
 
-/* copy button on every code block */
+/* language selector + copy button on every code block */
 document.querySelectorAll("pre").forEach(function (pre) {
-  var code = pre.querySelector("code");
-  if (!code) return;
-  var lang = document.createElement("span");
-  lang.className = "lang";
-  lang.textContent = "go";
-  pre.appendChild(lang);
+  var codes = Array.prototype.slice.call(pre.querySelectorAll("code"));
+  if (!codes.length) return;
+  var tools = document.createElement("div");
+  tools.className = "ptools";
   var b = document.createElement("button");
   b.className = "copy";
   b.type = "button";
   b.textContent = "Copy";
   b.addEventListener("click", function () {
+    var code = pre.querySelector("code:not([hidden])") || codes[0];
     navigator.clipboard.writeText(code.innerText).then(function () {
       b.textContent = "Copied";
       b.classList.add("done");
       setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); }, 1200);
     });
   });
-  pre.appendChild(b);
+  tools.appendChild(b);
+  codes.forEach(function (code) {
+    var t = document.createElement("button");
+    t.type = "button";
+    t.className = "langbtn" + (code.hidden ? "" : " on");
+    t.textContent = code.className;
+    t.addEventListener("click", function () {
+      codes.forEach(function (c) { c.hidden = c !== code; });
+      tools.querySelectorAll(".langbtn").forEach(function (x) { x.classList.remove("on"); });
+      t.classList.add("on");
+    });
+    tools.appendChild(t);
+  });
+  pre.appendChild(tools);
 });
 
 </script>
