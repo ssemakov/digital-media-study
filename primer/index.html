@@ -149,6 +149,11 @@ pre .s{color:var(--s3)}
 pre .n{color:var(--s4)}
 pre .bad{color:var(--critical)}
 pre .ok{color:var(--good)}
+pre{position:relative;tab-size:4;-moz-tab-size:4}
+pre .copy{position:absolute;top:8px;right:8px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
+pre:hover .copy,pre .copy:focus{opacity:1}
+pre .copy:hover{color:var(--ink)}
+pre .copy.done{color:var(--good)}
 
 /* ============================ figures ============================ */
 figure{margin:30px 0;background:var(--surface);border:1px solid var(--border);
@@ -281,27 +286,27 @@ footer a{color:var(--ink-2)}
 <section id="top">
   <div class="prose">
     <p class="kicker">A digital media primer, for people who write software</p>
-    <h1>Everything in a media file is <em>numbers on a grid</em>. The rest is bookkeeping.</h1>
-    <p class="lede">Digital audio and video have a reputation for being an elite specialty. They
-    aren't. There's one genuinely deep idea — the sampling theorem — and then a long tail of
-    engineering decisions, most of which are historical accidents that got frozen into standards.
-    This page walks the whole stack: what a PCM sample actually is, why adding noise on purpose makes
-    audio <em>better</em>, why your video's pixels aren't square, and why nobody can agree where a
-    chroma sample sits.</p>
+    <h1>Everything in a media file is <em>numbers on a grid</em>. The remainder is metadata.</h1>
+    <p class="lede">Digital audio and video are often regarded as a specialist field. They
+    are not. There is one fundamental idea — the sampling theorem — and then a long series of
+    engineering decisions, most of which are historical accidents that became standards.
+    This page covers the full stack: what a PCM sample is, why adding noise deliberately makes
+    audio <em>better</em>, why video pixels are often not square, and why the position of a
+    chroma sample is not standardised.</p>
 
     <div class="theorem">
       <div class="lab">Based on</div>
       <p style="color:var(--ink)">Xiph.Org's <em>A Digital Media Primer for Geeks</em> by Christopher
-      "Monty" Montgomery (2010) — rebuilt as a set of things you can poke at rather than watch.</p>
-      <p style="margin-top:12px;font-size:14.5px">Monty's framing is the one worth stealing: this
-      field looks hard because the equipment used to be expensive, not because the concepts are
+      "Monty" Montgomery (2010) — rebuilt as a set of interactive figures rather than a video.</p>
+      <p style="margin-top:12px;font-size:14.5px">Monty's framing is worth restating: this
+      field appears difficult because the equipment used to be expensive, not because the concepts are
       harder than anything else in computer science.</p>
     </div>
 
-    <p>Twelve live figures. Everything is computed in your browser from scratch — the images are
-    generated procedurally, the audio is synthesised on the spot, and the colour-space maths runs on
-    real pixels. As before, genuinely heavy material sits in <strong>Go deeper</strong> panels you can
-    skip without losing the thread.</p>
+    <p>Twelve live figures. Everything is computed in the browser — the images are
+    generated procedurally, the audio is synthesised at runtime, and the colour-space calculations run on
+    real pixels. Heavier material sits in <strong>Go deeper</strong> panels that can
+    be skipped without loss of continuity.</p>
   </div>
 </section>
 
@@ -310,30 +315,30 @@ footer a{color:var(--ink-2)}
 <section id="why">
   <div class="prose">
     <p class="kicker">§1</p>
-    <h2>Digital didn't win because it's more accurate</h2>
-    <p>Start with a fact that's backwards from most people's intuition: <strong>digital came
-    first.</strong> The telegraph was pushing multiplexed digital signals across continents by the
+    <h2>Digital did not prevail because of higher accuracy</h2>
+    <p>Begin with a fact that is contrary to common intuition: <strong>digital came
+    first.</strong> The telegraph was carrying multiplexed digital signals across continents by the
     1860s, decades before anyone recorded an analogue waveform. Analogue audio and video are the
     <em>newer</em> technology.</p>
 
-    <p>And digital didn't win on fidelity. A good analogue chain can be extraordinarily accurate. It
-    won on something more boring and more important: <strong>copies</strong>. Every analogue component
+    <p>Digital also did not prevail on fidelity. A good analogue chain can be extremely accurate. It
+    prevailed on a more mundane and more important property: <strong>copies</strong>. Every analogue component
     a signal passes through — every amplifier, every metre of cable, every tape generation — adds its
     own noise and distortion, permanently, and those errors accumulate. There is no way to remove them
     later, because nothing distinguishes the noise from the signal.</p>
 
     <p>A digital signal has one property that changes everything: the value is quantised, so as long
     as the noise is smaller than half a step, you can round it away completely. Copy a digital file a
-    thousand times and the thousandth copy is bit-identical to the first. That's the whole argument.
+    thousand times and the thousandth copy is bit-identical to the first. That is the entire argument.
     Conversion in and out is lossy in principle, but modern converters are so far below the threshold
     of human perception that in practice the ends of the chain stopped being the problem decades ago.</p>
 
     <div class="note aside">
-      <div class="t">The thing that actually made this an "elite" field</div>
+      <div class="t">What actually made this an elite field</div>
       <p style="margin:0">Not the mathematics. A single second of raw HD video is roughly 700
       megabits — about 500× the data rate of CD audio. Computers could manipulate raw audio in real
-      time about fifteen years before they could do the same for raw video, and the equipment to do it
-      in between cost more than a house. The concepts were always accessible; the hardware wasn't.</p>
+      time about fifteen years before they could do the same for raw video, and the equipment required
+      in the interim was prohibitively expensive. The concepts were always accessible; the hardware was not.</p>
     </div>
   </div>
 </section>
@@ -346,25 +351,32 @@ footer a{color:var(--ink-2)}
     <h2>PCM is three numbers and a byte order</h2>
     <p>Raw digital audio — <strong>Pulse Code Modulation</strong> — is the simplest thing it could
     be: measure the signal at fixed intervals, write each measurement down as an integer. To read or
-    write a PCM stream you need exactly three parameters, plus one annoying detail.</p>
+    write a PCM stream you need exactly three parameters, plus one additional detail.</p>
 
     <p><strong>Sample rate</strong> — how many measurements per second. This sets the highest
     frequency you can represent: half the rate, and not a hertz more.
     <strong>Sample format</strong> — how each measurement is stored: how many bits, signed or
     unsigned, integer or float. This sets the <em>dynamic range</em>.
     <strong>Channel count</strong> — how many simultaneous streams, stored interleaved: left, right,
-    left, right, and so on. And the annoying detail: anything wider than 8 bits has a
+    left, right, and so on. And the additional detail: anything wider than 8 bits has a
     <strong>byte order</strong>. WAV is little-endian, AIFF is big-endian, and getting it wrong
-    produces a famously horrible noise.</p>
+    produces a loud broadband noise.</p>
 
     <p>That's the entire format. Multiply the three numbers together and you have the bitrate:</p>
   </div>
 
   <div class="prose">
-<pre><code>bytes_per_second = sample_rate * (bits / <span class="n">8</span>) * channels
+<pre><code><span class="k">package</span> main
 
-<span class="c">// CD audio</span>
-<span class="n">44100</span> * <span class="n">2</span> * <span class="n">2</span> = <span class="n">176400</span> B/s   <span class="c">// ≈ 1.41 Mbit/s, ≈ 10 MB per minute</span>
+<span class="k">import</span> <span class="s">"fmt"</span>
+
+<span class="k">func</span> main() {
+	sampleRate := <span class="n">44100</span> <span class="c">// CD audio</span>
+	bits := <span class="n">16</span>
+	channels := <span class="n">2</span>
+	bytesPerSecond := sampleRate * (bits / <span class="n">8</span>) * channels
+	fmt.Println(bytesPerSecond, <span class="s">"B/s"</span>) <span class="c">// 176400 B/s  ≈ 1.41 Mbit/s, ≈ 10 MB per minute</span>
+}
 </code></pre>
   </div>
 
@@ -372,8 +384,7 @@ footer a{color:var(--ink-2)}
     <div class="head">
       <div class="n">Figure 1 · live</div>
       <h4>The three numbers, and what they cost</h4>
-      <p>Move the sliders to see the waveform actually get sampled and rounded — and what the choice
-      costs you in bytes.</p>
+      <p>The sliders show the waveform being sampled and rounded, and the resulting size in bytes.</p>
     </div>
     <div class="canvasbox"><canvas id="c-pcm" height="270" aria-label="Waveform being sampled and quantised at the selected rate and bit depth"></canvas></div>
     <div class="legend">
@@ -400,11 +411,11 @@ footer a{color:var(--ink-2)}
     <figcaption>Note how differently the two sliders behave. Sample rate changes <em>which
     frequencies survive</em> — a horizontal limit. Bit depth changes <em>how quiet a sound can be
     before it disappears into the rounding</em> — a vertical limit. They are not interchangeable, and
-    neither one makes the waveform "steppier" in any way you can hear.</figcaption>
+    neither makes the waveform "steppier" in any audible way.</figcaption>
   </figure>
 
   <div class="prose">
-    <h3>The rates you'll actually meet, and why</h3>
+    <h3>The common rates, and why they exist</h3>
   </div>
 
   <div class="prose tw">
@@ -416,11 +427,11 @@ footer a{color:var(--ink-2)}
         <tr><td><b>44.1 kHz</b></td><td>CD. The oddly specific number comes from early digital
           recorders that stored audio on video tape — the rate had to fit a whole number of samples
           into a video field. It had no prior use and no successor.</td></tr>
-        <tr><td><b>48 kHz</b></td><td>The professional video standard, and the sane default. Divides
+        <tr><td><b>48 kHz</b></td><td>The professional video standard, and the standard default. Divides
           neatly by common frame rates, which matters when audio must line up with picture.</td></tr>
-        <tr><td><b>96 / 192 kHz</b></td><td>Not for extending the audible range — you can't hear above
-          20 kHz. They exist to give anti-aliasing and reconstruction filters somewhere gentle to roll
-          off, and to give processing headroom during production.</td></tr>
+        <tr><td><b>96 / 192 kHz</b></td><td>Not for extending the audible range — human hearing does not
+          extend above 20 kHz. They exist to give anti-aliasing and reconstruction filters a gentler
+          roll-off, and to give processing headroom during production.</td></tr>
       </tbody>
     </table>
   </div>
@@ -428,12 +439,12 @@ footer a{color:var(--ink-2)}
   <div class="prose">
     <div class="note">
       <div class="t">One line on sample rate and aliasing</div>
-      <p style="margin:0">If frequencies above half the sample rate reach the converter, they don't
-      get politely discarded — they <em>fold down</em> into the audible range as new tones that were
-      never in the source. Monty's description is accurate: it sounds freaking awful. The fix is a
-      filter before the converter, and it is the one thing you cannot postpone. (The companion
-      explainer on the sampling theorem takes this apart in detail; here we'll take it as given and
-      spend our time on the other two numbers.)</p>
+      <p style="margin:0">If frequencies above half the sample rate reach the converter, they are not
+      discarded — they <em>fold down</em> into the audible range as new tones that were
+      never in the source. The result is audible distortion. The fix is a
+      filter before the converter, and it is the one step that cannot be postponed. (The companion
+      explainer on the sampling theorem covers this in detail; here it is taken as given, and the
+      focus is on the other two numbers.)</p>
     </div>
   </div>
 </section>
@@ -444,9 +455,9 @@ footer a{color:var(--ink-2)}
   <div class="prose">
     <p class="kicker">§3</p>
     <h2>Bit depth is dynamic range, not "accuracy"</h2>
-    <p>Here's the most common misunderstanding in digital audio. People assume more bits means each
+    <p>This is the most common misunderstanding in digital audio. People assume more bits means each
     sample is "closer to the true value," so 16-bit audio is a slightly blurry version of the real
-    thing and 24-bit is sharper. That isn't what's happening.</p>
+    thing and 24-bit is sharper. That is not what happens.</p>
 
     <p>Rounding each sample to the nearest level introduces an error, and that error is bounded by
     half a level. The signal you can store gets no bigger — full scale is full scale. What changes is
@@ -477,8 +488,8 @@ footer a{color:var(--ink-2)}
     <div class="head">
       <div class="n">Figure 2 · live</div>
       <h4>What rounding actually does to a signal</h4>
-      <p>Top: the signal and its quantised version. Bottom: the rounding error. Watch what happens
-      to the error's <em>shape</em> as the signal gets quieter.</p>
+      <p>Top: the signal and its quantised version. Bottom: the rounding error. Note how the
+      error's <em>shape</em> changes as the signal gets quieter.</p>
     </div>
     <div class="canvasbox"><canvas id="c-quant" height="300" aria-label="A signal, its quantised version, and the quantisation error trace"></canvas></div>
     <div class="legend">
@@ -499,14 +510,14 @@ footer a{color:var(--ink-2)}
       <div class="cell"><div class="k">Error character</div><div class="v" id="r-q-char">noise</div></div>
     </div>
     <div class="verdict ok" id="r-q-verdict"><span class="ic">✓</span><span id="r-q-msg"></span></div>
-    <figcaption>At a healthy level the error looks like a random hash — harmless noise. Turn the
+    <figcaption>At a healthy level the error appears as random noise — harmless. Turn the
     signal down and the error becomes <em>structured</em>, locked to the waveform. That structure is
-    the real problem with quantisation, and it's what §4 fixes.</figcaption>
+    the real problem with quantisation, and it is what §4 addresses.</figcaption>
   </figure>
 
   <div class="prose tw">
     <table>
-      <thead><tr><th style="width:150px">Format</th><th>Range</th><th>Where you'll see it</th></tr></thead>
+      <thead><tr><th style="width:150px">Format</th><th>Range</th><th>Where it appears</th></tr></thead>
       <tbody>
         <tr><td><b>8-bit linear</b></td><td>~50 dB</td><td>Effectively extinct. Audibly noisy on
           anything with quiet passages.</td></tr>
@@ -516,9 +527,9 @@ footer a{color:var(--ink-2)}
           everything. Full scale is 0 dBFS; everything else is negative.</td></tr>
         <tr><td><b>24-bit signed</b></td><td>~144 dB</td><td>Recording and production. Headroom for
           processing, not for listening.</td></tr>
-        <tr><td><b>32-bit float</b></td><td>enormous</td><td>Mixing and mastering. ±1.0 is 0 dBFS, but
-          going over doesn't clip — you can pull it back down later without damage, which is the whole
-          point.</td></tr>
+        <tr><td><b>32-bit float</b></td><td>very large</td><td>Mixing and mastering. ±1.0 is 0 dBFS, but
+          going over does not clip — the level can be reduced later without damage, which is the
+          purpose.</td></tr>
       </tbody>
     </table>
   </div>
@@ -533,9 +544,9 @@ footer a{color:var(--ink-2)}
       <p>A full-scale sine has power <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span></span></span></span>. The ratio is
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.53em;vertical-align:-0.52em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.01em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7463em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mtight">/12</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.485em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1/2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.3262em;vertical-align:-0.4811em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">q</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7463em;"><span style="top:-2.786em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">12</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4811em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8491em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">b</span></span></span></span></span></span></span></span></span></span></span></span>, and
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">b</span></span></span></span></span></span></span></span></span><span class="mord"><span class="delimsizing size1">)</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord">20</span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9386em;vertical-align:-0.2441em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1.5</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord">6.02</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1.76</span></span></span></span>
-      dB. The 1.76 is just <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">3/2</span><span class="mclose">)</span></span></span></span> — the bonus you get from measuring against a sine's
+      dB. The 1.76 is just <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">10</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">3/2</span><span class="mclose">)</span></span></span></span> — the gain from measuring against a sine's
       RMS rather than its peak.</p>
-      <p>The assumption is the interesting part. "Uniformly distributed error, uncorrelated with the
+      <p>The assumption is worth examining. "Uniformly distributed error, uncorrelated with the
       signal" is exactly what stops being true for quiet or simple signals — which is why the formula
       describes the noise floor well in general and describes low-level behaviour badly. Dither is how
       you make the assumption true again.</p>
@@ -548,8 +559,8 @@ footer a{color:var(--ink-2)}
 <section id="dither">
   <div class="prose">
     <p class="kicker">§4</p>
-    <h2>Dither: making it worse to make it better</h2>
-    <p>This is the most counter-intuitive idea in digital audio, and it's a genuinely beautiful one.</p>
+    <h2>Dither: adding noise to reduce distortion</h2>
+    <p>This is the most counter-intuitive idea in digital audio.</p>
     <p>The problem from Figure 2: when a signal is quiet, or simple, the rounding error stops being
     random. A quiet sine wave crosses the same few levels in the same pattern every cycle, so the
     error repeats at the signal's own frequency. Repeating error isn't noise — it's
@@ -558,24 +569,39 @@ footer a{color:var(--ink-2)}
     they're musically related to what you're listening to.</p>
 
     <p>The fix is to add a small amount of random noise <em>before</em> rounding — about one level's
-    worth. That sounds like vandalism. It isn't:</p>
+    worth:</p>
   </div>
 
   <div class="prose">
-<pre><code><span class="c">// naive: correlated error, audible distortion</span>
-out = Math.round(x * levels) / levels;
+<pre><code><span class="k">package</span> main
 
-<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
-<span class="k">const</span> d = (Math.random() + Math.random() - <span class="n">1</span>) / levels;  <span class="c">// triangular, ±1 LSB</span>
-out = Math.round((x + d) * levels) / levels;
+<span class="k">import</span> (
+	<span class="s">"fmt"</span>
+	<span class="s">"math"</span>
+	<span class="s">"math/rand"</span>
+)
+
+<span class="k">func</span> main() {
+	x := <span class="n">0.3</span>      <span class="c">// input sample, -1..1</span>
+	levels := <span class="n">8.0</span> <span class="c">// quantiser step count</span>
+
+	<span class="c">// naive: correlated error, audible distortion</span>
+	out := math.Round(x*levels) / levels
+
+	<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
+	d := (rand.Float64() + rand.Float64() - <span class="n">1</span>) / levels <span class="c">// triangular, ±1 LSB</span>
+	outDithered := math.Round((x+d)*levels) / levels
+
+	fmt.Println(out, outDithered)
+}
 </code></pre>
 
     <p>The noise decorrelates the error from the signal, which converts distortion into a constant,
     featureless hiss. And it does something better than that: because the noise pushes the signal
     across a rounding boundary more often when the signal is slightly higher, information about
-    signals <em>smaller than a single step</em> survives in the statistics. You can hear a tone that
-    is quieter than the smallest number your format can represent. It's below the noise, but your ear
-    integrates over time and pulls it out — which is exactly why you can follow a conversation in a
+    signals <em>smaller than a single step</em> survives in the statistics. A tone quieter than the
+    smallest number the format can represent remains audible. It is below the noise, but the ear
+    integrates over time and recovers it, which is why a conversation remains intelligible in a
     noisy room.</p>
   </div>
 
@@ -583,8 +609,9 @@ out = Math.round((x + d) * levels) / levels;
     <div class="head">
       <div class="n">Figure 3 · audio + live</div>
       <h4>A tone quieter than one bit</h4>
-      <p>A sine at the level shown, quantised to the depth shown. The spectrum tells the story: spikes
-      mean invented harmonics; a flat floor means honest noise. Turn it up gently before playing.</p>
+      <p>A sine at the level shown, quantised to the depth shown. The spectrum shows the difference:
+      spikes indicate invented harmonics; a flat floor indicates broadband noise. Raise the volume
+      gradually before playing.</p>
     </div>
     <div class="canvasbox"><canvas id="c-dither" height="280" aria-label="Spectrum of a quantised tone with and without dither"></canvas></div>
     <div class="legend">
@@ -610,14 +637,14 @@ out = Math.round((x + d) * levels) / levels;
     </div>
     <div class="verdict edge" id="r-d-verdict"><span class="ic">!</span><span id="r-d-msg"></span></div>
     <figcaption>Drag the tone level below one step and listen to the undithered version: the tone
-    doesn't fade out gracefully, it breaks up into gritty artefacts and eventually snaps to silence.
-    The dithered version just gets quieter, staying recognisable well past the point where the
-    undithered one has fallen apart.</figcaption>
+    does not fade out smoothly; it breaks up into audible artefacts and eventually cuts to silence.
+    The dithered version simply gets quieter, staying recognisable well past the point where the
+    undithered one has broken down.</figcaption>
   </figure>
 
   <div class="prose">
     <div class="note good">
-      <div class="t">Why this matters even if you never touch audio</div>
+      <div class="t">Why this applies beyond audio</div>
       <p style="margin:0">The same trick applies anywhere you reduce precision. Reducing an image to
       256 colours produces visible banding in gradients; adding a little noise before quantising
       converts the bands into a fine grain your eye ignores. That's what "dithering" means in a GIF
@@ -633,7 +660,7 @@ out = Math.round((x + d) * levels) / levels;
       independent rectangular sources gives a <strong>triangular</strong> distribution spanning ±1
       LSB (TPDF), which decorrelates both mean and variance. That's why the snippet above adds two
       calls to <code>random()</code>. The price is 4.77 dB more noise power than undithered
-      quantisation — a trade essentially everyone takes.</p>
+      quantisation — a trade that is almost always accepted.</p>
       <p><strong>Noise shaping</strong> goes further. The total noise power is fixed, but its
       distribution across frequency is not, so you can push it out of the band where hearing is most
       sensitive (roughly 2–5 kHz) and pile it up near 20 kHz where you can't hear it. The measured
@@ -650,13 +677,13 @@ out = Math.round((x + d) * levels) / levels;
   <div class="prose">
     <p class="kicker">§5</p>
     <h2>Companding: 8 bits that behave like 14</h2>
-    <p>Linear 8-bit audio sounds bad — about 50 dB of range, which isn't enough for speech with any
+    <p>Linear 8-bit audio has poor quality — about 50 dB of range, which is not enough for speech with any
     variation in loudness. Yet telephony ran on 8 bits per sample for decades and sounded acceptable.
-    The trick is that the levels don't have to be evenly spaced.</p>
+    The reason is that the levels do not have to be evenly spaced.</p>
 
-    <p>Human hearing is roughly logarithmic: you notice a change in loudness as a <em>ratio</em>, not
+    <p>Human hearing is roughly logarithmic: a change in loudness is perceived as a <em>ratio</em>, not
     a difference. Going from 0.001 to 0.002 is as perceptually significant as going from 0.5 to 1.0.
-    Even spacing wastes most of its levels on loud sounds where you can't tell them apart anyway.</p>
+    Even spacing wastes most of its levels on loud sounds where the differences are imperceptible.</p>
 
     <p>So <strong>µ-law</strong> (North America and Japan) and <strong>A-law</strong> (elsewhere)
     space the levels logarithmically: fine steps near silence, coarse steps near full scale. Same 256
@@ -688,19 +715,19 @@ out = Math.round((x + d) * levels) / levels;
       <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">µ-law range</div><div class="v" id="r-m-mu">70 dB</div></div>
       <div class="cell"><div class="k">Equivalent bits</div><div class="v" id="r-m-eq">11.3</div></div>
     </div>
-    <figcaption>Switch to "quality vs level" and the trade becomes obvious: linear coding is better
-    than µ-law for loud signals and dramatically worse for quiet ones. µ-law gives up a little at the
-    top — where you'd never notice — to hold quality roughly constant all the way down. "Equivalent
-    bits" compares µ-law's <em>smallest</em> step against a linear coder's: the ratio is a constant
+    <figcaption>Switch to "quality vs level" and the trade is clear: linear coding is better
+    than µ-law for loud signals and substantially worse for quiet ones. µ-law gives up a little at the
+    top — where the difference is imperceptible — to hold quality roughly constant all the way down.
+    "Equivalent bits" compares µ-law's <em>smallest</em> step against a linear coder's: the ratio is a constant
     5.5 bits, which is why 8-bit µ-law is usually quoted as behaving like 13–14 bits.</figcaption>
   </figure>
 
   <div class="prose">
-    <p>Note what this is <em>not</em>: compression in the file-size sense. There's no modelling, no
-    prediction, no entropy coding — just a different mapping from numbers to amplitudes. It's the
-    cheapest possible perceptual coding, and the direct ancestor of the idea that every modern codec
-    is built on: <strong>spend bits where perception is sharp, save them where it's dull.</strong> The
-    video half of this page is that same sentence applied three more times.</p>
+    <p>Note what this is <em>not</em>: compression in the file-size sense. There is no modelling, no
+    prediction, no entropy coding — just a different mapping from numbers to amplitudes. It is the
+    simplest form of perceptual coding, and the direct ancestor of the idea that every modern codec
+    is built on: <strong>spend bits where perception is sharp, save them where it is dull.</strong> The
+    video half of this page applies that same principle three more times.</p>
   </div>
 </section>
 
@@ -710,16 +737,16 @@ out = Math.round((x + d) * levels) / levels;
   <div class="prose">
     <p class="kicker">§6</p>
     <h2>Digital audio is not a staircase</h2>
-    <p>Search for "digital audio" and you'll find a thousand diagrams showing a smooth analogue curve
+    <p>Searches for "digital audio" return many diagrams showing a smooth analogue curve
     next to a blocky digital staircase, usually to argue that analogue is smoother and therefore
-    better. The staircase is <strong>wrong</strong>. Not simplified — wrong. No digital system
+    better. The staircase is <strong>incorrect</strong> — not a simplification. No digital system
     produces it, and nothing in the theory suggests it.</p>
 
-    <p>The confusion comes from how we draw samples. A sample is a single measurement at a single
+    <p>The confusion comes from how samples are drawn. A sample is a single measurement at a single
     instant: a point, with no width. Drawing a flat step between two points is a drawing convention,
-    not a claim about the signal. When you ask "what was the signal doing between these two points?"
-    the answer isn't "holding flat" — it's the unique smooth curve that passes through every point
-    without wiggling faster than the rate allows, which is what a converter actually reconstructs.</p>
+    not a claim about the signal. The question "what was the signal doing between these two points?"
+    is not answered by "holding flat" — the answer is the unique smooth curve that passes through every point
+    without varying faster than the rate allows, which is what a converter actually reconstructs.</p>
   </div>
 
   <figure id="fig-myth">
@@ -743,17 +770,17 @@ out = Math.round((x + d) * levels) / levels;
         <input type="range" id="s-y-fs" min="2.1" max="12" step="0.1" value="3"></div>
     </div>
     <div class="verdict ok" id="r-y-verdict"><span class="ic">✓</span><span id="r-y-msg"></span></div>
-    <figcaption>Drop to barely more than two samples per cycle — where the staircase looks its most
-    absurd — and the real output is still a clean, smooth wave of exactly the right frequency and
+    <figcaption>Drop to barely more than two samples per cycle — where the staircase appears most
+    exaggerated — and the real output is still a clean, smooth wave of exactly the right frequency and
     amplitude. The staircase's sharp corners would contain frequencies far above what the format can
-    represent, which is a tell that it can't be the real signal.</figcaption>
+    represent, which indicates that it cannot be the real signal.</figcaption>
   </figure>
 
   <div class="prose">
     <div class="note warn">
       <div class="t">Where the staircase does briefly exist</div>
-      <p style="margin:0">A cheap converter really does emit a staircase for a moment, and then a
-      filter smooths it away — that's the "hold" stage, and its whole job is to be temporary. Modern
+      <p style="margin:0">A low-cost converter does emit a staircase for a moment, and then a
+      filter smooths it away — that is the "hold" stage, and its purpose is to be temporary. Modern
       converters oversample so heavily that the steps are far above the audible range before the
       filter even sees them. So the staircase exists for microseconds inside a chip, never in the
       stored data and never at the speaker.</p>
@@ -788,7 +815,7 @@ out = Math.round((x + d) * levels) / levels;
     the horizontal axis too coarsely and fine vertical stripes alias into moiré. Sample time too
     coarsely and a spinning wheel appears to rotate backwards. Same theorem, different units.</p>
 
-    <p>What makes video feel like a different discipline is not the theory — it's the volume. Raw CD
+    <p>What distinguishes video from audio is not the theory but the volume of data. Raw CD
     audio is about 1.4 megabits per second. Raw 1080i video is over <strong>700 megabits per
     second</strong>: roughly 500 times as much. That single ratio explains most of the history.
     Computers could edit raw audio in real time about fifteen years before they could do the same for
@@ -800,7 +827,7 @@ out = Math.round((x + d) * levels) / levels;
     <div class="head">
       <div class="n">Figure 6 · calculator</div>
       <h4>What raw video actually costs</h4>
-      <p>No compression, no cleverness — just width × height × frames × bits. The numbers are worse
+      <p>No compression — just width × height × frames × bits. The results are larger
       than most people expect.</p>
     </div>
     <div class="ctl" style="border-top:0">
@@ -822,8 +849,8 @@ out = Math.round((x + d) * levels) / levels;
       <div class="cell"><div class="k">vs CD audio</div><div class="v" id="r-v-x">529×</div></div>
     </div>
     <div class="verdict bad" id="r-v-verdict"><span class="ic">!</span><span id="r-v-msg"></span></div>
-    <figcaption>Chroma subsampling alone — covered in §11 — cuts this in half before any codec gets
-    involved, and costs almost nothing you can see. That's the single best deal in the whole
+    <figcaption>Chroma subsampling alone — covered in §11 — cuts this in half before any codec is
+    involved, and costs almost nothing perceptible. It is the most efficient reduction in the
     pipeline.</figcaption>
   </figure>
 </section>
@@ -833,7 +860,7 @@ out = Math.round((x + d) * levels) / levels;
 <section id="pixels">
   <div class="prose">
     <p class="kicker">§8</p>
-    <h2>Your pixels are probably not square</h2>
+    <h2>Pixels are often not square</h2>
     <p>On a computer, a pixel is a square and an image's shape is just its pixel count. Broadcast
     video never worked that way, and the assumption still breaks things today.</p>
 
@@ -845,14 +872,14 @@ out = Math.round((x + d) * levels) / levels;
 
     <p>The practical consequence: a 4:3 NTSC DVD stores <strong>704×480</strong> pixels, which is not
     a 4:3 ratio. Each stored pixel has a <strong>10:11</strong> shape, and the player stretches them
-    on the way to the screen. Ignore that and everyone is slightly too tall.</p>
+    on the way to the screen. Without that correction, the image appears slightly too tall.</p>
   </div>
 
   <figure id="fig-par">
     <div class="head">
       <div class="n">Figure 7 · live</div>
       <h4>Stored shape versus displayed shape</h4>
-      <p>The circle should be a circle. Toggle the correction to see what forgetting it does.</p>
+      <p>The circle should be a circle. Toggling the correction shows the effect of omitting it.</p>
     </div>
     <div class="imgrow">
       <div class="imgcell">
@@ -880,7 +907,7 @@ out = Math.round((x + d) * levels) / levels;
     <div class="verdict ok" id="r-par-verdict"><span class="ic">✓</span><span id="r-par-msg"></span></div>
     <figcaption>Anamorphic 16:9 is the extreme case: the same 704×480 grid is declared to represent a
     widescreen picture, so every pixel is stretched to about 1.46× its stored width. The file gives no
-    hint of this beyond a flag — which is why a mislabelled flag makes everyone look either stretched
+    indication of this beyond a flag — which is why a mislabelled flag makes the picture appear either stretched
     or squashed.</figcaption>
   </figure>
 </section>
@@ -890,18 +917,18 @@ out = Math.round((x + d) * levels) / levels;
 <section id="interlace">
   <div class="prose">
     <p class="kicker">§9</p>
-    <h2>Interlacing: the compression scheme that predates compression</h2>
-    <p>Early television engineers had a genuine dilemma. Low frame rates flicker unbearably and make
-    motion stutter. High frame rates need bandwidth nobody had. Their solution was clever, effective,
-    and has been making life difficult ever since.</p>
+    <h2>Interlacing: reducing bandwidth before compression existed</h2>
+    <p>Early television engineers faced a dilemma. Low frame rates flicker badly and make
+    motion stutter. High frame rates need bandwidth that was not available. Their solution was
+    effective and has caused difficulties ever since.</p>
 
     <p>Instead of sending whole frames, send <strong>half</strong> of each one: all the even-numbered
     scanlines in one pass, then all the odd-numbered lines in the next. Each half is a
-    <strong>field</strong>. You get the temporal smoothness of 60 updates per second at the bandwidth
+    <strong>field</strong>. This provides the temporal smoothness of 60 updates per second at the bandwidth
     of 30 full frames, and because the eye integrates over the whole screen, the missing lines barely
     register.</p>
 
-    <p>Here's the part that causes all the trouble. Two fields do <em>not</em> add up to one frame,
+    <p>This is the source of the difficulties. Two fields do <em>not</em> add up to one frame,
     because they were captured at <strong>different moments</strong>. Half the original content was
     never recorded at all. Weave two fields together and anything that moved between them shows up as
     a comb of interleaved stripes — not a compression artefact, but an accurate record of two
@@ -912,8 +939,8 @@ out = Math.round((x + d) * levels) / levels;
     <div class="head">
       <div class="n">Figure 8 · live</div>
       <h4>Two moments in one frame</h4>
-      <p>A shape moving left to right, captured as fields. Try each deinterlacing strategy and watch
-      what each one costs.</p>
+      <p>A shape moving left to right, captured as fields. Each deinterlacing strategy has a
+      different cost.</p>
     </div>
     <div class="imgrow">
       <div class="imgcell">
@@ -946,12 +973,12 @@ out = Math.round((x + d) * levels) / levels;
 
   <div class="prose">
     <div class="note aside">
-      <div class="t">The naming convention, decoded</div>
+      <div class="t">The naming convention explained</div>
       <p style="margin:0"><strong>1080i</strong> is 1080 lines, interlaced — 60 fields per second,
       each holding 540 lines. <strong>1080p</strong> is 1080 lines, progressive — whole frames.
       "480i60" means 480 lines interlaced at 60 fields per second, which is 30 frames' worth of
-      bandwidth. Interlacing is dead in new formats and immortal in archives, which is why
-      deinterlacing code will outlive all of us.</p>
+      bandwidth. Interlacing is absent from new formats but remains common in archives, which is why
+      deinterlacing code remains necessary.</p>
     </div>
   </div>
 </section>
@@ -961,23 +988,23 @@ out = Math.round((x + d) * levels) / levels;
 <section id="gamma">
   <div class="prose">
     <p class="kicker">§10</p>
-    <h2>Gamma: the accident that turned out to be right</h2>
+    <h2>Gamma: an accident that proved beneficial</h2>
     <p>A cathode ray tube is not a linear device. Double the voltage on the gun and you get much more
     than double the brightness — the response goes roughly as voltage to the power of
     <strong>2.5</strong>. Left uncorrected, every image would come out with crushed shadows and
     blown-out highlights.</p>
 
-    <p>Somebody had to apply the inverse. The engineers made a decision that looks like penny-pinching
-    and turned out to be inspired: put the correction in the <em>camera</em>. There would be a handful
-    of cameras and millions of television sets, so correcting at the source was overwhelmingly
+    <p>Someone had to apply the inverse. The engineers made a decision that appeared to be a
+    cost-saving measure and proved effective: put the correction in the <em>camera</em>. There would be a handful
+    of cameras and millions of television sets, so correcting at the source was substantially
     cheaper. Cameras applied roughly a 1/2.2 power curve, the CRT applied its native 2.5, and the
-    round trip came out close enough to linear. (The mismatch between 2.2 and 2.5 wasn't sloppiness —
-    it compensates for viewing in a dim room, where the eye wants a little extra contrast.)</p>
+    round trip came out close enough to linear. (The mismatch between 2.2 and 2.5 is not an error —
+    it compensates for viewing in a dim room, where the eye requires slightly more contrast.)</p>
 
-    <p>Here's why it survived the death of the CRT. Human brightness perception is
-    <em>also</em> roughly a power law — an exponent near 3, not far from the CRT's 2.5. You can
-    distinguish far more shades in the dark than in bright light. Storing values with a gamma curve
-    therefore spends bits where your eye is sharp and saves them where it's dull. It is, accidentally,
+    <p>It survived the obsolescence of the CRT for the following reason. Human brightness perception is
+    <em>also</em> roughly a power law — an exponent near 3, not far from the CRT's 2.5. The eye can
+    distinguish far more shades in dark regions than in bright ones. Storing values with a gamma curve
+    therefore spends bits where the eye is most sensitive and saves them where it is least sensitive. It is, accidentally,
     a perceptual compression scheme — the same principle as µ-law from §5, arrived at for entirely
     unrelated reasons.</p>
   </div>
@@ -986,7 +1013,7 @@ out = Math.round((x + d) * levels) / levels;
     <div class="head">
       <div class="n">Figure 9 · live</div>
       <h4>Why 8 bits of linear light isn't enough, and 8 bits of gamma is</h4>
-      <p>The same 8-bit budget, spent two ways. Look at the dark end of each ramp.</p>
+      <p>The same 8-bit budget, allocated two ways. The difference appears at the dark end of each ramp.</p>
     </div>
     <div class="imgrow">
       <div class="imgcell">
@@ -1018,21 +1045,21 @@ out = Math.round((x + d) * levels) / levels;
       <div class="cell"><div class="k">Round trip</div><div class="v" id="r-g-rt">linear</div></div>
     </div>
     <div class="verdict ok" id="r-g-verdict"><span class="ic">✓</span><span id="r-g-msg"></span></div>
-    <figcaption>Slide the encode and decode exponents apart and the round-trip curve bends away from
-    the diagonal — that's a washed-out or crushed image, and it's exactly what happens when software
-    blends pixels without knowing which space they're in. Modern sRGB still uses a curve close to 2.2
+    <figcaption>When the encode and decode exponents differ, the round-trip curve bends away from
+    the diagonal, producing a washed-out or crushed image; this is exactly what happens when software
+    blends pixels without knowing which space they are in. Modern sRGB still uses a curve close to 2.2
     for precisely the reason above; the CRT it was designed around is long gone.</figcaption>
   </figure>
 
   <div class="prose">
     <div class="note warn">
-      <div class="t">The bug this causes constantly</div>
+      <div class="t">A common bug this causes</div>
       <p style="margin:0">Averaging two gamma-encoded pixels does <em>not</em> give the average
       brightness. Scaling an image, blurring it, or alpha-blending in gamma space makes results
       systematically too dark — most visibly when resizing images with fine high-contrast detail.
-      Correct order: decode to linear, do the arithmetic, re-encode. A surprising amount of graphics
-      software still gets this wrong, and now you know what you're looking at when a downscaled image
-      looks murkier than the original.</p>
+      Correct order: decode to linear, do the arithmetic, re-encode. A significant amount of graphics
+      software still handles this incorrectly, which is why a downscaled image can appear darker
+      than the original.</p>
     </div>
   </div>
 </section>
@@ -1042,14 +1069,14 @@ out = Math.round((x + d) * levels) / levels;
 <section id="chroma">
   <div class="prose">
     <p class="kicker">§11</p>
-    <h2>Colour: the eye's blind spot, exploited</h2>
-    <p>Your eye has three colour receptors, so displays use three primaries — red, green, blue — and
-    adding them in different proportions reproduces most of what you can see. RGB is the natural
+    <h2>Colour: exploiting the limits of human vision</h2>
+    <p>The eye has three colour receptors, so displays use three primaries — red, green, blue — and
+    adding them in different proportions reproduces most visible colours. RGB is the natural
     format for a display, and a poor format for storage.</p>
 
-    <p>The reason: RGB spreads the picture's information evenly across three channels, but your vision
-    doesn't treat those channels evenly at all. You resolve fine detail in <em>brightness</em>
-    extremely well and fine detail in <em>colour</em> remarkably badly. Video therefore converts to a
+    <p>The reason: RGB spreads the picture's information evenly across three channels, but human vision
+    does not treat those channels evenly. The eye resolves fine detail in <em>brightness</em>
+    very well and fine detail in <em>colour</em> poorly. Video therefore converts to a
     different arrangement — one channel of brightness (<strong>luma</strong>, Y′), and two channels
     describing only how the colour departs from grey (<strong>chroma</strong>, Cb and Cr):</p>
   </div>
@@ -1065,16 +1092,16 @@ out = Math.round((x + d) * levels) / levels;
   </dl>
 
   <div class="prose">
-    <p>Now the payoff. Since colour detail is nearly invisible, you can store Cb and Cr at
-    <em>lower resolution</em> than Y′ and almost nobody notices. That's <strong>chroma
-    subsampling</strong>, and it's free money: 4:2:0 halves both chroma dimensions, cutting the data
+    <p>Because colour detail is nearly invisible, Cb and Cr can be stored at
+    <em>lower resolution</em> than Y′ with little perceptible loss. This is <strong>chroma
+    subsampling</strong>: 4:2:0 halves both chroma dimensions, cutting the data
     in half before any codec runs.</p>
   </div>
 
   <figure id="fig-chroma">
     <div class="head">
       <div class="n">Figure 10 · live</div>
-      <h4>Throwing away three-quarters of the colour</h4>
+      <h4>Discarding three-quarters of the colour</h4>
       <p>A procedurally generated test frame, put through a real Y′CbCr round trip. Compare "subsample
       the colour" against "subsample the brightness by the same amount."</p>
     </div>
@@ -1108,15 +1135,15 @@ out = Math.round((x + d) * levels) / levels;
       <div class="cell"><div class="k">Average error</div><div class="v" id="r-ch-avg">0.9%</div></div>
     </div>
     <div class="verdict ok" id="r-ch-verdict"><span class="ic">✓</span><span id="r-ch-msg"></span></div>
-    <figcaption>Switch to "the brightness" and the illusion collapses instantly — for a comparable
+    <figcaption>Switch to "the brightness" and the degradation becomes obvious — for a comparable
     measured error, and in fact a <em>smaller</em> data saving. That asymmetry is the entire
-    justification for Y′CbCr, and it's why every camera, codec and streaming service on Earth ships
+    justification for Y′CbCr, and it is why every camera, codec and streaming service ships
     4:2:0 by default.</figcaption>
   </figure>
 
   <div class="prose">
     <h3>Where, exactly, is a chroma sample?</h3>
-    <p>Now the part that turns a clean idea into an interoperability swamp. If four luma pixels share
+    <p>This is the part that complicates interoperability. If four luma pixels share
     one chroma sample, <em>where does that chroma sample sit?</em> Centred among the four? Aligned
     with the left pair? Somewhere else?</p>
     <p>Every answer got standardised by somebody. MPEG-1, JPEG, Theora and WebM centre it both
@@ -1144,9 +1171,9 @@ out = Math.round((x + d) * levels) / levels;
         </div></div>
     </div>
     <div class="verdict edge" id="r-site-verdict"><span class="ic">!</span><span id="r-site-msg"></span></div>
-    <figcaption>Get the siting wrong and colour shifts by half a pixel against the brightness — subtle
-    on most frames, and glaringly obvious on hard colour edges like subtitles or a red logo on white.
-    This is a leading cause of "why does my transcode look slightly off" and it is invisible in the
+    <figcaption>If the siting is wrong, colour shifts by half a pixel against the brightness — subtle
+    on most frames, and clearly visible on hard colour edges like subtitles or a red logo on white.
+    This is a leading cause of transcodes that look slightly off, and it is invisible in the
     file's metadata.</figcaption>
   </figure>
 </section>
@@ -1162,10 +1189,10 @@ out = Math.round((x + d) * levels) / levels;
     <strong>Planar</strong> formats keep each channel in its own contiguous block, which is what
     almost every codec wants, since it can then process the small chroma planes independently.</p>
 
-    <p>Multiply that choice by every subsampling scheme and every bit depth and you get the
-    <strong>fourcc</strong> zoo: four-character codes like <code>YV12</code>, <code>NV12</code>,
-    <code>UYVY</code>, <code>I420</code>. At least fifty exist; you'll meet maybe fifteen. And here is
-    the trap: a fourcc describes the <em>arrangement</em> of samples, and generally says nothing about
+    <p>Multiply that choice by every subsampling scheme and every bit depth and the result is the
+    <strong>fourcc</strong> set: four-character codes like <code>YV12</code>, <code>NV12</code>,
+    <code>UYVY</code>, <code>I420</code>. At least fifty exist; roughly fifteen are common. The
+    complication: a fourcc describes the <em>arrangement</em> of samples, and generally says nothing about
     chroma siting or which colourspace matrix was used. <code>YV12</code> alone doesn't tell you
     whether the chroma is sited MPEG-1 style or MPEG-2 style, or whether the matrix was BT.601 or
     BT.709. That information travels separately, or it doesn't travel at all.</p>
@@ -1175,10 +1202,10 @@ out = Math.round((x + d) * levels) / levels;
     <table>
       <thead><tr><th style="width:110px">Fourcc</th><th style="width:90px">Layout</th><th>What it is</th></tr></thead>
       <tbody>
-        <tr><td><b>I420</b></td><td>planar</td><td>4:2:0 as Y, then Cb, then Cr. The default currency of
+        <tr><td><b>I420</b></td><td>planar</td><td>4:2:0 as Y, then Cb, then Cr. The default format of
           video codecs.</td></tr>
         <tr><td><b>YV12</b></td><td>planar</td><td>Identical to I420 with Cr and Cb swapped. Confusing
-          the two produces a memorably orange-and-blue picture.</td></tr>
+          the two produces an incorrectly orange-and-blue picture.</td></tr>
         <tr><td><b>NV12</b></td><td>semi-planar</td><td>Y plane, then a single interleaved CbCrCbCr
           plane. What most hardware decoders emit.</td></tr>
         <tr><td><b>UYVY / YUY2</b></td><td>packed</td><td>4:2:2 interleaved. Common in capture hardware
@@ -1190,25 +1217,25 @@ out = Math.round((x + d) * levels) / levels;
   </div>
 
   <div class="prose">
-    <h3>Containers: the part that isn't about pixels at all</h3>
+    <h3>Containers: the part unrelated to pixels</h3>
     <p>A raw stream of compressed frames is unusable on its own. The frames vary in size
-    unpredictably, so you can't find frame 400 by multiplying. There's no way to tell where audio ends
+    unpredictably, so frame 400 cannot be located by multiplication. There is no way to tell where audio ends
     and video begins. There are no timestamps, so nothing tells the player how to keep them together.</p>
 
     <p>A <strong>container</strong> — MP4, Matroska, Ogg, AVI, WebM — solves exactly those problems
     and nothing else. It adds framing so each chunk's boundaries are findable, identification so
     streams can be told apart, timing so they can be synchronised, and space for metadata like
     chapters and subtitles. The crucial property is that containers are <em>generic</em>: the
-    container doesn't know or care what codec produced the bytes it carries. That's why "MP4" isn't a
+    container is independent of the codec that produced the bytes it carries. That is why "MP4" is not a
     video format, and why two MP4 files can be completely different inside.</p>
   </div>
 
   <figure id="fig-cont">
     <div class="head">
       <div class="n">Figure 12 · live</div>
-      <h4>Why streams get chopped up and shuffled together</h4>
-      <p>Two streams, one file, one read head. Drag the buffer slider to see why interleaving isn't
-      optional.</p>
+      <h4>Why streams are split and interleaved</h4>
+      <p>Two streams, one file, one read head. The buffer slider shows why interleaving is
+      necessary.</p>
     </div>
     <div class="canvasbox"><canvas id="c-cont" height="200" aria-label="Diagram of audio and video packets interleaved in a container"></canvas></div>
     <div class="legend">
@@ -1228,9 +1255,9 @@ out = Math.round((x + d) * levels) / levels;
       <div class="cell"><div class="k">Seek cost</div><div class="v" id="r-c-seek">low</div></div>
     </div>
     <div class="verdict ok" id="r-c-verdict"><span class="ic">✓</span><span id="r-c-msg"></span></div>
-    <figcaption>Push the interleaving slider right and the streams separate into long runs. Playback
-    still works, but the player must now buffer everything between the audio it's playing and the
-    video it needs — which is why a badly interleaved file stutters when streamed and plays fine from
+    <figcaption>As the interleaving slider moves right, the streams separate into long runs. Playback
+    still works, but the player must then buffer everything between the audio it is playing and the
+    video it needs — which is why a badly interleaved file stutters when streamed and plays correctly from
     a local disk.</figcaption>
   </figure>
 </section>
@@ -1252,9 +1279,9 @@ out = Math.round((x + d) * levels) / levels;
         <tr><td><b>PCM</b></td><td>Sample rate, sample format, channel count, byte order. That's the
           entire format.</td></tr>
         <tr><td><b>Sample rate</b></td><td>Sets the highest frequency: half the rate. 44.1 kHz is a
-          historical accident; 48 kHz is the sane default.</td></tr>
+          historical accident; 48 kHz is the standard default.</td></tr>
         <tr><td><b>Bit depth</b></td><td>Sets the noise floor, not the "accuracy". About 6 dB per bit.
-          16-bit ships, 24-bit is for working.</td></tr>
+          16-bit is for delivery, 24-bit for production.</td></tr>
         <tr><td><b>Dither</b></td><td>Add ~1 step of noise before rounding. Converts audible distortion
           into inaudible hiss, and preserves signals smaller than one step.</td></tr>
         <tr><td><b>Companding</b></td><td>Log-spaced levels give 8 bits the usable range of ~14. The direct
@@ -1266,10 +1293,10 @@ out = Math.round((x + d) * levels) / levels;
         <tr><td><b>Pixel aspect</b></td><td>Stored size ≠ displayed shape. 704×480 with a 10:11 pixel is
           a 4:3 picture.</td></tr>
         <tr><td><b>Interlacing</b></td><td>Two fields, two <em>moments</em>. Combing is not an artefact,
-          it's an honest record of motion.</td></tr>
+          it is an accurate record of motion.</td></tr>
         <tr><td><b>Gamma</b></td><td>A CRT workaround that survived because human vision has the same
-          shape. Always know which space your pixels are in before doing arithmetic.</td></tr>
-        <tr><td><b>Chroma subsampling</b></td><td>Half the data, invisible cost — because your eye
+          shape. Determine which space pixels are in before performing arithmetic.</td></tr>
+        <tr><td><b>Chroma subsampling</b></td><td>Half the data, invisible cost — because the eye
           resolves brightness far better than colour.</td></tr>
         <tr><td><b>Chroma siting</b></td><td>Four incompatible layouts all called 4:2:0, and the file
           usually doesn't say which.</td></tr>
@@ -1281,12 +1308,12 @@ out = Math.round((x + d) * levels) / levels;
 
   <div class="prose">
     <div class="note">
-      <div class="t">The thread running through all of it</div>
-      <p style="margin:0">Every good decision on this page is the same decision: <em>find out where
-      human perception is sharp, spend your bits there, and take them away from everywhere else.</em>
+      <div class="t">The principle running through all of it</div>
+      <p style="margin:0">Every effective decision on this page is the same one: <em>identify where
+      human perception is sharp, allocate bits there, and remove them elsewhere.</em>
       µ-law does it with loudness, gamma does it with brightness, chroma subsampling does it with
-      colour. Modern codecs are that idea pursued much harder — and once you see the pattern, they
-      stop looking like magic.</p>
+      colour. Modern codecs apply the same idea more aggressively; once the pattern is visible, their
+      behaviour is straightforward to understand.</p>
     </div>
   </div>
 </section>
@@ -1295,11 +1322,11 @@ out = Math.round((x + d) * levels) / levels;
   <p>An interactive companion to Xiph.Org's
   <a href="https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks">A Digital Media Primer for
   Geeks</a> by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA).
-  Every figure is computed live in your browser — the test images are generated procedurally, the
-  colourspace conversions run on real pixels, and the audio is synthesised on the spot through an
+  Every figure is computed live in the browser — the test images are generated procedurally, the
+  colourspace conversions run on real pixels, and the audio is synthesised at runtime through an
   actual quantiser.</p>
   <p style="margin-bottom:0">Monty's follow-up, <em>Digital Show and Tell</em>, demonstrates several
-  of these points on real lab equipment and is worth an hour of anyone's time.</p>
+  of these points on real lab equipment.</p>
 </footer>
 
 </main>
@@ -1659,8 +1686,8 @@ function quantise(x, step, dith, rnd) {
     var msg, kind = "ok";
     if (nbits <= 8) { kind = "bad"; msg = "At " + nbits + " bits the noise floor sits " + fmt(6.02 * nbits + 1.76, 0) + " dB below full scale — audible hiss on anything with a quiet passage. This is why 8-bit linear audio is effectively extinct outside chiptunes."; }
     else if (rate() <= 11025) { kind = "bad"; msg = "At " + rate() + " Hz nothing above " + (rate() / 2) + " Hz survives. Speech stays intelligible; music loses everything from the upper harmonics of a voice on up, which is most of what makes an instrument recognisable."; }
-    else if (rate() >= 44100 && nbits >= 16) { kind = "ok"; msg = "CD quality or better: " + (rate() / 2) + " Hz of bandwidth and " + fmt(6.02 * nbits + 1.76, 0) + " dB of range, at " + bits(bps) + ". Every doubling of either number doubles the file and buys progressively less."; }
-    else { kind = "edge"; msg = "Workable but compromised — " + (rate() / 2) + " Hz of bandwidth and " + fmt(6.02 * nbits + 1.76, 0) + " dB of range. Fine for speech or effects, thin for music."; }
+    else if (rate() >= 44100 && nbits >= 16) { kind = "ok"; msg = "CD quality or better: " + (rate() / 2) + " Hz of bandwidth and " + fmt(6.02 * nbits + 1.76, 0) + " dB of range, at " + bits(bps) + ". Every doubling of either number doubles the file and yields progressively less benefit."; }
+    else { kind = "edge"; msg = "Workable but compromised — " + (rate() / 2) + " Hz of bandwidth and " + fmt(6.02 * nbits + 1.76, 0) + " dB of range. Adequate for speech or effects, insufficient for music."; }
     verdict("r-p-verdict", "r-p-msg", kind, msg);
     draw();
   }
@@ -1749,10 +1776,10 @@ function quantise(x, step, dith, rnd) {
     var kind, msg;
     if (inSteps < 0.5 && !dith) {
       kind = "bad";
-      msg = "The signal is smaller than half a step, so every sample rounds to the same value: the output is a flat line. Without dither the signal is simply gone — not quiet, gone.";
+      msg = "The signal is smaller than half a step, so every sample rounds to the same value: the output is a flat line. Without dither the signal is entirely lost, not merely quiet.";
     } else if (correlated) {
       kind = "bad";
-      msg = "Only about " + fmt(inSteps, 1) + " steps of signal. Look at the error trace: it's a repeating pattern locked to the waveform, not random hash. Repeating error is distortion, and it puts new tones into your audio at harmonics of the original. Tick “add dither” and watch the shape dissolve.";
+      msg = "Only about " + fmt(inSteps, 1) + " steps of signal. The error trace is a repeating pattern locked to the waveform, not random noise. Repeating error is distortion, and it adds new tones at harmonics of the original. Enabling “add dither” removes the pattern.";
     } else if (dith && inSteps < 4) {
       kind = "ok";
       msg = "Dither has broken the pattern. The error trace is now featureless noise, and the signal survives even though it spans only " + fmt(inSteps, 1) + " quantisation steps — information below one step is carried in the statistics.";
@@ -1862,13 +1889,13 @@ function quantise(x, step, dith, rnd) {
     var kind, msg;
     if (s.steps < 1) {
       kind = "bad";
-      msg = "The tone is only " + fmt(s.steps, 2) + " of one quantisation step. Undithered, it has collapsed into a mess of harmonics or vanished entirely — play both and the difference is not subtle. Dithered, it is still a clean tone sitting under a flat bed of noise.";
+      msg = "The tone is only " + fmt(s.steps, 2) + " of one quantisation step. Undithered, it has broken up into harmonics or vanished entirely; the difference between the two is clearly audible. Dithered, it is still a clean tone beneath a flat noise floor.";
     } else if (s.steps < 6) {
       kind = "edge";
-      msg = "About " + fmt(s.steps, 1) + " steps of signal. The orange trace shows the invented harmonics, worst one at " + fmt(s.worst, 0) + " dB — those are tones your source never contained, at frequencies musically related to it, which is exactly what the ear notices.";
+      msg = "About " + fmt(s.steps, 1) + " steps of signal. The orange trace shows the invented harmonics, worst one at " + fmt(s.worst, 0) + " dB — these are tones the source never contained, at frequencies musically related to it, which the ear readily detects.";
     } else {
       kind = "ok";
-      msg = "Plenty of signal (" + fmt(s.steps, 0) + " steps), so even undithered the error is close to random and the two traces nearly agree. Dither matters at the quiet end; here it costs a little noise and buys little. Drag the level down to see it start to matter.";
+      msg = "Ample signal (" + fmt(s.steps, 0) + " steps), so even undithered the error is close to random and the two traces nearly agree. Dither matters at the quiet end; here it adds a little noise for little benefit. Lowering the level shows where it begins to matter.";
     }
     verdict("r-d-verdict", "r-d-msg", kind, msg);
   }
@@ -2006,10 +2033,10 @@ function quantise(x, step, dith, rnd) {
   function update() {
     txt("v-y-fs", fmt(spc, 1));
     var kind = "ok", msg;
-    if (show === "stair") msg = "This is the picture everyone has seen. It is a drawing convention — join the dots with flat steps — and nothing more. Those sharp corners contain frequencies far above what this format can hold, which is the giveaway that no real system produces this.";
+    if (show === "stair") msg = "This is the commonly reproduced picture. It is a drawing convention — the dots joined with flat steps — and nothing more. Those sharp corners contain frequencies far above what this format can hold, which indicates that no real system produces this.";
     else if (show === "lines") msg = "Equally arbitrary, and equally wrong. Straight lines between samples is what a plotting library does by default. It is not what a converter does either.";
     else if (show === "true") msg = "This is what actually comes out: the one smooth curve that passes through every sample without wiggling faster than " + fmt(spc, 1) + " samples per cycle allows. At " + fmt(spc, 1) + " samples per cycle it is a perfect sine — correct frequency, correct amplitude, no steps anywhere.";
-    else msg = "Three curves through identical dots. Two are drawing conventions; the blue one is the signal. Notice that the staircase and the straight lines both deviate most exactly where the real signal is smoothest.";
+    else msg = "Three curves through identical dots. Two are drawing conventions; the blue one is the signal. Note that the staircase and the straight lines both deviate most exactly where the real signal is smoothest.";
     if (show === "stair" || show === "lines") kind = "bad";
     verdict("r-y-verdict", "r-y-msg", kind, msg);
     draw();
@@ -2120,16 +2147,16 @@ function quantise(x, step, dith, rnd) {
     var kind, msg;
     if (F.par === 1) {
       kind = "ok";
-      msg = "Square pixels — the modern case. Stored size and displayed shape are the same thing, which is why nobody who grew up on HD has ever had to think about this.";
+      msg = "Square pixels — the modern case. Stored size and displayed shape are the same thing, which is why it does not arise with HD content.";
     } else if (fix) {
       kind = "ok";
       msg = F.name + " stores " + F.w + "×" + F.h + " with " + F.parS + " pixels. Corrected, that is a " + F.dar +
-        " picture — the circle is round. The correction is a flag in the file, not anything you can see in the pixel data.";
+        " picture — the circle is round. The correction is a flag in the file, not anything visible in the pixel data.";
     } else {
       kind = "bad";
-      msg = "Correction off: every pixel is being treated as square when it isn't, so the whole picture is off by " +
-        fmt(err, 1) + "%. " + (F.par < 1 ? "Everything is stretched vertically — people look thin and tall." : "Everything is squashed — people look short and wide.") +
-        " Subtle enough to ship, obvious once you know to look.";
+      msg = "Correction off: every pixel is treated as square when it is not, so the whole picture is off by " +
+        fmt(err, 1) + "%. " + (F.par < 1 ? "Everything is stretched vertically — subjects appear tall and narrow." : "Everything is squashed — subjects appear short and wide.") +
+        " Subtle enough to pass unnoticed, but visible once identified.";
     }
     verdict("r-par-verdict", "r-par-msg", kind, msg);
   }
@@ -2219,13 +2246,13 @@ function quantise(x, step, dith, rnd) {
       msg = "Weaving assumes the two fields belong to the same instant. They don't, so the moving object appears at two positions at once, interleaved line by line. That comb pattern is not corruption — it is an accurate recording of two different moments.";
     } else if (method === "bob") {
       kind = "edge";
-      msg = "Line doubling throws away one field and duplicates the other's lines. No combing, correct motion, and half the vertical resolution — you can see the chunkiness on the static object at the bottom, which didn't need fixing.";
+      msg = "Line doubling discards one field and duplicates the other's lines. No combing, correct motion, and half the vertical resolution — the reduced detail is visible on the static object at the bottom, which did not need correction.";
     } else if (method === "blend") {
       kind = "edge";
-      msg = "Averaging the two fields removes the comb by smearing both moments together. The result is a permanent motion ghost, and detail is softened everywhere — including on the parts that never moved.";
+      msg = "Averaging the two fields removes the comb by blending both moments together. The result is a permanent motion blur, and detail is softened everywhere — including on the parts that never moved.";
     } else {
       kind = "ok";
-      msg = "Motion-adaptive: weave where the two fields agree (full detail preserved on the static object) and interpolate only where they disagree. More expensive, and the reason good deinterlacers look dramatically better than bad ones.";
+      msg = "Motion-adaptive: weave where the two fields agree (full detail preserved on the static object) and interpolate only where they disagree. More expensive, and the reason good deinterlacers perform substantially better than poor ones.";
     }
     verdict("r-il-verdict", "r-il-msg", kind, msg);
   }
@@ -2314,13 +2341,13 @@ function quantise(x, step, dith, rnd) {
     var kind, msg;
     if (Math.abs(rt - 1) < 0.03) {
       kind = "ok";
-      msg = "Encode and decode cancel, so the round trip is a straight line and light leaving the screen is proportional to light entering the camera. Meanwhile look at the two ramps: across the darkest quarter, gamma encoding keeps " +
+      msg = "Encode and decode cancel, so the round trip is a straight line and light leaving the screen is proportional to light entering the camera. Across the darkest quarter of the two ramps, gamma encoding keeps " +
         nGam + " distinct shades where linear storage manages " + nLin + " — same " + nb + " bits, and linear simply has no numbers left for the shadows. That black block on the left is not a rendering fault; it is every value below 1/" +
         (Math.pow(2, nb) - 1) + " of full brightness collapsing to zero.";
     } else if (rt > 1) {
       kind = "bad";
       msg = "The display decodes more steeply than the camera encoded (γ " + fmt(gam, 2) + " against 1/" + fmt(enc, 2) +
-        "). Midtones come out darker than they should and shadows crush to black — the classic “why is this video so murky” bug.";
+        "). Midtones come out darker than they should and shadows crush to black — the common cause of murky-looking video.";
     } else {
       kind = "bad";
       msg = "The display decodes less steeply than the camera encoded. Everything looks washed out and low-contrast, blacks turn grey — the other half of the same mismatch.";
@@ -2441,17 +2468,17 @@ function quantise(x, step, dith, rnd) {
       msg = "4:4:4 keeps everything — no subsampling at all, so the middle and left panels are identical and the difference is black. Rare outside high-end production, because the savings below are so nearly free.";
     } else if (what === "luma") {
       kind = "bad";
-      msg = "Now check the numbers against your own eyes. Subsampling the brightness by the same factor saves " +
+      msg = "Compare the numbers with the visible result. Subsampling the brightness by the same factor saves " +
         Math.round((1 - keep) * 100) + "% — actually less than subsampling the colour, because there is one luma plane and two chroma planes — and the measured error is " +
-        fmt(r.err, 1) + "%, in the same ballpark as the colour version. Yet one is invisible and this one is obviously broken. Average pixel error is not a measure of perception, which is the single most important idea in codec design.";
+        fmt(r.err, 1) + "%, comparable to the colour version. Yet one is invisible and this one is clearly degraded. Average pixel error is not a measure of perception, which is the single most important idea in codec design.";
     } else if (scheme === "410") {
       kind = "edge";
-      msg = "4:1:0 is the aggressive end: chroma at " + Math.round(W / r.hx) + "×" + Math.round(H / r.hy) +
-        " for a " + W + "×" + H + " picture. Now the cost is visible — look at the red text and the thin blue bar, where colour bleeds across the edges.";
+      msg = "4:1:0 is the most aggressive scheme: chroma at " + Math.round(W / r.hx) + "×" + Math.round(H / r.hy) +
+        " for a " + W + "×" + H + " picture. The cost is now visible — in the red text and the thin blue bar, where colour spreads across the edges.";
     } else {
       kind = "ok";
       msg = "Chroma at " + Math.round(W / r.hx) + "×" + Math.round(H / r.hy) + " — " + Math.round((1 - keep) * 100) +
-        "% of the data gone for " + fmt(r.err, 1) + "% average error, and most of that error is concentrated on saturated edges rather than spread over the picture. Check the difference panel: the flat areas are black.";
+        "% of the data removed for " + fmt(r.err, 1) + "% average error, and most of that error is concentrated on saturated edges rather than spread over the picture. In the difference panel, the flat areas are black.";
     }
     verdict("r-ch-verdict", "r-ch-msg", kind, msg);
   }
@@ -2503,8 +2530,8 @@ function quantise(x, step, dith, rnd) {
   function update() {
     var msg;
     if (site === "mpeg1") msg = "Chroma sits at the centre of each 2×2 luma block — the symmetric, arguably correct choice. Used by JPEG, MPEG-1, Theora and WebM.";
-    else if (site === "mpeg2") msg = "Chroma is centred vertically but sits exactly on every other luma column. Used by MPEG-2, H.264 and most broadcast. Half a pixel to the left of the layout above, and there is no flag in the pixel data to tell you which you have.";
-    else if (site === "dv") msg = "PAL-DV alternates: each line carries only one of the two chroma channels (orange and yellow here), so a full colour sample needs two lines. Cheap to record on tape in 1995, awkward to convert forever after.";
+    else if (site === "mpeg2") msg = "Chroma is centred vertically but sits exactly on every other luma column. Used by MPEG-2, H.264 and most broadcast. Half a pixel to the left of the layout above, and there is no flag in the pixel data to indicate which is in use.";
+    else if (site === "dv") msg = "PAL-DV alternates: each line carries only one of the two chroma channels (orange and yellow here), so a full colour sample needs two lines. Inexpensive to record on tape in 1995, and difficult to convert since.";
     else msg = "4:2:2 for comparison: chroma is halved horizontally only, so every line keeps its own colour information. The usual choice for broadcast contribution and editing, because it survives repeated processing far better than 4:2:0.";
     verdict("r-site-verdict", "r-site-msg", site === "mpeg1" ? "ok" : "edge", msg);
     draw();
@@ -2598,7 +2625,7 @@ function quantise(x, step, dith, rnd) {
     if (cs <= 0.2) {
       kind = "ok";
       msg = "Tightly interleaved: audio and video for the same moment sit next to each other in the file, so a player needs only " +
-        bytes(buf) + " of buffer and can start playing almost immediately. This is what you want for streaming.";
+        bytes(buf) + " of buffer and can start playing almost immediately. This is the preferred arrangement for streaming.";
     } else if (cs <= 3) {
       kind = "edge";
       msg = "Loosely interleaved at " + fmt(cs, 1) + " s chunks. Still fine locally, but a streaming player must now hold " +
@@ -2606,7 +2633,7 @@ function quantise(x, step, dith, rnd) {
     } else {
       kind = "bad";
       msg = "Badly interleaved: " + fmt(cs, 0) + " s of video before any of its audio arrives. The player must buffer " +
-        bytes(buf) + " just to keep the two in sync. Plays fine from a local disk where seeking is free; stutters miserably over a network. This is a real and common way to ship a broken-feeling file.";
+        bytes(buf) + " just to keep the two in sync. Plays correctly from a local disk where seeking is free; stutters over a network. This is a common way to produce a file that performs poorly.";
     }
     verdict("r-c-verdict", "r-c-msg", kind, msg);
     draw();
@@ -2648,6 +2675,24 @@ function quantise(x, step, dith, rnd) {
 window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll, 60); });
 
 })();
+
+/* copy button on every code block */
+document.querySelectorAll("pre").forEach(function (pre) {
+  var code = pre.querySelector("code");
+  if (!code) return;
+  var b = document.createElement("button");
+  b.className = "copy";
+  b.type = "button";
+  b.textContent = "Copy";
+  b.addEventListener("click", function () {
+    navigator.clipboard.writeText(code.innerText).then(function () {
+      b.textContent = "Copied";
+      b.classList.add("done");
+      setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); }, 1200);
+    });
+  });
+  pre.appendChild(b);
+});
 
 </script>
 </body>

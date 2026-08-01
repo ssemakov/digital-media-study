@@ -149,6 +149,11 @@ pre .s{color:var(--s3)}
 pre .n{color:var(--s4)}
 pre .bad{color:var(--critical)}
 pre .ok{color:var(--good)}
+pre{position:relative;tab-size:4;-moz-tab-size:4}
+pre .copy{position:absolute;top:8px;right:8px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
+pre:hover .copy,pre .copy:focus{opacity:1}
+pre .copy:hover{color:var(--ink)}
+pre .copy.done{color:var(--good)}
 
 /* ============================ figures ============================ */
 figure{margin:30px 0;background:var(--surface);border:1px solid var(--border);
@@ -269,34 +274,34 @@ footer a{color:var(--ink-2)}
 <section id="top">
   <div class="prose">
     <p class="kicker">Sampling, for people who write software</p>
-    <h1>Measuring something twice as fast as it wiggles is <em>enough</em>. Here's why.</h1>
-    <p class="lede">You take measurements at a fixed interval and get back an array of numbers. The
-    sampling theorem answers a question you've probably never asked out loud: <strong>when is that
-    array the whole story, and when has it quietly thrown information away?</strong> The answer turns
-    out to be exact, not approximate — and the failure mode has a name you've seen in bug reports:
+    <h1>Sampling at twice the highest frequency is <em>sufficient</em> to reconstruct a signal.</h1>
+    <p class="lede">Measurements taken at a fixed interval produce an array of numbers. The
+    sampling theorem answers a specific question: <strong>when is that
+    array a complete record, and when has it discarded information?</strong> The answer is
+    exact, not approximate, and the failure mode is named
     <em>aliasing</em>.</p>
 
     <div class="theorem">
       <div class="lab">The theorem, in one sentence</div>
-      <p style="color:var(--ink)">If nothing in your signal wiggles faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> times per
+      <p style="color:var(--ink)">If no component of the signal oscillates faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> times per
       second, then measuring it more than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> times per second captures it <em>perfectly</em> —
       the original can be rebuilt from the measurements with zero error.</p>
-      <p style="margin-top:12px;font-size:14.5px">Claude Shannon, 1949. "Perfectly" is not a
-      figure of speech here; the reconstruction is exact, and we'll build it in
+      <p style="margin-top:12px;font-size:14.5px">Claude Shannon, 1949. "Perfectly" is literal
+      here: the reconstruction is exact, and it is constructed in
       <a href="#recon">§4</a>.</p>
     </div>
 
-    <p>This page is a lab, not a lecture. Nine figures, all live — every claim in the text has a
-    slider you can drag until it breaks. There is some math, but every equation is unpacked
-    symbol-by-symbol right underneath it, and the genuinely heavy material is tucked into
-    <strong>Go deeper</strong> panels you can ignore entirely without losing the thread.</p>
+    <p>This page contains nine live figures; each claim in the text has an associated slider that
+    can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more
+    advanced material is placed in
+    <strong>Go deeper</strong> panels that can be skipped without loss of continuity.</p>
 
     <div class="note aside">
       <div class="t">Notation, once</div>
       <p style="margin:0"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is the <strong>sample rate</strong> — measurements per second
       (44100 for CD audio, 60 for a 60 fps game loop, 1 for a metric scraped every second).
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is the gap between measurements. <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> is the <strong>bandwidth</strong>: the
-      fastest wiggle actually present in the thing you're measuring. That's the entire vocabulary.</p>
+      highest frequency present in the measured signal. That is the complete set of terms.</p>
     </div>
   </div>
 </section>
@@ -307,36 +312,57 @@ footer a{color:var(--ink-2)}
   <div class="prose">
     <p class="kicker">§1</p>
     <h2>Infinitely many curves fit your data</h2>
-    <p>Start with the uncomfortable part. Sampling is this loop, and nothing more:</p>
+    <p>Begin with the core definition. Sampling is the following loop, and nothing more:</p>
   </div>
 
   <div class="prose">
-<pre><code><span class="c">// this is all "sampling" means</span>
-<span class="k">const</span> T = <span class="n">1</span> / fs;
-<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; N; n++) samples[n] = measure(n * T);
+<pre><code><span class="k">package</span> main
+
+<span class="k">import</span> (
+	<span class="s">"fmt"</span>
+	<span class="s">"math"</span>
+)
+
+<span class="c">// this is all "sampling" means</span>
+<span class="k">func</span> main() {
+	fs := <span class="n">4.0</span>
+	N := <span class="n">8</span>
+	T := <span class="n">1</span> / fs
+	samples := <span class="k">make</span>([]<span class="k">float64</span>, N)
+	<span class="k">for</span> n := <span class="n">0</span>; n &lt; N; n++ {
+		samples[n] = measure(<span class="k">float64</span>(n) * T)
+	}
+	fmt.Println(samples)
+}
+
+<span class="c">// a 1 Hz tone, sampled</span>
+<span class="k">func</span> measure(t <span class="k">float64</span>) <span class="k">float64</span> {
+	<span class="k">return</span> math.Sin(<span class="n">2</span> * math.Pi * t)
+}
 </code></pre>
 
-    <p>You now hold <code>samples</code>, and the continuous thing you measured is gone. Here's the
-    problem: <strong>infinitely many different signals produce that exact array.</strong> Draw dots on
-    a graph and you can thread endless curves through them. Nothing in the data picks a winner.</p>
+    <p>The array <code>samples</code> now holds the data, and the continuous signal that was measured
+    is gone. The difficulty: <strong>infinitely many different signals produce that exact array.</strong>
+    Plotting the samples as points on a graph, many curves can be drawn through them. The data alone
+    does not determine which one is correct.</p>
 
-    <p>So the theorem needs a tiebreaker, and "bandlimited" is it. Saying a signal is bandlimited to
-    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> means it contains no wiggle faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> cycles per second — no sudden jumps, no
-    infinitely sharp corners, nothing that darts between your measurements and sneaks back before the
-    next one. Add that constraint and the picture flips completely: out of the infinitely many curves
-    through your dots, <strong>exactly one</strong> is smooth enough to qualify. The array plus the
-    promise "nothing wiggles faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>" determines the signal uniquely.</p>
+    <p>The theorem resolves this with an additional constraint: "bandlimited". A signal is bandlimited to
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> means it contains no oscillation faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> cycles per second — no sudden jumps, no
+    infinitely sharp corners, and no variation that passes between measurements and returns before the
+    next one. With that constraint, out of the infinitely many curves
+    through the points, <strong>exactly one</strong> is smooth enough to qualify. The array plus the
+    condition "nothing oscillates faster than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>" determines the signal uniquely.</p>
 
-    <p>The intuition is worth sitting with, because everything else follows from it. A slow-moving
-    signal can't do much between measurements. Sample fast enough relative to how fast it can
-    possibly move, and it has nowhere to hide.</p>
+    <p>The intuition underlies everything that follows. A slow-moving
+    signal cannot change much between measurements. If the sampling rate is high enough relative to
+    how fast the signal can change, the signal is fully determined by the samples.</p>
 
     <div class="note">
       <div class="t">Where the factor of two comes from</div>
-      <p style="margin:0">One cycle of a wave has a peak and a trough. To know a wave is there at
-      all, you need at least one measurement on the way up and one on the way down — two per cycle.
-      Fewer than that and a fast wave becomes indistinguishable from a slow one, which is precisely
-      what Figure 2 shows. That's the <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>; the rest of this page is bookkeeping around that
+      <p style="margin:0">One cycle of a wave has a peak and a trough. To detect a wave at
+      all requires at least one measurement while it rises and one while it falls — two per cycle.
+      With fewer, a fast wave becomes indistinguishable from a slow one, which is
+      what Figure 2 shows. That is the <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>; the remainder of this page follows from that
       observation.</p>
     </div>
   </div>
@@ -348,13 +374,13 @@ footer a{color:var(--ink-2)}
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>. Its defining feature: a signal in it is the inverse Fourier transform of something
       supported on a finite interval, which by the Paley–Wiener theorem makes it an <em>entire
       function</em> of exponential type <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> — analytic on the whole complex plane.</p>
-      <p>Analytic functions are rigid. They cannot wiggle locally without that wiggle being visible in
-      their global behaviour, which is the formal version of "it has nowhere to hide". More usefully,
+      <p>Analytic functions are rigid. They cannot vary locally without that variation being visible in
+      their global behaviour, which is the formal version of the earlier intuition. More importantly,
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is a <em>reproducing-kernel Hilbert space</em>: evaluating a signal at a point is a
-      well-behaved (bounded) operation, which is emphatically not true for arbitrary square-integrable
-      functions, where "the value at a single instant" is meaningless. The kernel that does the
-      evaluating is a sinc, which is why sincs show up again in <a href="#recon">§4</a> as the
-      reconstruction weights — same function, two different jobs.</p>
+      well-behaved (bounded) operation, which is not true for arbitrary square-integrable
+      functions, where "the value at a single instant" is meaningless. The kernel that performs the
+      evaluation is a sinc, which is why sincs appear again in <a href="#recon">§4</a> as the
+      reconstruction weights — the same function in two roles.</p>
     </div>
   </details>
 </section>
@@ -365,12 +391,12 @@ footer a{color:var(--ink-2)}
   <div class="prose">
     <p class="kicker">§2</p>
     <h2>Sampling makes copies of the spectrum</h2>
-    <p>To see when sampling loses information, stop looking at the waveform and look at its
-    <strong>spectrum</strong> — how much energy sits at each frequency. If you've ever drawn an audio
-    visualiser or called an FFT, this is the same picture.</p>
-    <p>Here's the one surprising fact in the whole theory. Sampling in time <em>duplicates</em> the
-    spectrum in frequency. Not "approximately", not "roughly" — it makes exact copies, spaced exactly
-    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> apart, and adds them all together:</p>
+    <p>To determine when sampling loses information, consider the signal's
+    <strong>spectrum</strong> rather than its waveform — the amount of energy at each frequency. This
+    is the same representation produced by an audio visualiser or an FFT.</p>
+    <p>The central fact of the theory is the following. Sampling in time <em>duplicates</em> the
+    spectrum in frequency. Not approximately: it makes exact copies, spaced exactly
+<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> apart, and adds them all together:</p>
   </div>
 
   <div class="prose eqbox">
@@ -378,36 +404,36 @@ footer a{color:var(--ink-2)}
   </div>
 
   <dl class="prose gloss">
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></dt><dd>the spectrum of the original signal — what was really there.</dd>
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></dt><dd>the spectrum your samples actually represent.</dd>
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>"add up, for every whole number <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>" — including negatives.</dd>
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></dt><dd>the original spectrum, shifted sideways by <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> sample rates.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></dt><dd>the spectrum of the original signal — what was actually present.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></dt><dd>the spectrum the samples represent.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>sum over every integer <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>, including negatives.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></dt><dd>the original spectrum, shifted by <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> sample rates.</dd>
   </dl>
 
   <div class="prose">
-    <p>In words: <strong>your samples don't know <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span>. They only know <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span> plus every copy of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span>
-    shifted by a multiple of the sample rate.</strong> If those copies don't touch, you can crop out
-    the middle one and recover the original exactly. If they overlap, they've been <em>summed</em> —
-    and you cannot unadd two numbers.</p>
+    <p>In words: <strong>the samples do not contain <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span>. They contain <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span> plus every copy of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span></span></span></span>
+    shifted by a multiple of the sample rate.</strong> If those copies do not overlap, the middle one
+    can be cropped out and the original recovered exactly. If they overlap, they have been <em>summed</em>,
+    and a sum of two numbers cannot be separated.</p>
 
     <p>That gives the condition immediately. The original spans <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. Its neighbour is
-    shifted to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> up to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. They stay clear of each other when <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>,
-    which rearranges to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. That's the theorem, and there is nothing else to it. Drag the
-    sliders below until the copies collide.</p>
+    shifted to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> up to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. They do not overlap when <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7224em;vertical-align:-0.0391em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>,
+    which rearranges to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. That is the theorem in full. Adjust the
+    sliders below until the copies overlap.</p>
   </div>
 
   <figure id="fig-spec">
     <div class="head">
       <div class="n">Figure 1 · live</div>
-      <h4>Your samples see the spectrum, plus every shifted copy of it</h4>
-      <p>The blue hump is what's really there. The orange humps are the copies sampling adds. Raise
-      the bandwidth or lower the sample rate until they crash into each other.</p>
+      <h4>The samples represent the spectrum, plus every shifted copy of it</h4>
+      <p>The blue region is the original spectrum. The orange regions are the copies added by
+      sampling. Raise the bandwidth or lower the sample rate until they overlap.</p>
     </div>
     <div class="canvasbox"><canvas id="c-spec" height="300" aria-label="Spectrum showing baseband copy and its shifted replicas"></canvas></div>
     <div class="legend">
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the real spectrum <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></span>
       <span style="color:var(--s2)"><i style="background:var(--s2)"></i>copies added by sampling</span>
-      <span style="color:var(--s4)"><i class="dash" style="color:var(--s4)"></i>the crop you'd apply to recover it</span>
+      <span style="color:var(--s4)"><i class="dash" style="color:var(--s4)"></i>the crop applied to recover it</span>
       <span style="color:var(--critical)"><i class="blk" style="background:var(--critical)"></i>overlap = information lost</span>
     </div>
     <div class="ctl">
@@ -422,22 +448,23 @@ footer a{color:var(--ink-2)}
     </div>
     <div class="readout">
       <div class="cell"><div class="k">Rate you need <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span></div><div class="v" id="r-spec-nr">2.00</div></div>
-      <div class="cell"><div class="k">Half your rate <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span></div><div class="v" id="r-spec-nf">1.50</div></div>
+      <div class="cell"><div class="k">Half the rate <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span></div><div class="v" id="r-spec-nf">1.50</div></div>
       <div class="cell"><div class="k">Gap between copies</div><div class="v" id="r-spec-guard">1.00</div></div>
       <div class="cell"><div class="k">Headroom</div><div class="v" id="r-spec-osr">1.50×</div></div>
     </div>
     <div class="verdict ok" id="r-spec-verdict"><span class="ic">✓</span><span id="r-spec-msg"></span></div>
-    <figcaption>The dashed yellow box is the ideal "crop" — keep everything below half the sample
-    rate, discard the rest. It works perfectly right up until the copies touch, and then it can't
-    help at all, because the thing you're cropping is already a sum.</figcaption>
+    <figcaption>The dashed yellow box is the ideal crop: keep everything below half the sample
+    rate and discard the rest. It works exactly until the copies overlap, after which it cannot
+    recover the original, because the region being cropped is already a sum.</figcaption>
   </figure>
 
   <div class="prose">
-    <p>Notice what sampling <em>faster</em> than the minimum buys you: a gap. At exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>
-    the copies are touching, so the crop has to be infinitely sharp — a filter that passes everything
-    below the line and nothing above it, with no transition. That's not buildable in hardware and not
-    cheap in software. Sample at, say, 4× and a comfortable gap opens up for a real filter to roll off
-    through. <strong>Oversampling doesn't improve the theorem; it makes the engineering possible.</strong>
+    <p>Sampling <em>faster</em> than the minimum produces a gap. At exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>
+    the copies are touching, so the crop must be infinitely sharp — a filter that passes everything
+    below the line and nothing above it, with no transition. Such a filter is not realisable in hardware
+    and is expensive in software. Sampling at, for example, 4× opens an adequate gap for a practical
+    filter to roll off
+    through. <strong>Oversampling does not improve the theorem; it makes the engineering feasible.</strong>
     This is why 44.1 kHz audio was considered tight and 96 kHz production rates exist.</p>
   </div>
 
@@ -463,29 +490,38 @@ footer a{color:var(--ink-2)}
 <section id="alias">
   <div class="prose">
     <p class="kicker">§3</p>
-    <h2>Aliasing: fast things impersonating slow things</h2>
-    <p>When the copies overlap, a high frequency lands on top of a low one and becomes
-    <em>indistinguishable</em> from it. It doesn't get attenuated or blurred — it gets relabelled. A
-    3.2 kHz tone sampled at 4 kHz doesn't come back as a quiet 3.2 kHz tone; it comes back as a
-    perfectly ordinary 800 Hz tone that was never there.</p>
-    <p>The arithmetic is short enough to write as a function, and it's arithmetic you already know:</p>
+    <h2>Aliasing: high frequencies appearing as low frequencies</h2>
+    <p>When the copies overlap, a high frequency coincides with a low one and becomes
+    <em>indistinguishable</em> from it. It is not attenuated or blurred; it is relabelled. A
+    3.2 kHz tone sampled at 4 kHz does not return as a quiet 3.2 kHz tone; it returns as an
+    ordinary 800 Hz tone that was never present.</p>
+    <p>The arithmetic is short enough to write as a function:</p>
   </div>
 
   <div class="prose">
-<pre><code><span class="k">function</span> <span class="s">aliasOf</span>(f, fs) {
-  <span class="k">const</span> r = ((f % fs) + fs) % fs;      <span class="c">// wrap into [0, fs)</span>
-  <span class="k">return</span> r &lt;= fs / <span class="n">2</span> ? r : fs - r;    <span class="c">// then mirror the top half back down</span>
+<pre><code><span class="k">package</span> main
+
+<span class="k">import</span> <span class="s">"fmt"</span>
+
+<span class="k">func</span> aliasOf(f, fs <span class="k">int</span>) <span class="k">int</span> {
+	r := ((f % fs) + fs) % fs <span class="c">// wrap into [0, fs)</span>
+	<span class="k">if</span> r &lt;= fs/<span class="n">2</span> {
+		<span class="k">return</span> r
+	}
+	<span class="k">return</span> fs - r <span class="c">// mirror the top half back down</span>
 }
 
-aliasOf(<span class="n">3200</span>, <span class="n">4000</span>);   <span class="c">// -&gt; 800</span>
-aliasOf(<span class="n">4800</span>, <span class="n">4000</span>);   <span class="c">// -&gt; 800  (a different tone, same result)</span>
-aliasOf(<span class="n">11200</span>, <span class="n">4000</span>);  <span class="c">// -&gt; 800  (and another)</span>
+<span class="k">func</span> main() {
+	fmt.Println(aliasOf(<span class="n">3200</span>, <span class="n">4000</span>))  <span class="c">// -&gt; 800</span>
+	fmt.Println(aliasOf(<span class="n">4800</span>, <span class="n">4000</span>))  <span class="c">// -&gt; 800  (a different tone, same result)</span>
+	fmt.Println(aliasOf(<span class="n">11200</span>, <span class="n">4000</span>)) <span class="c">// -&gt; 800  (and another)</span>
+}
 </code></pre>
 
-    <p>If you've done texture addressing, you already have the mental model: frequency doesn't get
-    clamped at the limit and it doesn't wrap around either — it uses <strong>mirrored repeat</strong>.
-    Go past the edge and you bounce back. That bouncing is why the map is a triangle wave rather than
-    a sawtooth, and why three completely different input tones above can all land on 800 Hz.</p>
+    <p>Texture addressing provides a useful analogy: frequency is not
+    clamped at the limit and does not wrap around; it uses <strong>mirrored repeat</strong>.
+    Past the edge, the value reflects back. This reflection is why the mapping is a triangle wave rather
+    than a sawtooth, and why three different input tones above can all map to 800 Hz.</p>
 
     <p>Written as math, that function is:</p>
   </div>
@@ -500,10 +536,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
-    <p>Two frequencies become each other's aliases exactly when their sum or difference is a multiple
-    of the sample rate. And on the "bouncing back" segments there's a bonus effect: the wave comes
-    back <strong>phase-flipped</strong>, so a rising sweep is heard as a falling one. That's not a
-    curiosity — it's why an undersampled radio band arrives with its spectrum mirrored, and it's
+    <p>Two frequencies are aliases of each other exactly when their sum or difference is a multiple
+    of the sample rate. On the reflected segments there is an additional effect: the wave returns
+    <strong>phase-flipped</strong>, so a rising sweep is heard as a falling one. This is why an
+    undersampled radio band arrives with its spectrum mirrored, and it is
     audible in <a href="#hear">§6</a>.</p>
   </div>
 
@@ -511,14 +547,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     <div class="head">
       <div class="n">Figure 2 · live</div>
       <h4>Two different signals, the exact same measurements</h4>
-      <p>Push <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> past half the sample rate. The dots stop being able to tell the difference —
-      and the orange curve is the one your system will actually reproduce.</p>
+      <p>Increase <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> past half the sample rate. The samples can no longer distinguish the two signals,
+      and the orange curve is the one the system will reproduce.</p>
     </div>
     <div class="canvasbox"><canvas id="c-time" height="252" aria-label="Time domain plot of a sinusoid, its samples, and the aliased reconstruction"></canvas></div>
     <div class="legend">
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the real signal at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
-      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>your measurements</span>
-      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what comes back out</span>
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>the measurements</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what is reconstructed</span>
       <span id="lg-t-hold" style="color:var(--muted);display:none"><i style="background:var(--muted)"></i>staircase output</span>
     </div>
     <div class="ctl">
@@ -537,17 +573,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <div class="cell"><div class="k">Phase flip</div><div class="v" id="r-t-aph">+0°</div></div>
     </div>
     <div class="verdict ok" id="r-t-verdict"><span class="ic">✓</span><span id="r-t-msg"></span></div>
-    <figcaption>Tick "staircase output" to see what cheap playback does: hold each value until the
-    next one arrives. Note that the staircase follows the <em>orange</em> curve. Nothing downstream
-    can undo an alias — the wrong answer was locked in the moment you measured.</figcaption>
+    <figcaption>Enable "staircase output" to see the behaviour of low-cost playback: each value is
+    held until the next arrives. The staircase follows the <em>orange</em> curve. No downstream
+    processing can undo an alias; the incorrect result was fixed at the moment of measurement.</figcaption>
   </figure>
 
   <figure id="fig-fold">
     <div class="head">
       <div class="n">Figure 3 · live</div>
       <h4>Every input frequency, and where it ends up</h4>
-      <p>What went in along the bottom; what comes out up the side. Everything above half the sample
-      rate bounces back down. Hover anywhere to trace a value.</p>
+      <p>Input frequency along the bottom, output frequency up the side. Everything above half the
+      sample rate reflects back down. Hover anywhere to trace a value.</p>
     </div>
     <div class="canvasbox"><canvas id="c-fold" height="250" aria-label="Triangle-wave folding map from input frequency to apparent frequency"></canvas></div>
     <div class="legend">
@@ -555,17 +591,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <span style="color:var(--s2)"><i class="dot" style="background:var(--s2)"></i>current <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> from Figure 2</span>
       <span style="color:var(--muted)"><i class="dash" style="color:var(--muted)"></i>zone boundaries</span>
     </div>
-    <figcaption>This is <code>aliasOf</code> plotted. The bounce points sit at multiples of
-    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span>; the shaded zones are the ones that come back phase-flipped. Deliberately picking which
-    zone your signal lands in is a real technique — that's <a href="#bandpass">§7</a>.</figcaption>
+    <figcaption>This is <code>aliasOf</code> plotted. The reflection points sit at multiples of
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span>; the shaded zones are those that return phase-flipped. Deliberately selecting which
+    zone the signal lands in is an established technique, described in <a href="#bandpass">§7</a>.</figcaption>
   </figure>
 
   <div class="prose">
     <div class="note warn">
       <div class="t">The one-line takeaway for code</div>
-      <p style="margin:0">Aliasing is not noise you can filter out later. It is <em>valid-looking
-      data at the wrong frequency</em>, permanently mixed into the real data. Every fix has to happen
-      before or during measurement — never after.</p>
+      <p style="margin:0">Aliasing is not noise that can be filtered out later. It is <em>valid-looking
+      data at the wrong frequency</em>, permanently mixed into the real data. Every remedy must occur
+      before or during measurement, never after.</p>
     </div>
   </div>
 </section>
@@ -575,9 +611,9 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 <section id="recon">
   <div class="prose">
     <p class="kicker">§4</p>
-    <h2>Rebuilding the original: it's an interpolation kernel</h2>
-    <p>So the samples contain everything. How do you get the signal back? Crop the spectrum to the
-    middle copy and transform back to the time domain — and it turns out the crop, viewed in the time
+    <h2>Rebuilding the original: an interpolation kernel</h2>
+    <p>The samples contain all the information. To recover the signal: crop the spectrum to the
+    middle copy and transform back to the time domain. The crop, viewed in the time
     domain, is a specific weighting function. The result:</p>
   </div>
 
@@ -586,41 +622,59 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
-    <p>Don't let the sum intimidate you — this is an interpolation loop, and you have written it
-    before with a different kernel:</p>
+    <p>The sum is an interpolation loop, of the same form as interpolation code written with a
+    different kernel:</p>
   </div>
 
   <div class="prose">
-<pre><code><span class="k">const</span> sinc = u =&gt; u === <span class="n">0</span> ? <span class="n">1</span> : Math.sin(Math.PI*u) / (Math.PI*u);
+<pre><code><span class="k">package</span> main
+
+<span class="k">import</span> (
+	<span class="s">"fmt"</span>
+	<span class="s">"math"</span>
+)
+
+<span class="k">func</span> sinc(u <span class="k">float64</span>) <span class="k">float64</span> {
+	<span class="k">if</span> u == <span class="n">0</span> {
+		<span class="k">return</span> <span class="n">1</span>
+	}
+	<span class="k">return</span> math.Sin(math.Pi*u) / (math.Pi * u)
+}
 
 <span class="c">// the value at ANY time t, exactly, from the samples alone</span>
-<span class="k">function</span> <span class="s">valueAt</span>(t, samples, T) {
-  <span class="k">let</span> sum = <span class="n">0</span>;
-  <span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; samples.length; n++)
-    sum += samples[n] * sinc((t - n*T) / T);
-  <span class="k">return</span> sum;
+<span class="k">func</span> valueAt(t <span class="k">float64</span>, samples []<span class="k">float64</span>, T <span class="k">float64</span>) <span class="k">float64</span> {
+	sum := <span class="n">0.0</span>
+	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(samples); n++ {
+		sum += samples[n] * sinc((t-<span class="k">float64</span>(n)*T)/T)
+	}
+	<span class="k">return</span> sum
+}
+
+<span class="k">func</span> main() {
+	T := <span class="n">1.0</span>
+	samples := []<span class="k">float64</span>{<span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">-1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">-1</span>}
+	fmt.Println(valueAt(<span class="n">2.5</span>, samples, T))
 }
 </code></pre>
 
-    <p>Swap <code>sinc</code> for a box and you have nearest-neighbour. Swap it for a triangle and you
-    have linear interpolation. Swap it for a cubic and you have bicubic. <strong>Sinc is simply the
-    kernel that happens to be exactly right</strong> — the others are approximations to it. And if you
-    truncate that loop to a handful of neighbours and taper the ends, you get
-    <strong>Lanczos</strong>, which is the resampling filter in basically every image library you've
-    used.</p>
+    <p>Replacing <code>sinc</code> with a box gives nearest-neighbour interpolation. Replacing it with
+    a triangle gives linear interpolation. Replacing it with a cubic gives bicubic. <strong>Sinc is the
+    kernel that is exactly correct</strong>; the others are approximations to it. Truncating the loop
+    to a few neighbours and tapering the ends gives
+    <strong>Lanczos</strong>, the resampling filter used in most image libraries.</p>
 
     <p>Two properties make it work: <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span><span class="mopen">(</span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>, and <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6679em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span></span></span></span> is
-    exactly zero at every other whole number. So each sample's kernel contributes its full value at
-    its own instant and <em>nothing at all</em> at every other sample instant. The curve passes
-    through every dot exactly, and the kernels only argue about what happens in between.</p>
+    exactly zero at every other integer. Each sample's kernel contributes its full value at
+    its own instant and <em>zero</em> at every other sample instant. The curve passes
+    through every sample point exactly, and the kernels determine only the values in between.</p>
   </div>
 
   <figure id="fig-sinc">
     <div class="head">
       <div class="n">Figure 4 · live</div>
-      <h4>Watch the waveform get built out of kernels</h4>
-      <p>Each measurement launches one scaled sinc. Add enough of them and the original comes back.
-      Turn on "show kernels" to see the individual contributions.</p>
+      <h4>The waveform built from kernels</h4>
+      <p>Each measurement contributes one scaled sinc. Summing enough of them reconstructs the
+      original. Enable "show kernels" to see the individual contributions.</p>
     </div>
     <div class="canvasbox"><canvas id="c-sinc" height="290" aria-label="Sinc kernels summing to a reconstructed waveform"></canvas></div>
     <div class="legend">
@@ -645,19 +699,19 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <div class="cell"><div class="k">Typical error (centre)</div><div class="v" id="r-k-rms">—</div></div>
       <div class="cell"><div class="k">Kernels reach</div><div class="v" id="r-k-span">—</div></div>
     </div>
-    <figcaption>Drop the kernel count and the error appears at the <em>edges</em> first — the middle
-    stays accurate longest. That's exactly why real resamplers use a few dozen taps around each output
-    point instead of the whole (infinite) sum, and why they still work fine.</figcaption>
+    <figcaption>Reducing the kernel count makes the error appear at the <em>edges</em> first; the middle
+    remains accurate longest. This is why practical resamplers use a few dozen taps around each output
+    point rather than the full infinite sum, and why they remain accurate.</figcaption>
   </figure>
 
   <div class="prose">
     <div class="note">
-      <div class="t">The perfect filter is impossible, and that's fine</div>
-      <p style="margin:0">The ideal kernel is infinitely wide and needs samples from the future, so
-      nobody implements it. What the theorem actually gives you is the guarantee that
-      <strong>no information was destroyed</strong> — so the difference between your finite,
-      practical interpolator and the perfect one is an error budget you control, rather than a loss
-      you can't recover from. That distinction is the whole point.</p>
+      <div class="t">The perfect filter is not realisable</div>
+      <p style="margin:0">The ideal kernel is infinitely wide and requires samples from the future, so
+      it is not implemented directly. The theorem guarantees that
+      <strong>no information was destroyed</strong>, so the difference between a finite,
+      practical interpolator and the ideal one is a controllable error budget rather than an
+      unrecoverable loss. That distinction is the key point.</p>
     </div>
   </div>
 
@@ -670,11 +724,11 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <em>span</em> the whole space of signals bandlimited to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. Together that makes
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">{</span><span class="mord"><span class="mord mathnormal">φ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">}</span></span></span></span> an orthonormal basis, and the reconstruction formula is nothing but the
       standard "expand a vector in an orthonormal basis" — the samples <em>are</em> the coordinates.</p>
-      <p>One consequence worth carrying: Parseval's identity gives
+      <p>One consequence: Parseval's identity gives
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1202em;vertical-align:-0.3061em;"></span><span class="mop op-symbol small-op" style="margin-right:0.19445em;position:relative;top:-0.0006em;">∫</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">∣</span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mord"><span class="mord">∣</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal">d</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.1138em;vertical-align:-0.2997em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">∣</span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mclose">)</span><span class="mord"><span class="mord">∣</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span>. The energy in the samples equals the energy in the
-      waveform, exactly. Sampling isn't a lossy summary that happens to be good enough — it's a
-      rotation into a different coordinate system, and rotations don't lose anything. When you
-      undersample, this identity is the first thing to break.</p>
+      waveform, exactly. Sampling is not a lossy summary that is merely good enough; it is a
+      rotation into a different coordinate system, and rotations preserve energy. Under
+      undersampling, this identity is the first to break.</p>
     </div>
   </details>
 </section>
@@ -684,13 +738,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 <section id="edge">
   <div class="prose">
     <p class="kicker">§5</p>
-    <h2>An off-by-one bug, hiding in a textbook</h2>
-    <p>Plenty of references state the rule as <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. It should be <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>, strictly,
-    and the counterexample takes one line.</p>
+    <h2>An off-by-one error in the textbook statement</h2>
+    <p>Many references state the rule as <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>. It should be <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>, strictly.
+    The counterexample is one line.</p>
     <p>Sample a sine wave at exactly twice its frequency — two measurements per cycle, the theoretical
-    minimum. If your measurements happen to land on the zero crossings, every single one reads
-    <strong>zero</strong>. Your array is all zeros. The signal is indistinguishable from silence, and
-    from the same sine at ten times the volume.</p>
+    minimum. If the measurements land on the zero crossings, every one reads
+    <strong>zero</strong>. The array is all zeros. The signal is indistinguishable from silence, and
+    from the same sine at ten times the amplitude.</p>
   </div>
 
   <div class="prose eqbox">
@@ -698,24 +752,24 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
-    <p>Shift the phase and the amplitude comes back — partially. Drag the slider below and watch: at
-    one phase you capture the full amplitude, at another you capture nothing, and everywhere in
-    between you get some arbitrary fraction. A wave sitting exactly at half your sample rate has its
-    amplitude decided by <em>where your measurements happen to fall</em>, which is not a property of
-    the signal at all.</p>
+    <p>Shifting the phase recovers the amplitude partially. Adjust the slider below: at
+    one phase the full amplitude is captured, at another nothing is captured, and in
+    between an arbitrary fraction is captured. A wave at exactly half the sample rate has its
+    amplitude determined by <em>where the measurements fall</em>, which is not a property of
+    the signal.</p>
   </div>
 
   <figure id="fig-crit">
     <div class="head">
       <div class="n">Figure 5 · live</div>
       <h4>Exactly two samples per cycle, as the phase rotates</h4>
-      <p>The blue wave never changes amplitude. Watch what the dots do — and what comes back out.</p>
+      <p>The blue wave has constant amplitude. Observe the samples and the reconstructed output.</p>
     </div>
     <div class="canvasbox"><canvas id="c-crit" height="230" aria-label="Sinusoid at exactly half the sample rate with varying phase"></canvas></div>
     <div class="legend">
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>real signal, amplitude 1</span>
       <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>measurements</span>
-      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what comes back</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what is reconstructed</span>
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-c-ph">phase <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">ϕ</span></span></span></span><b><span id="v-c-ph">0</span>°</b></label>
@@ -730,16 +784,16 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <div class="cell"><div class="k">Error</div><div class="v" id="r-c-err">0.0%</div></div>
     </div>
     <div class="verdict edge" id="r-c-verdict"><span class="ic">!</span><span id="r-c-msg"></span></div>
-    <figcaption>Hit the rotate button and let it run. Nothing about the signal is changing — only the
-    alignment between the wave and the measurement clock. That's an unacceptable amount of luck to
-    depend on, which is why the rule is a strict inequality.</figcaption>
+    <figcaption>Start the rotation. The signal does not change; only the
+    alignment between the wave and the measurement clock changes. Depending on that alignment is not
+    acceptable, which is why the rule is a strict inequality.</figcaption>
   </figure>
 
   <div class="prose">
-    <p>In practice this rarely bites, because a real filter has already attenuated anything sitting
-    right at the limit. But it's worth knowing for the same reason you'd want to know whether a bounds
-    check uses <code>&lt;</code> or <code>&lt;=</code>: it tells you the boundary is genuinely
-    excluded, not merely uncomfortable.</p>
+    <p>In practice this rarely occurs, because a real filter has already attenuated anything at the
+    limit. It is worth knowing for the same reason as whether a bounds
+    check uses <code>&lt;</code> or <code>&lt;=</code>: it indicates that the boundary is genuinely
+    excluded, not merely marginal.</p>
 
     <div class="note aside">
       <div class="t">Two thresholds that get confused constantly</div>
@@ -773,27 +827,27 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 <section id="hear">
   <div class="prose">
     <p class="kicker">§6</p>
-    <h2>Hear it happen</h2>
-    <p>Aliasing is far more convincing through a speaker than on a screen. Below, a tone sweeps
-    upward from 200 Hz to 7 kHz. It gets decimated to whatever rate you choose and rebuilt properly —
-    the only thing that changes is whether a filter runs <em>before</em> the decimation.</p>
-    <p>With the filter <strong>on</strong>, you hear the sweep climb and then simply stop existing.
-    With it <strong>off</strong>, you hear it climb, hit an invisible ceiling, and come back
-    <em>down</em> — while the real tone is still going up. That descending sound does not exist
-    anywhere in the input. Your sampler invented it.</p>
+    <h2>An audible demonstration</h2>
+    <p>Aliasing is often clearer through a speaker than on a screen. Below, a tone sweeps
+    upward from 200 Hz to 7 kHz. It is decimated to the selected rate and reconstructed correctly;
+    the only variable is whether a filter runs <em>before</em> the decimation.</p>
+    <p>With the filter <strong>on</strong>, the sweep climbs and then stops.
+    With it <strong>off</strong>, it climbs, reaches a ceiling, and descends
+    <em>back down</em> while the real tone continues upward. That descending sound is not present
+    anywhere in the input; it is produced by the sampler.</p>
   </div>
 
   <figure id="fig-audio">
     <div class="head">
       <div class="n">Figure 6 · audio</div>
       <h4>A rising sweep, sampled too slowly</h4>
-      <p>Nothing is faked here: a real windowed-sinc filter, real integer decimation, real bandlimited
-      reconstruction. Headphones or speakers on, then hit play.</p>
+      <p>This uses a real windowed-sinc filter, integer decimation, and bandlimited
+      reconstruction. Use headphones or speakers, then press play.</p>
     </div>
     <div class="canvasbox"><canvas id="c-audio" height="240" aria-label="Chirp instantaneous frequency and its aliased trajectory with a playhead"></canvas></div>
     <div class="legend">
-      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the tone that's actually there</span>
-      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what you'll hear</span>
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the actual tone</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what is heard</span>
       <span style="color:var(--s4)"><i class="dash" style="color:var(--s4)"></i>half the sample rate</span>
     </div>
     <div class="ctl">
@@ -812,31 +866,65 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
       <div class="cell"><div class="k">Sweep hits it at</div><div class="v" id="r-a-t">2.24 s</div></div>
     </div>
     <div class="verdict bad" id="r-a-verdict"><span class="ic">!</span><span id="r-a-msg"></span></div>
-    <figcaption>Compare the two. With the filter on you lose the top of the sweep — a loss you chose,
-    knew about, and bounded. With it off you keep something, but that something is wrong. Given the
-    choice between missing data and confidently incorrect data, take missing every time.</figcaption>
+    <figcaption>Compare the two. With the filter on, the top of the sweep is lost — a known, bounded
+    loss. With it off, data is retained but incorrect. Between missing data and confidently incorrect
+    data, missing data is preferable.</figcaption>
   </figure>
 
   <div class="prose">
-    <h3>The version of this you'll actually write</h3>
-    <p>Downsampling an array by dropping elements is the single most common way this bug ships:</p>
+    <h3>The common form of this bug in code</h3>
+    <p>Downsampling an array by dropping elements is the most common way this bug appears:</p>
   </div>
 
   <div class="prose">
-<pre><code><span class="c">// WRONG — this is exactly the "filter off" button above</span>
-<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) out[n] = input[n * <span class="n">4</span>];
-<span class="bad">// anything above the NEW half-rate is now permanently disguised as something slower</span>
+<pre><code><span class="k">package</span> main
 
-<span class="c">// RIGHT — remove what the new rate can't represent, THEN drop samples</span>
-<span class="k">const</span> filtered = lowPass(input, <span class="c">/* cutoff */</span> newRate / <span class="n">2</span>);
-<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) out[n] = filtered[n * <span class="n">4</span>];
-<span class="ok">// now the samples you threw away really were redundant</span>
+<span class="k">import</span> <span class="s">"fmt"</span>
+
+<span class="c">// a plain moving-average low-pass: crude, but it removes the fast wiggle</span>
+<span class="k">func</span> lowPass(x []<span class="k">float64</span>, width <span class="k">int</span>) []<span class="k">float64</span> {
+	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(x))
+	<span class="k">for</span> i := <span class="k">range</span> x {
+		sum, count := <span class="n">0.0</span>, <span class="n">0</span>
+		<span class="k">for</span> j := i - width; j &lt;= i+width; j++ {
+			<span class="k">if</span> j &gt;= <span class="n">0</span> &amp;&amp; j &lt; <span class="k">len</span>(x) {
+				sum += x[j]
+				count++
+			}
+		}
+		out[i] = sum / <span class="k">float64</span>(count)
+	}
+	<span class="k">return</span> out
+}
+
+<span class="k">func</span> main() {
+	input := <span class="k">make</span>([]<span class="k">float64</span>, <span class="n">32</span>)
+	<span class="k">for</span> i := <span class="k">range</span> input {
+		input[i] = <span class="k">float64</span>(i % <span class="n">2</span>) <span class="c">// fastest possible wiggle: 0,1,0,1,...</span>
+	}
+	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/<span class="n">4</span>)
+
+	<span class="c">// WRONG — this is exactly the "filter off" button above</span>
+	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(out); n++ {
+		out[n] = input[n*<span class="n">4</span>]
+	}
+	<span class="bad">// anything above the NEW half-rate is now permanently disguised as something slower</span>
+	fmt.Println(<span class="s">"wrong:"</span>, out) <span class="bad">// all 0s: the wiggle became a false DC level</span>
+
+	<span class="c">// RIGHT — remove what the new rate can't represent, THEN drop samples</span>
+	filtered := lowPass(input, <span class="n">2</span>) <span class="c">// cutoff near the new half-rate</span>
+	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(out); n++ {
+		out[n] = filtered[n*<span class="n">4</span>]
+	}
+	<span class="ok">// now the samples you threw away really were redundant</span>
+	fmt.Println(<span class="s">"right:"</span>, out) <span class="ok">// ~0.5: reports "too fast to represent"</span>
+}
 </code></pre>
 
-    <p>The same shape of mistake appears when you shrink an image by taking every N-th pixel instead
-    of area-averaging, when you thin a metrics series by keeping every N-th point instead of averaging
-    the bucket, and when you animate a spinning wheel by evaluating its angle once per frame. It's one
-    bug wearing several hats.</p>
+    <p>The same error appears when shrinking an image by taking every N-th pixel instead
+    of area-averaging, when thinning a metrics series by keeping every N-th point instead of averaging
+    the bucket, and when animating a spinning wheel by evaluating its angle once per frame. These are
+    all the same bug.</p>
   </div>
 </section>
 
@@ -846,14 +934,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   <div class="prose">
     <p class="kicker">§7</p>
     <h2>Undersampling on purpose</h2>
-    <p>"Sample at twice the highest frequency" is the version of the rule most people carry, and it's
-    stricter than the truth. What actually matters is that the copies don't overlap — and that depends
-    on how <em>wide</em> your signal's band is, not on how high up it sits.</p>
-    <p>Concretely: FM radio between 100 and 102 MHz is only 2 MHz wide. You do not need to sample at
-    204 MHz. You need 4 MHz — a 51× saving — because at that rate the band folds down into a slot
-    where nothing else is competing for the space. Software-defined radios live on this trick, and so
-    do plenty of instrumentation front-ends.</p>
-    <p>The catch is that only certain rates work. The legal ones form a set of windows:</p>
+    <p>"Sample at twice the highest frequency" is the commonly cited form of the rule, and it is
+    stricter than necessary. What matters is that the copies do not overlap, which depends
+    on how <em>wide</em> the signal's band is, not on how high it sits.</p>
+    <p>For example, FM radio between 100 and 102 MHz is only 2 MHz wide. Sampling at
+    204 MHz is not required. 4 MHz suffices — a 51× reduction — because at that rate the band folds
+    down into a slot where nothing else is present. Software-defined radios rely on this technique, as
+    do many instrumentation front-ends.</p>
+    <p>Only certain rates work. The valid ones form a set of windows:</p>
   </div>
 
   <div class="prose eqbox">
@@ -861,13 +949,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <dl class="prose gloss">
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>the bottom and the top of your signal's band.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>the bottom and top of the signal's band.</dd>
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></dt><dd>which "zone" the band folds into. <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> is ordinary sampling.</dd>
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">⌊</span><span class="mspace"> </span><span class="mclose">⌋</span></span></span></span></dt><dd>round down to a whole number.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">⌊</span><span class="mspace"> </span><span class="mclose">⌋</span></span></span></span></dt><dd>round down to an integer.</dd>
   </dl>
 
   <div class="prose">
-    <p>Rather than evaluate that by hand, drag the sliders. Green means the band lands cleanly inside
+    <p>Rather than evaluate this by hand, adjust the sliders. Green means the band lands cleanly inside
     one zone; orange means it straddles a boundary and folds onto itself, which is unrecoverable.</p>
   </div>
 
@@ -875,14 +963,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     <div class="head">
       <div class="n">Figure 7 · live</div>
       <h4>Which sample rates are legal for a high-frequency band</h4>
-      <p>Green bands are rates that work. Notice they get narrower the lower you go — the cheapest
-      legal rate is also the least forgiving.</p>
+      <p>Green bands are rates that work. They become narrower at lower rates; the lowest valid
+      rate is also the least tolerant.</p>
     </div>
     <div class="canvasbox"><canvas id="c-zones" height="212" aria-label="Admissible bandpass sampling rate wedges"></canvas></div>
     <div class="legend">
       <span style="color:var(--s3)"><i style="background:var(--s3)"></i>works</span>
       <span style="color:var(--s2)"><i style="background:var(--s2)"></i>band folds onto itself</span>
-      <span style="color:var(--s1)"><i class="dash" style="color:var(--s1)"></i>your chosen <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+      <span style="color:var(--s1)"><i class="dash" style="color:var(--s1)"></i>the chosen <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-z-f1">band starts at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><b><span id="v-z-f1">100.0</span> MHz</b></label>
@@ -894,14 +982,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     </div>
     <div class="readout">
       <div class="cell"><div class="k">Naive rate</div><div class="v" id="r-z-bb">204.0</div></div>
-      <div class="cell"><div class="k">Cheapest legal rate</div><div class="v" id="r-z-min">4.00</div></div>
+      <div class="cell"><div class="k">Lowest valid rate</div><div class="v" id="r-z-min">4.00</div></div>
       <div class="cell"><div class="k">Zone <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></div><div class="v" id="r-z-n">51</div></div>
       <div class="cell"><div class="k">Comes back</div><div class="v" id="r-z-inv">upright</div></div>
     </div>
     <div class="verdict ok" id="r-z-verdict"><span class="ic">✓</span><span id="r-z-msg"></span></div>
-    <figcaption>Two things this doesn't get you out of: your hardware still has to be able to
-    <em>see</em> 102 MHz on its input, and your filter is now a bandpass rather than a simple lowpass.
-    You're saving on sample rate, not on analogue design.</figcaption>
+    <figcaption>Two constraints remain: the hardware must still be able to receive
+    102 MHz at its input, and the filter is now a bandpass rather than a simple lowpass.
+    This saves on sample rate, not on analogue design.</figcaption>
   </figure>
 </section>
 
@@ -911,17 +999,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   <div class="prose">
     <p class="kicker">§8</p>
     <h2>What goes wrong in real systems</h2>
-    <p>The theorem assumes instant measurements, infinite precision, a perfect filter, and a perfectly
-    steady clock. Real systems miss on all four. Here's what each one costs, roughly in the order it
-    starts to matter.</p>
+    <p>The theorem assumes instantaneous measurements, infinite precision, a perfect filter, and a
+    perfectly steady clock. Real systems fail all four assumptions. The cost of each follows, roughly
+    in the order it begins to matter.</p>
 
     <h3>Staircase output, and the droop it causes</h3>
-    <p>Cheap playback holds each sample until the next one arrives — the staircase you can toggle on
-    in Figure 2. In image terms it's nearest-neighbour upsampling. It's easy and it mostly works, but
-    it has two side effects worth knowing about.</p>
-    <p>First, it quietly rolls off the top of your band: content near the ceiling comes out about
-    <strong>4 dB quieter</strong> than it should (a factor of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2/</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>). Second, it doesn't fully
-    remove the spectral copies from §2 — it only attenuates them. Both effects are described by one
+    <p>Low-cost playback holds each sample until the next arrives — the staircase that can be toggled
+    on in Figure 2. In image terms it is nearest-neighbour upsampling. It is simple and mostly works,
+    but it has two side effects worth noting.</p>
+    <p>First, it rolls off the top of the band: content near the ceiling comes out about
+    <strong>4 dB quieter</strong> than it should (a factor of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2/</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>). Second, it does not fully
+    remove the spectral copies from §2; it only attenuates them. Both effects are described by one
     curve:</p>
   </div>
 
@@ -941,15 +1029,15 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   <figure id="fig-zoh">
     <div class="head">
       <div class="n">Figure 8 · live</div>
-      <h4>What the staircase does to your spectrum</h4>
-      <p>Green is your signal, sagging at the top. Orange is the leftover copies it failed to remove.
-      Raise the oversampling ratio and watch both problems shrink.</p>
+      <h4>The effect of the staircase on the spectrum</h4>
+      <p>Green is the signal, attenuated at the top. Orange is the residual copies not removed.
+      Raise the oversampling ratio to reduce both.</p>
     </div>
     <div class="canvasbox"><canvas id="c-zoh" height="250" aria-label="Zero-order hold magnitude response with spectral images"></canvas></div>
     <div class="legend">
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the staircase's response</span>
-      <span style="color:var(--s3)"><i style="background:var(--s3)"></i>your signal, after sag</span>
-      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>leftover copies</span>
+      <span style="color:var(--s3)"><i style="background:var(--s3)"></i>the signal, after attenuation</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>residual copies</span>
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-zoh-osr">oversampling ratio<b><span id="v-zoh-osr">1.0</span>×</b></label>
@@ -961,17 +1049,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
       <div class="cell"><div class="k">Loudest leftover</div><div class="v" id="r-zoh-img">−3.92 dB</div></div>
       <div class="cell"><div class="k">Room for a filter</div><div class="v" id="r-zoh-tb">0.00×</div></div>
     </div>
-    <figcaption>"Compensate in software" pre-boosts the high end by the exact inverse of the sag — a
-    few-tap filter, and a standard trick inside audio DACs. Oversampling fixes both problems at once,
-    which is why interpolating converters exist: do the hard part in cheap digital logic so the
-    analogue filter afterwards can be trivial.</figcaption>
+    <figcaption>"Compensate in software" pre-boosts the high end by the exact inverse of the
+    attenuation — a few-tap filter, and a standard technique inside audio DACs. Oversampling addresses
+    both problems simultaneously, which is why interpolating converters exist: the difficult part is
+    done in inexpensive digital logic so the subsequent analogue filter can be simple.</figcaption>
   </figure>
 
   <div class="prose">
-    <h3>Clock jitter: your timer isn't a metronome</h3>
-    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. If they land a little early or late, you
-    read the right signal at the wrong moment — and the faster the signal is moving, the more that
-    costs you. Notice what's <em>not</em> in the formula below: the sample rate. Jitter is punished by
+    <h3>Clock jitter: the timer is not perfectly periodic</h3>
+    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. If they land slightly early or late, the correct
+    signal is read at the wrong moment, and the faster the signal is changing, the greater the
+    error. Note what is <em>not</em> in the formula below: the sample rate. Jitter is governed by
     how fast the <em>input</em> is changing.</p>
   </div>
 
@@ -980,17 +1068,17 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   </div>
 
   <dl class="prose gloss">
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">in</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>frequency of the thing you're measuring.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">in</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>frequency of the measured signal.</dd>
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>typical timing error per sample.</dd>
-    <dt>SNR</dt><dd>signal-to-noise ratio — how far above the noise your data sits.</dd>
+    <dt>SNR</dt><dd>signal-to-noise ratio — how far above the noise the data sits.</dd>
   </dl>
 
   <figure id="fig-jit">
     <div class="head">
       <div class="n">Figure 9 · calculator</div>
-      <h4>How much resolution timing jitter costs you</h4>
-      <p>"Effective bits" is the honest resolution you end up with, regardless of what the spec sheet
-      claims. Every doubling of input frequency costs half a bit.</p>
+      <h4>The resolution cost of timing jitter</h4>
+      <p>"Effective bits" is the actual resolution obtained, regardless of the spec-sheet value.
+      Every doubling of input frequency costs half a bit.</p>
     </div>
     <div class="ctl" style="border-top:0">
       <div style="flex:1 1 180px"><span class="fieldlab">input frequency (MHz)</span>
@@ -1009,32 +1097,32 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     <div class="verdict bad" id="r-j-verdict"><span class="ic">!</span><span id="r-j-msg"></span></div>
     <figcaption>The picosecond scale here is for high-speed converters, but the formula is
     scale-free. The same reasoning applies to ordinary software: if a timer drifts by 5 ms while
-    you're sampling something that changes meaningfully in 50 ms, you've added roughly 10% noise for
-    free.</figcaption>
+    sampling something that changes meaningfully over 50 ms, roughly 10% noise has been
+    added.</figcaption>
   </figure>
 
   <div class="prose">
-    <h3>Oversampling buys real resolution</h3>
-    <p>Sampling faster than you strictly need isn't wasted effort. Quantisation noise — the rounding
-    error from storing values with finite precision — spreads itself evenly across the whole frequency
-    range you sampled. Sample twice as fast and the same total noise spreads over twice the range, so
-    only half as much lands in the band you actually care about. You then filter the rest away.</p>
-    <p>The rate is <strong>+3 dB, or half a bit, per doubling</strong>. Not spectacular on its own —
-    but add feedback that deliberately pushes noise <em>out</em> of your band (a delta-sigma
-    modulator) and the same doubling buys 9, 15, or 21 dB instead. That's how a converter built around
-    a literal 1-bit comparator produces 20-bit audio: run it 128× too fast and spend the surplus.</p>
+    <h3>Oversampling provides additional resolution</h3>
+    <p>Sampling faster than strictly necessary is not wasted. Quantisation noise — the rounding
+    error from storing values with finite precision — spreads evenly across the entire sampled
+    frequency range. Sampling twice as fast spreads the same total noise over twice the range, so
+    only half of it lands in the band of interest. The rest is then filtered away.</p>
+    <p>The rate is <strong>+3 dB, or half a bit, per doubling</strong>. Modest on its own,
+    but adding feedback that deliberately moves noise <em>out</em> of the band (a delta-sigma
+    modulator) makes the same doubling yield 9, 15, or 21 dB instead. This is how a converter built
+    around a 1-bit comparator produces 20-bit audio: it runs 128× faster and uses the surplus.</p>
 
     <div class="grid2">
-      <div class="card"><h4 style="margin-top:0">Why 44.1 kHz felt tight</h4>
-        <p style="margin:0;font-size:14.5px">Human hearing tops out near 20 kHz; half of 44.1 kHz is
-        22.05 kHz. That leaves a 2 kHz gap for the filter to go from "fully passing" to "fully
-        blocking" — about a seventh of an octave. Brutal in analogue. Oversampling converters solved
-        it, and 96 kHz production rates sidestep it entirely.</p></div>
-      <div class="card"><h4 style="margin-top:0">Why filters get cheap fast</h4>
-        <p style="margin:0;font-size:14.5px">At <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2.2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> your filter has a fifth of an octave to
-        do its work — a 10th-order design with nasty phase behaviour. At <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">8</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> it has two full
-        octaves, and a simple 3rd-order filter is fine. Oversampling is how you trade cheap compute
-        for expensive analogue.</p></div>
+      <div class="card"><h4 style="margin-top:0">Why 44.1 kHz was tight</h4>
+        <p style="margin:0;font-size:14.5px">Human hearing extends to about 20 kHz; half of 44.1 kHz is
+        22.05 kHz. That leaves a 2 kHz gap for the filter to transition from fully passing to fully
+        blocking — about a seventh of an octave. This is difficult in analogue. Oversampling converters
+        addressed it, and 96 kHz production rates avoid it entirely.</p></div>
+      <div class="card"><h4 style="margin-top:0">Why filters become inexpensive quickly</h4>
+        <p style="margin:0;font-size:14.5px">At <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2.2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> the filter has a fifth of an octave to
+        do its work — a 10th-order design with poor phase behaviour. At <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">8</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> it has two full
+        octaves, and a simple 3rd-order filter suffices. Oversampling trades inexpensive computation
+        for expensive analogue design.</p></div>
     </div>
   </div>
 </section>
@@ -1044,33 +1132,33 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 <section id="wild">
   <div class="prose">
     <p class="kicker">§9</p>
-    <h2>Where you've already met this</h2>
-    <p>Every one of these is the same theorem wearing different units.</p>
+    <h2>Where this appears in practice</h2>
+    <p>Each of these is the same theorem in different units.</p>
   </div>
 
   <div class="prose tw">
     <table>
       <thead><tr><th style="width:26%">Where</th><th>What sampling too slowly looks like</th></tr></thead>
       <tbody>
-        <tr><td><b>Audio</b></td><td>A synth's harmonics fold down into audible grit that moves the
-          <em>wrong way</em> when you change pitch. Classic in naive digital oscillators — which is
+        <tr><td><b>Audio</b></td><td>A synth's harmonics fold down into audible artefacts that move in the
+          <em>wrong direction</em> when the pitch changes. Common in naive digital oscillators, which is
           why bandlimited waveform generation exists.</td></tr>
         <tr><td><b>Images &amp; textures</b></td><td>Moiré on striped shirts and brick walls. Shrinking
-          by dropping pixels aliases; mipmaps exist precisely so the GPU never samples a texture faster
+          by dropping pixels causes aliasing; mipmaps exist so the GPU never samples a texture faster
           than the screen can represent.</td></tr>
-        <tr><td><b>Video &amp; animation</b></td><td>Wagon wheels spinning backwards. A wheel turning at
-          26 revolutions per second, filmed at 24 fps, reads as 2 rps — that's
+        <tr><td><b>Video &amp; animation</b></td><td>Wagon wheels appearing to spin backwards. A wheel turning at
+          26 revolutions per second, filmed at 24 fps, reads as 2 rps —
           <code>aliasOf(26, 24)</code>. Motion blur is the anti-aliasing filter.</td></tr>
         <tr><td><b>Rendering</b></td><td>Jagged edges and shimmering thin geometry. Supersampling means
-          sampling above the geometry's rate and filtering down — the §8 oversampling argument, in two
+          sampling above the geometry's rate and filtering down — the §8 oversampling argument in two
           dimensions.</td></tr>
         <tr><td><b>Metrics &amp; monitoring</b></td><td>A 60-second scrape on a job that spikes every 55
           seconds produces a slow oscillation that does not exist. Averaging over the bucket instead of
           point-sampling it is the fix, and it is an anti-alias filter.</td></tr>
-        <tr><td><b>Control loops</b></td><td>A sensor read too slowly makes disturbances look slower than
-          they are, so the controller responds to a fiction. The sample rate has to beat the system's
-          actual dynamics, not merely feel fast.</td></tr>
-        <tr><td><b>Radio / SDR</b></td><td>Deliberate aliasing, done correctly — the §7 trick. Fold a band
+        <tr><td><b>Control loops</b></td><td>A sensor read too slowly makes disturbances appear slower than
+          they are, so the controller responds to a nonexistent signal. The sample rate must exceed the
+          system's actual dynamics, not merely appear fast.</td></tr>
+        <tr><td><b>Radio / SDR</b></td><td>Deliberate aliasing, done correctly — the §7 technique. Fold a band
           down instead of sampling at its carrier frequency.</td></tr>
       </tbody>
     </table>
@@ -1078,11 +1166,11 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <div class="prose">
     <div class="note good">
-      <div class="t">The habit worth forming</div>
-      <p style="margin:0">Whenever you're about to reduce a rate — decimating an array, shrinking an
-      image, thinning a series, dropping frames — ask: <em>what's the fastest thing in here, and is it
-      faster than half my new rate?</em> If it is, filter first. That single question prevents
-      essentially every aliasing bug you will ever write.</p>
+      <div class="t">A useful check</div>
+      <p style="margin:0">Before reducing a rate — decimating an array, shrinking an
+      image, thinning a series, dropping frames — ask: <em>what is the fastest component present, and is
+      it faster than half the new rate?</em> If it is, filter first. That single question prevents
+      essentially every aliasing bug.</p>
     </div>
   </div>
 
@@ -1098,13 +1186,13 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
       empty space between them, the Landau rate counts only the occupied measure, and multicoset
       samplers approach it. Compressed sensing goes further, dropping the bandlimit assumption
       entirely in favour of <em>sparsity</em>: roughly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mclose">))</span></span></span></span> measurements for a
-      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>-sparse signal. This doesn't break Nyquist — it's a different theorem with a stronger prior
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>-sparse signal. This does not break Nyquist; it is a different theorem with a stronger prior
       and a nonlinear reconstruction step.</p>
       <p><strong>More than one dimension.</strong> Everything generalises to sampling on a lattice in
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8491em;"></span><span class="mord"><span class="mord mathbb">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">d</span></span></span></span></span></span></span></span></span></span></span>, where the copies land on the dual lattice and non-overlap becomes a
       sphere-packing question. That's why hexagonal sampling beats a square grid by 13.4% for
       isotropic image content, and why Bayer demosaicing is best understood as multidimensional
-      reconstruction from a non-uniform lattice rather than as clever guessing.</p>
+      reconstruction from a non-uniform lattice rather than as heuristic guessing.</p>
       <p><strong>Sampling derivatives.</strong> Measure both a signal and its rate of change and each
       stream needs only half the rate. This generalises to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> interleaved channels at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> each
       — the principle behind time-interleaved converters, where channel mismatch shows up as spurious
@@ -1119,8 +1207,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   <div class="prose">
     <p class="kicker">§10</p>
     <h2>Neither man in the name proved it first</h2>
-    <p>The theorem was discovered independently at least six times, and the usual attribution is a
-    mess worth knowing about.</p>
+    <p>The theorem was discovered independently at least six times, and the usual attribution is
+    inaccurate in ways worth knowing.</p>
   </div>
 
   <div class="prose tw">
@@ -1148,11 +1236,11 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   </div>
 
   <div class="prose">
-    <p>Nyquist's name got attached later and nobody is quite sure how; the likeliest story is that
-    Shannon referred to the "Nyquist interval" of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> seconds and it stuck. People who find this
-    unfair write <strong>WKS</strong> for Whittaker–Kotelnikov–Shannon; completists write
-    Whittaker–Kotelnikov–Raabe–Shannon–Someya. "Nyquist–Shannon" credits one man for the wrong paper
-    and omits the one who proved it first in the right context.</p>
+    <p>Nyquist's name was attached later, and the mechanism is uncertain; the most likely account is that
+    Shannon referred to the "Nyquist interval" of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> seconds and the name persisted. Some authors
+    write <strong>WKS</strong> for Whittaker–Kotelnikov–Shannon; more complete attributions write
+    Whittaker–Kotelnikov–Raabe–Shannon–Someya. "Nyquist–Shannon" credits one person for the wrong paper
+    and omits the one who proved it first in the correct context.</p>
   </div>
 </section>
 
@@ -1161,41 +1249,41 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 <section id="sheet">
   <div class="prose">
     <p class="kicker">§11</p>
-    <h2>The whole thing on one page</h2>
+    <h2>The complete summary</h2>
   </div>
 
   <div class="prose tw">
     <table>
       <thead><tr><th style="width:30%">Idea</th><th>What to remember</th></tr></thead>
       <tbody>
-        <tr><td><b>The rule</b></td><td>Sample faster than twice the fastest thing present and you've lost
-          nothing at all. Strictly faster — equal isn't enough.</td></tr>
+        <tr><td><b>The rule</b></td><td>Sample faster than twice the fastest component present and no
+          information is lost. Strictly faster; equal is not sufficient.</td></tr>
         <tr><td><b>Why it works</b></td><td>Sampling adds copies of the spectrum every <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>. Keep them
-          from overlapping and you can crop the original back out exactly.</td></tr>
-        <tr><td><b>Aliasing</b></td><td>Overlapping copies get <em>summed</em>. A fast wave comes back
-          wearing a slow wave's clothes, permanently. <code>aliasOf(f, fs)</code> says where it lands —
+          from overlapping and the original can be cropped back out exactly.</td></tr>
+        <tr><td><b>Aliasing</b></td><td>Overlapping copies are <em>summed</em>. A fast wave returns
+          permanently relabelled as a slow one. <code>aliasOf(f, fs)</code> gives where it lands —
           mirrored repeat, not clamp and not wrap.</td></tr>
-        <tr><td><b>Rebuilding</b></td><td>A weighted sum of sincs, one per sample. It's interpolation with
-          the exactly-correct kernel; Lanczos is the practical truncation of it.</td></tr>
-        <tr><td><b>The fix</b></td><td>Filter <em>before</em> you reduce the rate, never after. After is too
-          late — the wrong data is already indistinguishable from the right data.</td></tr>
-        <tr><td><b>Oversampling</b></td><td>Doesn't improve the theorem; makes the filters cheap and buys
-          half a bit of real resolution per doubling.</td></tr>
+        <tr><td><b>Rebuilding</b></td><td>A weighted sum of sincs, one per sample. Interpolation with
+          the exactly correct kernel; Lanczos is its practical truncation.</td></tr>
+        <tr><td><b>The fix</b></td><td>Filter <em>before</em> reducing the rate, never after. Afterward is too
+          late: the incorrect data is already indistinguishable from the correct data.</td></tr>
+        <tr><td><b>Oversampling</b></td><td>Does not improve the theorem; makes the filters inexpensive and
+          provides half a bit of real resolution per doubling.</td></tr>
         <tr><td><b>Staircase output</b></td><td>Costs about 4 dB at the top of the band and leaves partial
           copies behind. Fixable in software, or by oversampling.</td></tr>
-        <tr><td><b>Jitter</b></td><td>Timing wobble hurts in proportion to how fast the signal moves, not
-          how fast you sample it.</td></tr>
-        <tr><td><b>Position vs width</b></td><td>What limits your rate is how <em>wide</em> the band is, not
-          how high it sits. That's what makes deliberate undersampling possible.</td></tr>
+        <tr><td><b>Jitter</b></td><td>Timing error degrades the signal in proportion to how fast the signal
+          changes, not how fast it is sampled.</td></tr>
+        <tr><td><b>Position vs width</b></td><td>What limits the rate is how <em>wide</em> the band is, not
+          how high it sits. This is what makes deliberate undersampling possible.</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="prose">
     <div class="note">
-      <div class="t">If you keep one sentence</div>
-      <p style="margin:0">Sampling never destroys information — <em>overlap</em> does. Every practical
-      rule, from anti-alias filters to mipmaps to averaging your metrics buckets, is a tactic for
+      <div class="t">The key point</div>
+      <p style="margin:0">Sampling never destroys information; <em>overlap</em> does. Every practical
+      rule, from anti-alias filters to mipmaps to averaging metrics buckets, is a method for
       keeping the copies apart.</p>
     </div>
   </div>
@@ -1204,9 +1292,9 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 <footer class="prose">
   <p>An interactive companion to the Wikipedia article
   <a href="https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem">Nyquist–Shannon sampling theorem</a>.
-  Every figure computes its curves live in your browser — no precomputed data and no network calls.
-  The audio is synthesised on the spot through a real windowed-sinc decimation chain, so what you hear
-  is the actual phenomenon rather than a recording of it.</p>
+  Every figure computes its curves live in the browser — no precomputed data and no network calls.
+  The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output
+  is the actual phenomenon rather than a recording.</p>
   <p style="margin-bottom:0">Sources behind §10: Shannon, <em>Communication in the Presence of Noise</em>
   (1949); Kotelnikov (1933); Whittaker (1915); Landau, <em>Necessary density conditions</em> (1967).</p>
 </footer>
@@ -2208,6 +2296,24 @@ function segment(id, cb) {
 window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll, 60); });
 
 })();
+
+/* copy button on every code block */
+document.querySelectorAll("pre").forEach(function (pre) {
+  var code = pre.querySelector("code");
+  if (!code) return;
+  var b = document.createElement("button");
+  b.className = "copy";
+  b.type = "button";
+  b.textContent = "Copy";
+  b.addEventListener("click", function () {
+    navigator.clipboard.writeText(code.innerText).then(function () {
+      b.textContent = "Copied";
+      b.classList.add("done");
+      setTimeout(function () { b.textContent = "Copy"; b.classList.remove("done"); }, 1200);
+    });
+  });
+  pre.appendChild(b);
+});
 
 </script>
 </body>
