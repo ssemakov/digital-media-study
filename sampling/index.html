@@ -150,8 +150,9 @@ pre .n{color:var(--s4)}
 pre .bad{color:var(--critical)}
 pre .ok{color:var(--good)}
 pre{position:relative;tab-size:4;-moz-tab-size:4}
-pre .copy{position:absolute;top:8px;right:8px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
+pre .copy{position:absolute;top:8px;right:52px;font:600 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;opacity:0;transition:opacity .15s,color .15s}
 pre:hover .copy,pre .copy:focus{opacity:1}
+pre .lang{position:absolute;top:8px;right:12px;font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.7;pointer-events:none}
 pre .copy:hover{color:var(--ink)}
 pre .copy.done{color:var(--good)}
 
@@ -2301,6 +2302,10 @@ window.addEventListener("load", function () { readTheme(); setTimeout(redrawAll,
 document.querySelectorAll("pre").forEach(function (pre) {
   var code = pre.querySelector("code");
   if (!code) return;
+  var lang = document.createElement("span");
+  lang.className = "lang";
+  lang.textContent = "go";
+  pre.appendChild(lang);
   var b = document.createElement("button");
   b.className = "copy";
   b.type = "button";

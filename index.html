@@ -124,8 +124,18 @@
       .lede {
         font-size: 17.5px;
         color: var(--ink-2);
-        margin: 0 0 52px;
+        margin: 0 0 16px;
         max-width: 62ch;
+      }
+      .gonote {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 52px;
+      }
+      .gonote b {
+        color: var(--s3);
+        font-weight: 600;
       }
       .cards {
         display: grid;
@@ -225,6 +235,10 @@
         and then a long tail of engineering decisions, most of which are
         historical accidents that got frozen into standards. Start with the
         theorem, then walk the rest of the stack.
+      </p>
+      <p class="gonote">
+        All code samples are written in <b>Go</b> and compile as-is — copy,
+        paste, and run.
       </p>
 
       <div class="cards">
