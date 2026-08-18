@@ -268,7 +268,8 @@ footer a{color:var(--ink-2)}
     <p class="lede">Amplitude, frequency, and phase. Those three terms, plus spectrum, appear early
     in every signal processing text and are then used on every page that follows. This page defines
     each one, shows what it controls, and stops where the sampling theorem begins. Every figure is
-    interactive and every code example is a complete Go program you can run.</p>
+    interactive and every code example is a complete, runnable program, provided in Go and
+    JavaScript.</p>
 
     <div class="theorem">
       <div class="lab">The starting point</div>
@@ -291,9 +292,11 @@ footer a{color:var(--ink-2)}
 <section id="anatomy">
   <div class="prose">
     <h2>Amplitude, frequency, period</h2>
-    <p>A pure tone is fully specified by three numbers. This is the complete description, not a
-    simplified one, which is why the sine is treated as the building block that other signals are
-    made from:</p>
+    <p>A pure tone is fully specified by three numbers, and that specification is exact. A sine
+    carries energy at exactly one frequency, and every other signal — however complex — is a sum
+    of sines, each with its own amplitude, frequency, and phase. Because every signal decomposes
+    this way, the sine is the unit the later sections build on: square waves, spectra and
+    spectrograms are all assembled from sines. Here is that single sine, written out:</p>
   </div>
 
   <div class="eqbox prose">
@@ -309,7 +312,7 @@ footer a{color:var(--ink-2)}
   </dl>
 
   <div class="prose">
-    <p><strong>Period</strong> is not a fourth number. It is frequency expressed the other way
+    <p><strong>Period</strong> is the frequency written the other way
     round: <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span></span></span></span> is the time one cycle takes. A 2 Hz wave has a period of 0.5 seconds. Both
     forms describe the same fact, and each is convenient in different places.</p>
     <p>The three controls below are independent of each other. Amplitude scales the wave
@@ -542,9 +545,8 @@ console.log(<span class="s">`amplitude ${amplitude.toFixed(2)}, frequency ${freq
   <div class="prose">
     <h2>Superposition</h2>
     <p><strong>Superposition</strong> is the rule that when two waves occupy the same place, the
-    result is their sum at each instant. It is an addition, not an average and not an interaction.
-    The air pressure at a given point is one number, and it is the total of the contributions from
-    every source present.</p>
+    result is their sum at each instant. It is a plain sum: the air pressure at a given point is
+    one number, equal to the total of the contributions from every source present.</p>
     <p>Applied in reverse, this rule is the basis of the rest of the subject. If sines added
     together produce other shapes, then other shapes can be decomposed back into sines. Adding
     harmonics below shows a square wave being assembled from nothing but smooth curves.</p>
@@ -1108,7 +1110,8 @@ console.log(<span class="s">`${"samples".padStart(8)} ${"window span".padStart(1
   <p>One of a set of interactive explainers on digital media. Every figure is computed in the
   browser from the definitions given in the text: the harmonics are summed as described, and the
   spectrogram is a short-time Fourier transform running on a synthesised signal. Every code example
-  is a complete program that compiles and runs with <code>go run</code>.</p>
+  is a complete program in Go and JavaScript; the Go version compiles and runs with
+  <code>go run</code>, the JavaScript version with <code>node</code>.</p>
   <p style="margin-bottom:0"><a href="../">← back to the index</a></p>
 </footer>
 
