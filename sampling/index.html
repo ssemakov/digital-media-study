@@ -261,6 +261,7 @@ footer a{color:var(--ink-2)}
       <a href="#recon">Rebuilding</a>
       <a href="#edge">The edge case</a>
       <a href="#hear">Hear it</a>
+      <a href="#reduce">In code</a>
       <a href="#bandpass">Undersampling</a>
       <a href="#practice">Real systems</a>
       <a href="#wild">In the wild</a>
@@ -290,11 +291,11 @@ footer a{color:var(--ink-2)}
       second, then measuring it more than <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> times per second captures it <em>perfectly</em> —
       the original can be rebuilt from the measurements with zero error.</p>
       <p style="margin-top:12px;font-size:14.5px">Claude Shannon, 1949. "Perfectly" is literal
-      here: the reconstruction is exact, and it is constructed in
-      <a href="#recon">§4</a>.</p>
+      here: the reconstruction is exact, and the formula that performs it is built in
+      <a href="#recon">the section on rebuilding the original</a>.</p>
     </div>
 
-    <p>This page contains nine live figures; each claim in the text has an associated slider that
+    <p>This page contains twelve live figures; each claim in the text has an associated slider that
     can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more
     advanced material is placed in
     <strong>Go deeper</strong> panels that can be skipped without loss of continuity.</p>
@@ -396,8 +397,9 @@ console.log(samples);
       <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">P</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.05017em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is a <em>reproducing-kernel Hilbert space</em>: evaluating a signal at a point is a
       well-behaved (bounded) operation, which is not true for arbitrary square-integrable
       functions, where "the value at a single instant" is meaningless. The kernel that performs the
-      evaluation is a sinc, which is why sincs appear again in <a href="#recon">§4</a> as the
-      reconstruction weights — the same function in two roles.</p>
+      evaluation is a sinc, which is why the same function turns up again as the reconstruction
+      weights in <a href="#recon">the section on rebuilding the original</a> — one function in two
+      roles.</p>
     </div>
   </details>
 </section>
@@ -569,8 +571,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     <p>Two frequencies are aliases of each other exactly when their sum or difference is a multiple
     of the sample rate. On the reflected segments there is an additional effect: the wave returns
     <strong>phase-flipped</strong>, so a rising sweep is heard as a falling one. This is why an
-    undersampled radio band arrives with its spectrum mirrored, and it is
-    audible in <a href="#hear">§6</a>.</p>
+    undersampled radio band arrives with its spectrum mirrored, and it can be heard directly in
+    <a href="#hear">the audible demonstration</a>.</p>
   </div>
 
   <figure id="fig-time">
@@ -623,7 +625,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     </div>
     <figcaption>This is <code>aliasOf</code> plotted. The reflection points sit at multiples of
     <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/2</span></span></span></span>; the shaded zones are those that return phase-flipped. Deliberately selecting which
-    zone the signal lands in is an established technique, described in <a href="#bandpass">§7</a>.</figcaption>
+    zone the signal lands in is an established technique, covered in
+    <a href="#bandpass">undersampling on purpose</a>.</figcaption>
   </figure>
 
   <div class="prose">
@@ -922,9 +925,34 @@ console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span cl
     data, missing data is preferable.</figcaption>
   </figure>
 
+</section>
+
+<hr class="rule">
+
+<section id="reduce">
   <div class="prose">
-    <h3>The common form of this bug in code</h3>
-    <p>Downsampling an array by dropping elements is the most common way this bug appears:</p>
+    <p class="kicker">§7</p>
+    <h2>Reducing a rate in code</h2>
+    <p>Everything so far has concerned the moment of measurement, where a converter or a sensor
+    turns a continuous quantity into an array. Most programmers never write that code. What they do
+    write, routinely, is code that takes an array which already exists and produces a smaller one —
+    and that operation is a second act of sampling, governed by the same theorem.</p>
+    <p><strong>Downsampling</strong> means lowering the rate of data already captured, by keeping
+    one of every N values and discarding the rest. It is done constantly and for ordinary reasons:
+    storage and bandwidth, thumbnails generated from full-resolution images, metrics rolled up from
+    per-second to per-minute, audio converted between 48 kHz and 44.1 kHz.</p>
+    <p>The trap is that dropping samples <em>is sampling again</em>, at a rate N times lower, so the
+    theorem applies a second time. The limit moves down with the rate, and anything above the new
+    half-rate is reflected back down and reappears as a lower frequency, which is the folding
+    described in <a href="#alias">the section on aliasing</a>. The difference is that here the
+    original is already on disk, and the code doing the reading is what introduces the fold.</p>
+    <p>Preventing it requires removing those components first. A <strong>low-pass filter</strong>
+    passes everything below a chosen cutoff and removes everything above it. That is the same
+    operation as cropping the spectrum back to a single copy in
+    <a href="#copies">the section on spectral copies</a>, applied to an array instead of a spectrum.
+    Set the cutoff at the new half-rate and the values that remain are genuinely redundant, so
+    discarding them costs nothing. The order is the
+    whole point: filter, then drop. Dropping first destroys the information the filter needed.</p>
   </div>
 
   <div class="prose">
@@ -953,24 +981,27 @@ console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span cl
 	<span class="k">for</span> i := <span class="k">range</span> input {
 		input[i] = <span class="k">float64</span>(i % <span class="n">2</span>) <span class="c">// fastest possible wiggle: 0,1,0,1,...</span>
 	}
-	out := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/<span class="n">4</span>) <span class="c">// keep every 4th sample: rate drops by 4</span>
+
+	keep := <span class="n">4</span>                                 <span class="c">// keep every 4th sample: the rate drops by 4</span>
+	wrong := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/keep) <span class="c">// samples dropped straight away</span>
+	right := <span class="k">make</span>([]<span class="k">float64</span>, <span class="k">len</span>(input)/keep) <span class="c">// filtered first, then dropped</span>
 
 	<span class="c">// WRONG — this is exactly the "filter off" button above</span>
-	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(out); n++ {
-		out[n] = input[n*<span class="n">4</span>]
+	<span class="k">for</span> n := <span class="k">range</span> wrong {
+		wrong[n] = input[n*keep]
 	}
 	<span class="bad">// anything above the NEW half-rate is now permanently disguised as something slower</span>
-	fmt.Println(<span class="s">"wrong:"</span>, out) <span class="bad">// all 0s: the wiggle became a false DC level</span>
 
 	<span class="c">// RIGHT — remove what the new rate can't represent, THEN drop samples</span>
 	filtered := lowPass(input, <span class="n">2</span>) <span class="c">// cutoff near the new half-rate</span>
-	<span class="k">for</span> n := <span class="n">0</span>; n &lt; <span class="k">len</span>(out); n++ {
-		out[n] = filtered[n*<span class="n">4</span>]
+	<span class="k">for</span> n := <span class="k">range</span> right {
+		right[n] = filtered[n*keep]
 	}
-	<span class="ok">// now the samples you threw away really were redundant</span>
-	fmt.Println(<span class="s">"right:"</span>, out) <span class="ok">// ~0.5: reports "too fast to represent"</span>
-}
-</code><code class="js" hidden><span class="c">// a plain moving-average low-pass: crude, but it removes the fast wiggle</span>
+	<span class="ok">// now the discarded samples really were redundant</span>
+
+	fmt.Println(<span class="s">"wrong:"</span>, wrong) <span class="bad">// all 0s: the wiggle became a false DC level</span>
+	fmt.Println(<span class="s">"right:"</span>, right) <span class="ok">// ~0.5: reports "too fast to represent"</span>
+}</code><code class="js" hidden><span class="c">// a plain moving-average low-pass: crude, but it removes the fast wiggle</span>
 <span class="k">function</span> lowPass(x, width) {
   <span class="k">const</span> out = <span class="k">new</span> Array(x.length);
   <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; x.length; i++) {
@@ -990,36 +1021,45 @@ console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span cl
 <span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; input.length; i++) {
   input[i] = i % <span class="n">2</span>; <span class="c">// fastest possible wiggle: 0,1,0,1,...</span>
 }
-<span class="k">const</span> out = <span class="k">new</span> Array(input.length / <span class="n">4</span>); <span class="c">// keep every 4th sample: rate drops by 4</span>
+
+<span class="k">const</span> keep = <span class="n">4</span>;                                   <span class="c">// keep every 4th sample: the rate drops by 4</span>
+<span class="k">const</span> wrong = <span class="k">new</span> Array(input.length / keep);     <span class="c">// samples dropped straight away</span>
+<span class="k">const</span> right = <span class="k">new</span> Array(input.length / keep);     <span class="c">// filtered first, then dropped</span>
 
 <span class="c">// WRONG — this is exactly the "filter off" button above</span>
-<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) {
-  out[n] = input[n * <span class="n">4</span>];
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; wrong.length; n++) {
+  wrong[n] = input[n * keep];
 }
 <span class="bad">// anything above the NEW half-rate is now permanently disguised as something slower</span>
-console.log(<span class="s">"wrong:"</span>, out); <span class="bad">// all 0s: the wiggle became a false DC level</span>
 
 <span class="c">// RIGHT — remove what the new rate can't represent, THEN drop samples</span>
 <span class="k">const</span> filtered = lowPass(input, <span class="n">2</span>); <span class="c">// cutoff near the new half-rate</span>
-<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; out.length; n++) {
-  out[n] = filtered[n * <span class="n">4</span>];
+<span class="k">for</span> (<span class="k">let</span> n = <span class="n">0</span>; n &lt; right.length; n++) {
+  right[n] = filtered[n * keep];
 }
-<span class="ok">// now the samples you threw away really were redundant</span>
-console.log(<span class="s">"right:"</span>, out); <span class="ok">// ~0.5: reports "too fast to represent"</span>
-</code></pre>
+<span class="ok">// now the discarded samples really were redundant</span>
+
+console.log(<span class="s">"wrong:"</span>, wrong); <span class="bad">// all 0s: the wiggle became a false DC level</span>
+console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: reports "too fast to represent"</span></code></pre>
 
     <p>The same error appears when shrinking an image by taking every N-th pixel instead
     of area-averaging, when thinning a metrics series by keeping every N-th point instead of averaging
     the bucket, and when animating a spinning wheel by evaluating its angle once per frame. These are
     all the same bug.</p>
+    <p>In none of those three is there an obvious signal, a sample rate, or anything a programmer
+    would call a filter — there is a frame loop, an image resize, and a rollup query. Each one is
+    worked through, with the failure made visible, in
+    <a href="#wild">the survey of where this appears in practice</a>, alongside the other settings
+    this same reduction turns up in.</p>
   </div>
+
 </section>
 
 <hr class="rule">
 
 <section id="bandpass">
   <div class="prose">
-    <p class="kicker">§7</p>
+    <p class="kicker">§8</p>
     <h2>Undersampling on purpose</h2>
     <p>"Sample at twice the highest frequency" is the commonly cited form of the rule, and it is
     stricter than necessary. What matters is that the copies do not overlap, which depends
@@ -1084,7 +1124,7 @@ console.log(<span class="s">"right:"</span>, out); <span class="ok">// ~0.5: rep
 
 <section id="practice">
   <div class="prose">
-    <p class="kicker">§8</p>
+    <p class="kicker">§9</p>
     <h2>What goes wrong in real systems</h2>
     <p>The theorem assumes instantaneous measurements, infinite precision, a perfect filter, and a
     perfectly steady clock. Real systems fail all four assumptions. The cost of each follows, roughly
@@ -1096,7 +1136,7 @@ console.log(<span class="s">"right:"</span>, out); <span class="ok">// ~0.5: rep
     but it has two side effects worth noting.</p>
     <p>First, it rolls off the top of the band: content near the ceiling comes out about
     <strong>4 dB quieter</strong> than it should (a factor of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2/</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>). Second, it does not fully
-    remove the spectral copies from §2; it only attenuates them. Both effects are described by one
+    remove the spectral copies that sampling created; it only attenuates them. Both effects are described by one
     curve:</p>
   </div>
 
@@ -1218,7 +1258,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
 <section id="wild">
   <div class="prose">
-    <p class="kicker">§9</p>
+    <p class="kicker">§10</p>
     <h2>Where this appears in practice</h2>
     <p>Each of these is the same theorem in different units.</p>
   </div>
@@ -1237,7 +1277,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
           26 revolutions per second, filmed at 24 fps, reads as 2 rps —
           <code>aliasOf(26, 24)</code>. Motion blur is the anti-aliasing filter.</td></tr>
         <tr><td><b>Rendering</b></td><td>Jagged edges and shimmering thin geometry. Supersampling means
-          sampling above the geometry's rate and filtering down — the §8 oversampling argument in two
+          sampling above the geometry's rate and filtering down, which is the oversampling argument of
+          <a href="#practice">what goes wrong in real systems</a>, in two
           dimensions.</td></tr>
         <tr><td><b>Metrics &amp; monitoring</b></td><td>A 60-second scrape on a job that spikes every 55
           seconds produces a slow oscillation that does not exist. Averaging over the bucket instead of
@@ -1245,8 +1286,9 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
         <tr><td><b>Control loops</b></td><td>A sensor read too slowly makes disturbances appear slower than
           they are, so the controller responds to a nonexistent signal. The sample rate must exceed the
           system's actual dynamics, not merely appear fast.</td></tr>
-        <tr><td><b>Radio / SDR</b></td><td>Deliberate aliasing, done correctly — the §7 technique. Fold a band
-          down instead of sampling at its carrier frequency.</td></tr>
+        <tr><td><b>Radio / SDR</b></td><td>Deliberate aliasing, done correctly — the technique of
+          <a href="#bandpass">undersampling on purpose</a>. Fold a band down instead of sampling at
+          its carrier frequency.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1260,6 +1302,120 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
       essentially every aliasing bug.</p>
     </div>
   </div>
+
+  <div class="prose">
+    <p>Three of those rows are worth seeing rather than reading. Each figure below is the same
+    reduction — keep one value out of every N — in a setting where nobody would describe the work
+    as sampling.</p>
+  </div>
+
+<figure id="fig-wheel">
+    <div class="head">
+      <div class="n">Figure 10 · live</div>
+      <h4>A spinning wheel, evaluated once per frame</h4>
+      <p>Both wheels turn at the same speed, forwards, always. The left one is drawn continuously;
+      the right one moves only at the frame instants. Watch the marked spoke on the right as the
+      speed passes half the frame rate: it slows, stops, and then runs backwards, while the wheel
+      itself never changes direction.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-wheel" height="238" aria-label="Two wheels, one turning continuously and one sampled at a frame rate"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the actual rotation</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what the frames show</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-w-spd">wheel speed<b><span id="v-w-spd">3.0</span> rev/s</b></label>
+        <input type="range" id="s-w-spd" min="0" max="10" step="0.1" value="3"></div>
+      <div class="sl"><label for="s-w-fps">frame rate<b><span id="v-w-fps">12</span> fps</b></label>
+        <input type="range" id="s-w-fps" min="2" max="30" step="1" value="12"></div>
+      <div style="flex:0 0 auto;padding-bottom:2px">
+        <button class="btn" id="b-w-run">&#9654; run</button>
+      </div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">True speed</div><div class="v" id="r-w-true">3.0 rev/s</div></div>
+      <div class="cell"><div class="k">Apparent speed</div><div class="v" id="r-w-app">3.0 rev/s</div></div>
+      <div class="cell"><div class="k">Frames per turn</div><div class="v" id="r-w-fpr">4.00</div></div>
+      <div class="cell"><div class="k">Direction seen</div><div class="v" id="r-w-dir">forward</div></div>
+    </div>
+    <div class="verdict ok" id="r-w-verdict"><span class="ic">&#10003;</span><span id="r-w-msg"></span></div>
+    <figcaption>The wheel is the sampled signal and the frame rate is the sample rate; nothing else
+    is different. Apparent speed is <code>aliasOf(speed, fps)</code>, the folding function from
+    <a href="#alias">the section on aliasing</a>, and the backwards range is one of the
+    phase-flipped zones on the folding map plotted there. This is why film of a moving car shows the
+    wheels turning the wrong way, and why a game loop that advances an angle once per frame produces
+    the same artefact.</figcaption>
+  </figure>
+
+  <figure id="fig-img">
+    <div class="head">
+      <div class="n">Figure 11 · live</div>
+      <h4>Shrinking an image by dropping pixels</h4>
+      <p>The source is a band of stripes that get steadily finer from left to right — the spatial
+      version of the rising tone heard earlier. Both reductions below produce the same number of
+      output pixels; only the method differs. The dashed line marks where the stripes become finer
+      than the reduced grid can hold.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-img" height="268" aria-label="A stripe frequency sweep reduced by dropping pixels and by area averaging"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>every N-th pixel</span>
+      <span style="color:var(--s3)"><i style="background:var(--s3)"></i>area average</span>
+      <span style="color:var(--s1)"><i class="dash" style="color:var(--s1)"></i>half the output rate</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-i-n">reduction factor<b><span id="v-i-n">4</span>&times;</b></label>
+        <input type="range" id="s-i-n" min="2" max="12" step="1" value="4"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Source</div><div class="v" id="r-i-src">480 px wide</div></div>
+      <div class="cell"><div class="k">Output</div><div class="v" id="r-i-out">120 px wide</div></div>
+      <div class="cell"><div class="k">Pixels read</div><div class="v" id="r-i-read">25.0%</div></div>
+      <div class="cell"><div class="k">Limit falls at</div><div class="v" id="r-i-lim">28% across</div></div>
+    </div>
+    <div class="verdict bad" id="r-i-verdict"><span class="ic">&#10007;</span><span id="r-i-msg"></span></div>
+    <figcaption>Left of the dashed line the two reductions agree, because the stripes are coarse
+    enough for both. Right of it they diverge: dropping pixels produces wide bands that are not in
+    the source, which is the same folding as before, in space rather than time, and is what a
+    moir&eacute; pattern is. Averaging reads every pixel in each block, so the same region fades
+    towards flat grey — the detail is lost rather than replaced by something false. Raising the
+    reduction factor drags the dashed line to the left, which is exactly what happens when a
+    thumbnail gets smaller. Mipmaps exist to precompute the bottom band.</figcaption>
+  </figure>
+
+  <figure id="fig-metric">
+    <div class="head">
+      <div class="n">Figure 12 · live</div>
+      <h4>Thinning a metrics series</h4>
+      <p>A per-second series with periodic spikes, reduced to one point per bucket. Move the offset
+      slider: it shifts only <em>which</em> second each kept sample lands on, and the series itself
+      never changes.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-metric" height="250" aria-label="A spiky metrics series thinned by keeping every N-th point and by bucket averaging"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>the real series</span>
+      <span style="color:var(--s2)"><i class="dot" style="background:var(--s2)"></i>every N-th point</span>
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>bucket average</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-m-n">bucket size<b><span id="v-m-n">10</span> s</b></label>
+        <input type="range" id="s-m-n" min="2" max="30" step="1" value="10"></div>
+      <div class="sl"><label for="s-m-off">sampling offset<b><span id="v-m-off">0</span> s</b></label>
+        <input type="range" id="s-m-off" min="0" max="29" step="1" value="0"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">True peak</div><div class="v" id="r-m-true">0.00</div></div>
+      <div class="cell"><div class="k">Every N-th reports</div><div class="v" id="r-m-drop">0.00</div></div>
+      <div class="cell"><div class="k">Average reports</div><div class="v" id="r-m-avg">0.00</div></div>
+      <div class="cell"><div class="k">Spikes kept</div><div class="v" id="r-m-hit">0 of 0</div></div>
+    </div>
+    <div class="verdict bad" id="r-m-verdict"><span class="ic">&#10007;</span><span id="r-m-msg"></span></div>
+    <figcaption>Dragging the offset changes what the thinned series reports, sometimes by a large
+    factor, while the underlying data is untouched. A number that depends on where the sampling clock
+    happened to land is the same failure as the two different signals that produced identical
+    measurements earlier on this page. The average is lower than the true peak, but it
+    is lower for a stated reason and it does not change with the offset; if peaks are what matter,
+    aggregate with max over the bucket rather than reading one point from it.</figcaption>
+  </figure>
 
   <details class="deep">
     <summary><span class="chip">Go deeper</span> The generalisations, briefly</summary>
@@ -1292,7 +1448,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
 <section id="history">
   <div class="prose">
-    <p class="kicker">§10</p>
+    <p class="kicker">§11</p>
     <h2>Neither man in the name proved it first</h2>
     <p>The theorem was discovered independently at least six times, and the usual attribution is
     inaccurate in ways worth knowing.</p>
@@ -1335,7 +1491,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
 <section id="sheet">
   <div class="prose">
-    <p class="kicker">§11</p>
+    <p class="kicker">§12</p>
     <h2>The complete summary</h2>
   </div>
 
@@ -1382,7 +1538,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   Every figure computes its curves live in the browser — no precomputed data and no network calls.
   The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output
   is the actual phenomenon rather than a recording.</p>
-  <p style="margin-bottom:0">Sources behind §10: Shannon, <em>Communication in the Presence of Noise</em>
+  <p style="margin-bottom:0">Sources behind <a href="#history">the history section</a>: Shannon, <em>Communication in the Presence of Noise</em>
   (1949); Kotelnikov (1933); Whittaker (1915); Landau, <em>Necessary density conditions</em> (1967).</p>
 </footer>
 
@@ -1718,7 +1874,7 @@ function segment(id, cb) {
         "Nothing overlaps. There is a clear gap of " + fmt(d) + " Hz between the real spectrum and its nearest copy, so cropping recovers the original exactly — and a real, buildable filter has " + fmt(d) + " Hz of room to roll off in.");
     } else if (d > -0.015) {
       verdict("r-spec-verdict", "r-spec-msg", "edge",
-        "Exactly at the limit: fs = 2B. The copies are touching, so the crop would have to be infinitely sharp — no gap, nothing to roll off in. And anything sitting right at fs/2 is lost outright; that is §5.");
+        "Exactly at the limit: fs = 2B. The copies are touching, so the crop would have to be infinitely sharp — no gap, nothing to roll off in. And anything sitting right at fs/2 is lost outright, which is the strict-inequality case.");
     } else {
       verdict("r-spec-verdict", "r-spec-msg", "bad",
         "Aliasing. The copies overlap across " + fmt(-d) + " Hz — everything between " + fmt(fs - B) + " and " + fmt(B) + " Hz has been added to a copy of itself. You cannot unadd two numbers, so this data is gone no matter what you do next.");
@@ -2348,6 +2504,334 @@ function segment(id, cb) {
     }
   }
   ["n-j-f", "n-j-t", "n-j-b"].forEach(function (id) { on(id, "input", update); });
+  update();
+})();
+
+/* ================================================================
+   FIGURE 7 — wagon wheel: angle evaluated once per frame
+   ================================================================ */
+(function () {
+  var P = new Plot("c-wheel", { l: 0, r: 0, t: 0, b: 0 });
+  if (!P.cv) return;
+  var spd = 3, fps = 12, anim = null, t = 0, last = 0, started = false;
+  var SPOKES = 6, GHOSTS = 7;
+
+  /* The left wheel stands for continuous motion, but the display refreshes at
+     its own fixed rate, so drawing one crisp position per refresh would let the
+     reference alias too. Smearing it across the refresh interval is what a real
+     eye or a real camera does, and it keeps the reference honest. */
+  function rim(cx, cy, r) {
+    var g = P.ctx;
+    g.strokeStyle = C.grid; g.lineWidth = 2; g.setLineDash([]);
+    g.beginPath(); g.arc(cx, cy, r, 0, 6.2832); g.stroke();
+  }
+  function spokes(cx, cy, r, ang, color, alpha) {
+    var g = P.ctx, i, a;
+    g.lineCap = "round"; g.setLineDash([]);
+    g.strokeStyle = rgba(C.muted, 0.32 * alpha); g.lineWidth = 2;
+    for (i = 1; i < SPOKES; i++) {
+      a = ang + i * 2 * PI / SPOKES;
+      g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); g.stroke();
+    }
+    /* one marked spoke: without it the wheel is six-fold symmetric and the eye
+       cannot tell which way it turned */
+    g.strokeStyle = rgba(color, alpha); g.lineWidth = 4;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + r * Math.cos(ang), cy + r * Math.sin(ang)); g.stroke();
+    g.fillStyle = rgba(color, alpha);
+    g.beginPath(); g.arc(cx + r * Math.cos(ang), cy + r * Math.sin(ang), 6, 0, 6.2832); g.fill();
+  }
+  function label(cx, cy, r, s) {
+    var g = P.ctx;
+    g.fillStyle = C.muted; g.font = "600 12px " + FONT;
+    g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(s, cx, cy + r + 16);
+  }
+
+  function draw() {
+    P.clear();
+    var r = Math.min(78, (P.H - 56) / 2), cy = (P.H - 28) / 2;
+    var cxL = P.W * 0.29, cxR = P.W * 0.71;
+    var i, a;
+
+    rim(cxL, cy, r);
+    /* motion blur over one display refresh, so the reference reads as smooth */
+    for (i = GHOSTS - 1; i >= 0; i--) {
+      a = 2 * PI * spd * (t - i / 60 / GHOSTS);
+      spokes(cxL, cy, r, a, C.s1, i === 0 ? 1 : 0.16);
+    }
+    label(cxL, cy, r, "continuous");
+
+    rim(cxR, cy, r);
+    spokes(cxR, cy, r, 2 * PI * spd * (Math.floor(t * fps) / fps), C.s2, 1);
+    label(cxR, cy, r, "one sample per frame, " + fps + " fps");
+  }
+
+  function update() {
+    txt("v-w-spd", fmt(spd, 1)); txt("v-w-fps", String(fps));
+    var app = fold(spd, fps), sgn = foldSign(spd, fps);
+    txt("r-w-true", fmt(spd, 1) + " rev/s");
+    txt("r-w-app", fmt(app, 1) + " rev/s");
+    txt("r-w-fpr", spd > 0.05 ? fmt(fps / spd, 2) : "—");
+    txt("r-w-dir", app < 0.05 ? "stopped" : sgn > 0 ? "forward" : "backward");
+    if (spd < 0.05) verdict("r-w-verdict", "r-w-msg", "ok",
+      "Stationary. Raise the wheel speed, then raise it past half the frame rate — " +
+      fmt(fps / 2, 1) + " rev/s at this frame rate.");
+    else if (spd < fps / 2 - 0.05) verdict("r-w-verdict", "r-w-msg", "ok",
+      "Under half the frame rate, so the frames carry the rotation honestly: " + fmt(fps / spd, 1) +
+      " frames per turn, turning the right way. Both wheels agree.");
+    else if (app < 0.05) verdict("r-w-verdict", "r-w-msg", "bad",
+      "The wheel completes a whole number of turns between frames, so every frame catches it in exactly the same position. A wheel turning " +
+      fmt(spd, 1) + " times a second is recorded as a wheel standing still.");
+    else if (sgn < 0) verdict("r-w-verdict", "r-w-msg", "bad",
+      "Past half the frame rate, the rotation lands in a phase-flipped zone: the frames show " +
+      fmt(app, 1) + " rev/s backwards. Nothing downstream can recover the real direction, because the frames are equally consistent with a wheel that genuinely turns that way.");
+    else verdict("r-w-verdict", "r-w-msg", "bad",
+      "Past half the frame rate. The frames show " + fmt(app, 1) +
+      " rev/s forwards, which is a plausible speed the wheel never had.");
+    draw();
+  }
+
+  function stop() {
+    if (anim) cancelAnimationFrame(anim);
+    anim = null;
+    var b = $("b-w-run"); if (b) { b.textContent = "▶ run"; b.classList.remove("on"); }
+  }
+  function run() {
+    if (anim) return;
+    var b = $("b-w-run"); if (b) { b.textContent = "❚❚ pause"; b.classList.add("on"); }
+    last = performance.now();
+    (function step(now) {
+      t += Math.min(now - last, 60) / 1000; last = now;
+      draw(); anim = requestAnimationFrame(step);
+    })(last);
+  }
+
+  on("s-w-spd", "input", function (e) { spd = +e.target.value; update(); });
+  on("s-w-fps", "input", function (e) { fps = +e.target.value; update(); });
+  on("b-w-run", "click", function () { if (anim) stop(); else run(); });
+
+  /* start when it scrolls into view, pause when it leaves: the figure only
+     means anything in motion, and there is no point animating offscreen */
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting) { if (!started || anim) { started = true; run(); } }
+        else if (anim) { stop(); }
+      });
+    }, { threshold: 0.35 }).observe(P.cv);
+  }
+
+  register(P, draw); update();
+})();
+
+/* ================================================================
+   FIGURE 8 — image reduction: dropped pixels vs area average
+   ================================================================ */
+(function () {
+  var P = new Plot("c-img", { l: 0, r: 0, t: 0, b: 0 });
+  if (!P.cv) return;
+  var N = 4, W = 480, F0 = 0.008, F1 = 0.42;
+  var row = new Float32Array(W);
+
+  /* Stripes that get finer from left to right: the spatial version of the
+     rising tone in the audible demonstration. Every reduction factor is fine
+     on the left and too coarse somewhere on the right, so the figure shows
+     where the failure starts rather than only that it happens. */
+  (function build() {
+    for (var x = 0; x < W; x++) {
+      var phase = 2 * PI * (F0 * x + (F1 - F0) * x * x / (2 * W));
+      row[x] = 0.5 + 0.5 * Math.cos(phase);
+    }
+  })();
+
+  function naive(n) {
+    var m = Math.floor(W / n), out = new Float32Array(m);
+    for (var i = 0; i < m; i++) out[i] = row[i * n];
+    return out;
+  }
+  function averaged(n) {
+    var m = Math.floor(W / n), out = new Float32Array(m);
+    for (var i = 0; i < m; i++) {
+      var s = 0;
+      for (var j = 0; j < n; j++) s += row[i * n + j];
+      out[i] = s / n;
+    }
+    return out;
+  }
+  function strip(data) {
+    var m = data.length, cv = document.createElement("canvas");
+    cv.width = m; cv.height = 1;
+    var g = cv.getContext("2d"), im = g.createImageData(m, 1), i, v;
+    for (i = 0; i < m; i++) {
+      v = Math.round(255 * clamp(data[i], 0, 1));
+      im.data[4 * i] = v; im.data[4 * i + 1] = v; im.data[4 * i + 2] = v; im.data[4 * i + 3] = 255;
+    }
+    g.putImageData(im, 0, 0);
+    return cv;
+  }
+
+  /* where the stripes first exceed what the reduced grid can represent */
+  function limitX() { return W * (1 / (2 * N) - F0) / (F1 - F0); }
+
+  function band(cv, x, y, w, h, text, color) {
+    var g = P.ctx;
+    g.imageSmoothingEnabled = false;
+    g.drawImage(cv, x, y, w, h);
+    g.imageSmoothingEnabled = true;
+    g.strokeStyle = color ? rgba(color, 0.9) : C.grid;
+    g.lineWidth = color ? 2 : 1; g.setLineDash([]);
+    g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    g.fillStyle = color || C.muted; g.font = "600 11.5px " + FONT;
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(text, x, y + h + 5);
+  }
+
+  function draw() {
+    P.clear();
+    var g = P.ctx;
+    var pad = 16, w = P.W - 2 * pad, h = 52, gap = 26, y0 = 6;
+    band(strip(row), pad, y0, w, h, "source: stripes, getting finer to the right", null);
+    band(strip(naive(N)), pad, y0 + h + gap, w, h, "every " + N + "th pixel — false wide bands appear", C.s2);
+    band(strip(averaged(N)), pad, y0 + 2 * (h + gap), w, h, "area average — fades to flat where detail cannot fit", C.s3);
+
+    /* the line the eye should follow */
+    var lx = pad + w * limitX() / W;
+    if (lx > pad && lx < pad + w) {
+      g.strokeStyle = C.s1; g.lineWidth = 1.5; g.setLineDash([5, 4]);
+      g.beginPath(); g.moveTo(lx, y0); g.lineTo(lx, y0 + 3 * h + 2 * gap); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = C.s1; g.font = "600 11px " + FONT;
+      g.textBaseline = "bottom";
+      g.textAlign = lx > P.W - 150 ? "right" : "left";
+      g.fillText("half the output rate — look right of here",
+        lx > P.W - 150 ? lx - 5 : lx + 5, y0 + 3 * h + 2 * gap + 20);
+    }
+  }
+
+  function update() {
+    var m = Math.floor(W / N), lx = limitX();
+    txt("v-i-n", String(N));
+    txt("r-i-src", W + " px wide");
+    txt("r-i-out", m + " px wide");
+    txt("r-i-read", fmt(100 / N, 1) + "%");
+    txt("r-i-lim", lx > 0 && lx < W ? fmt(100 * lx / W, 0) + "% across" : "—");
+    verdict("r-i-verdict", "r-i-msg", "bad",
+      "Right of the dashed line the stripes are finer than the reduced grid can hold. Dropping pixels there does not blur them, it replaces them with wide bands that are not in the source — the same folding as before, now in space, and known as a moiré pattern. Averaging reads all " +
+      N + " pixels of each block, so the same region fades towards flat grey: the detail is lost rather than replaced with something false.");
+    draw();
+  }
+
+  on("s-i-n", "input", function (e) { N = +e.target.value; update(); });
+  register(P, draw); update();
+})();
+
+/* ================================================================
+   FIGURE 9 — metrics thinning: every N-th point vs bucket average
+   ================================================================ */
+(function () {
+  var P = new Plot("c-metric", { l: 44, r: 14, t: 14, b: 32 });
+  if (!P.cv) return;
+  var N = 10, off = 0, LEN = 300, SPIKE = 10;
+  var series = new Float64Array(LEN);
+
+  /* a plausible per-second metric: slow drift, small noise, and a sharp
+     spike every SPIKE seconds — the thing an on-call engineer cares about.
+     SPIKE and the default bucket size share a factor on purpose: that is the
+     case where the kept samples either always hit the spikes or always miss */
+  (function build() {
+    for (var i = 0; i < LEN; i++) {
+      var base = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 7.3 + 1.1);
+      var spike = (i % SPIKE === 3) ? 58 : 0;
+      series[i] = base + spike;
+    }
+  })();
+
+  function dropped() {
+    var pts = [];
+    for (var i = off; i < LEN; i += N) pts.push([i, series[i]]);
+    return pts;
+  }
+  function bucketed() {
+    var pts = [];
+    for (var s = off; s < LEN; s += N) {
+      var sum = 0, n = 0;
+      for (var i = s; i < Math.min(s + N, LEN); i++) { sum += series[i]; n++; }
+      if (n) pts.push([s + (n - 1) / 2, sum / n]);
+    }
+    return pts;
+  }
+
+  function draw() {
+    P.dom(0, LEN - 1, 0, 90);
+    P.clear();
+    P.gridY([0, 30, 60, 90]);
+    P.axisX([0, 60, 120, 180, 240, 300], function (v) { return v + "s"; }, "time");
+    P.axisY([0, 30, 60, 90], function (v) { return String(v); }, "requests/s");
+    P.clipPlot();
+    P.curve(function (x) {
+      var i = Math.round(x);
+      return (i >= 0 && i < LEN) ? series[i] : null;
+    }, rgba(C.muted, 0.55), 1.4, [], LEN * 2);
+    var d = dropped(), b = bucketed();
+    P.curve(function (x) {
+      for (var i = 0; i < d.length - 1; i++)
+        if (x >= d[i][0] && x <= d[i + 1][0]) {
+          var f = (x - d[i][0]) / (d[i + 1][0] - d[i][0]);
+          return d[i][1] + f * (d[i + 1][1] - d[i][1]);
+        }
+      return null;
+    }, C.s2, 2, [], 600);
+    P.curve(function (x) {
+      for (var i = 0; i < b.length - 1; i++)
+        if (x >= b[i][0] && x <= b[i + 1][0]) {
+          var f = (x - b[i][0]) / (b[i + 1][0] - b[i][0]);
+          return b[i][1] + f * (b[i + 1][1] - b[i][1]);
+        }
+      return null;
+    }, C.s3, 2, [], 600);
+    P.dots(d, C.s2, 3.4);
+    P.dots(b, C.s3, 3.4);
+    P.unclip();
+  }
+
+  function update() {
+    txt("v-m-n", String(N)); txt("v-m-off", String(off));
+    var d = dropped(), b = bucketed(), i;
+    var truePeak = 0, dPeak = 0, bPeak = 0, hit = 0, total = 0;
+    for (i = 0; i < LEN; i++) if (series[i] > truePeak) truePeak = series[i];
+    for (i = 0; i < LEN; i++) if (i % SPIKE === 3) total++;
+    for (i = 0; i < d.length; i++) {
+      if (d[i][1] > dPeak) dPeak = d[i][1];
+      if (Math.round(d[i][0]) % SPIKE === 3) hit++;
+    }
+    for (i = 0; i < b.length; i++) if (b[i][1] > bPeak) bPeak = b[i][1];
+    txt("r-m-true", fmt(truePeak, 1));
+    txt("r-m-drop", fmt(dPeak, 1));
+    txt("r-m-avg", fmt(bPeak, 1));
+    txt("r-m-hit", hit + " of " + total);
+    if (hit === 0) verdict("r-m-verdict", "r-m-msg", "bad",
+      "At this offset the kept samples land between every spike, so the thinned series peaks at " +
+      fmt(dPeak, 1) + " and the real peak of " + fmt(truePeak, 1) +
+      " is absent from the record. The chart looks calm and is wrong.");
+    else if (hit === d.length) verdict("r-m-verdict", "r-m-msg", "bad",
+      "At this offset every kept sample lands on a spike, so the thinned series reports a sustained " +
+      fmt(dPeak, 1) + " when the true level is around " + fmt(bPeak, 1) +
+      ". The same data, sampled a second later, tells the opposite story.");
+    else verdict("r-m-verdict", "r-m-msg", "bad",
+      hit + " of the " + d.length + " kept samples happen to land on a spike. Drag the offset: the reported peak moves between " +
+      fmt(bPeak, 1) + " and " + fmt(truePeak, 1) +
+      " while the underlying series never changes. That dependence on the sampling clock is the aliasing.");
+    draw();
+  }
+
+  on("s-m-n", "input", function (e) {
+    N = +e.target.value;
+    var s = $("s-m-off"); if (s) { s.max = String(N - 1); if (off > N - 1) { off = N - 1; s.value = String(off); } }
+    update();
+  });
+  on("s-m-off", "input", function (e) { off = +e.target.value; update(); });
+  register(P, draw);
+  (function () { var s = $("s-m-off"); if (s) s.max = String(N - 1); })();
   update();
 })();
 
