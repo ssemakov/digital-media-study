@@ -142,7 +142,7 @@
         gap: 18px;
         grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
       }
-      a.card {
+      .card {
         display: flex;
         flex-direction: column;
         background: var(--surface);
@@ -159,6 +159,12 @@
       a.card:hover {
         border-color: var(--border-strong);
         transform: translateY(-2px);
+      }
+      .card.soon {
+        opacity: 0.5;
+      }
+      .card.soon .go {
+        color: var(--muted);
       }
       .num {
         font-family: var(--mono);
@@ -259,7 +265,7 @@
           <div class="go">Read →</div>
         </a>
 
-        <a class="card" href="/sampling">
+        <div class="card soon">
           <div class="num">02 — the one deep idea</div>
           <h2>Sampling, for programmers</h2>
           <p>
@@ -272,10 +278,10 @@
             <span class="tag">reconstruction</span>
             <span class="tag">sinc</span>
           </div>
-          <div class="go">Read →</div>
-        </a>
+          <div class="go">Coming soon</div>
+        </div>
 
-        <a class="card" href="/primer">
+        <div class="card soon">
           <div class="num">03 — the long tail</div>
           <h2>A digital media primer for geeks</h2>
           <p>
@@ -290,8 +296,8 @@
             <span class="tag">gamma</span>
             <span class="tag">Y′CbCr</span>
           </div>
-          <div class="go">Read →</div>
-        </a>
+          <div class="go">Coming soon</div>
+        </div>
       </div>
     </main>
 
