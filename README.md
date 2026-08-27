@@ -32,6 +32,8 @@ with material from Wikipedia.
 > material stays with its authors; I claim nothing beyond my own additions, and those are
 > offered under the same license.
 
+See [LICENSE](LICENSE) for the full text and attribution details.
+
 ## How this is built
 
 Each page is a single self-contained HTML file — all CSS, JavaScript, and the KaTeX stylesheet
