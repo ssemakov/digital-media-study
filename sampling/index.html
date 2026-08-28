@@ -413,7 +413,8 @@ console.log(samples);
     <p class="kicker">§2</p>
     <h2>Sampling makes copies of the spectrum</h2>
     <p>To determine when sampling loses information, consider the signal's
-    <strong>spectrum</strong> rather than its waveform — the amount of energy at each frequency. This
+    <strong><a href="../waves/#spectrum">spectrum</a></strong> rather than its waveform — the amount
+    of energy at each frequency. This
     is the same representation produced by an audio visualiser or an FFT.</p>
     <p>The central fact of the theory is the following. Sampling in time <em>duplicates</em> the
     spectrum in frequency. Not approximately: it makes exact copies, spaced exactly
@@ -429,6 +430,7 @@ console.log(samples);
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mclose">)</span></span></span></span></dt><dd>the spectrum the samples represent.</dd>
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0497em;vertical-align:-0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1864em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>sum over every integer <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>, including negatives.</dd>
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></dt><dd>the original spectrum, shifted by <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span> sample rates.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span></dt><dd>the sampling period: the time between one measurement and the next, equal to 1 divided by the sample rate.</dd>
   </dl>
 
   <div class="prose">
@@ -570,6 +572,19 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
   </div>
 
   <div class="prose">
+    <p>That reflection gives the frequency axis a repeating structure worth naming, because the rest
+    of this page uses it. Sampling at a rate divides the whole axis into consecutive slices, each one
+    half the sample rate wide: 0 to half, half to one whole rate, one whole rate to one and a half,
+    and so on upwards without end. These slices are the <strong>zones</strong>, numbered from 1.
+    Zone 1 has a name of its own: the <strong>baseband</strong>. It runs from 0 to half the sample
+    rate, and it is the only stretch of the frequency axis that a set of samples can express at all.
+    Every other zone is folded down onto it, which is why a measurement can only ever report a
+    frequency in that range.</p>
+    <p>Folding maps each zone onto the baseband in turn. Odd-numbered zones arrive <strong>upright</strong>, the right way up.
+    Even-numbered zones arrive <strong>mirrored</strong>, low frequencies and high frequencies
+    swapped, which is the phase flip described below. Two frequencies in the same zone stay distinct
+    after folding; two in different zones can land on the same place and become impossible to tell
+    apart.</p>
     <p>Two frequencies are aliases of each other exactly when their sum or difference is a multiple
     of the sample rate. On the reflected segments there is an additional effect: the wave returns
     <strong>phase-flipped</strong>, so a rising sweep is heard as a falling one. This is why an
@@ -1066,11 +1081,34 @@ console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: r
     <p>"Sample at twice the highest frequency" is the commonly cited form of the rule, and it is
     stricter than necessary. What matters is that the copies do not overlap, which depends
     on how <em>wide</em> the signal's band is, not on how high it sits.</p>
-    <p>For example, FM radio between 100 and 102 MHz is only 2 MHz wide. Sampling at
-    204 MHz is not required. 4 MHz suffices — a 51× reduction — because at that rate the band folds
-    down into a slot where nothing else is present. Software-defined radios rely on this technique, as
-    do many instrumentation front-ends.</p>
-    <p>Only certain rates work. The valid ones form a set of windows:</p>
+    <p>Take FM radio between 100 and 102 MHz. The highest frequency present is 102 MHz, so the
+    familiar rule asks for 204 million measurements per second. But the signal only occupies 2 MHz of
+    the axis; everything below 100 MHz and above 102 MHz is empty. Sampling folds the whole axis down
+    into the baseband — the stretch from 0 to half the sampling rate, which is all a set of samples
+    can express — and if the fold happens to place this 2 MHz of content where nothing else lands,
+    none of it is lost. Sampling at 4 million measurements per
+    second does exactly that.</p>
+    <p>The saving is in the converter alone. A part that measures 4 million times a second is far
+    slower, cheaper and lower-powered than one that measures 204 million times a second, and that is
+    the entire point of the technique. Nothing else gets easier: the analogue input must still respond
+    accurately to a 102 MHz wave, and the filter in front of it must now pass 100 to 102 MHz while
+    rejecting everything else, which is harder to build than a filter that simply removes everything
+    above a limit. Software-defined radios and instrumentation front-ends are built this way.</p>
+    <h3>Why only some rates work</h3>
+    <p>Recall that a sampling rate cuts the frequency axis into zones, each half the rate wide, and
+    that every zone folds down onto the baseband. For this to be usable, the band has to sit
+    <em>inside a single zone</em>. If it does, the whole band folds down together and keeps its
+    internal spacing, so it can be recovered. If instead the band lies across the boundary between two
+    zones, the part below the boundary and the part above it fold down on top of each other and are
+    added together. That is the case the figure calls <strong>straddling</strong>, and it destroys the
+    signal: the two halves are summed into one set of numbers with no way to separate them again.</p>
+    <p>With the band at 100 to 102 MHz and a rate of 4 MHz, the zones are 2 MHz wide, so their
+    boundaries fall at 0, 2, 4 and so on — including at exactly 100 and 102. The band fills one zone
+    precisely and nothing straddles. Change the rate to 4.4 MHz and the zones become 2.2 MHz wide,
+    with boundaries at 99 and 101.2. Now the band lies across 101.2, the two parts fold onto one
+    another, and the signal is gone. The band did not move; only the spacing of the boundaries did.</p>
+    <p>This is why raising the rate does not always help and lowering it does not always hurt.
+    Workable rates come in separate ranges with unusable gaps between them, given by:</p>
   </div>
 
   <div class="prose eqbox">
@@ -1079,21 +1117,35 @@ console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: r
 
   <dl class="prose gloss">
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></dt><dd>the bottom and top of the signal's band.</dd>
-    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></dt><dd>which "zone" the band folds into. <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> is ordinary sampling.</dd>
+    <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></dt><dd>the number of the zone the band folds down from. <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> is ordinary sampling.</dd>
     <dt><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">⌊</span><span class="mspace"> </span><span class="mclose">⌋</span></span></span></span></dt><dd>round down to an integer.</dd>
   </dl>
 
   <div class="prose">
-    <p>Rather than evaluate this by hand, adjust the sliders. Green means the band lands cleanly inside
-    one zone; orange means it straddles a boundary and folds onto itself, which is unrecoverable.</p>
+    <p>Rather than evaluate that by hand, use the figure. It has two parts, and they answer two
+    different questions about the same choice of rate.</p>
+    <p>The <strong>upper bar</strong> is a survey: it runs along every sampling rate the slider can
+    reach, from left to right, and colours each one according to whether a band of the chosen position
+    and width would survive it. Green means the band falls inside a single zone at that rate; orange
+    means it would straddle a boundary. The dashed marker shows which rate is currently selected. The
+    green stretches are labelled with the number of the zone the band ends up in.</p>
+    <p>The <strong>lower bar</strong> zooms in on that one selected rate and shows the outcome: the
+    baseband, from 0 to half the selected rate, with the band drawn where it actually arrives after
+    folding. When the selected rate is a green one, a solid block shows the stretch of the baseband
+    the band now occupies, and everything else in the baseband is free. When the rate is an orange
+    one, there is no meaningful position to draw, because the band has been added to itself.</p>
+    <p>So the upper bar answers "which rates are usable at all", and the lower bar answers "if this
+    rate is used, where does the signal end up". Moving the rate slider moves the marker in the upper
+    bar and redraws the lower one.</p>
   </div>
 
   <figure id="fig-zones">
     <div class="head">
       <div class="n">Figure 7 · live</div>
-      <h4>Which sample rates are legal for a high-frequency band</h4>
-      <p>Green bands are rates that work. They become narrower at lower rates; the lowest valid
-      rate is also the least tolerant.</p>
+      <h4>Which sampling rates work for a band, and where it ends up</h4>
+      <p>Upper bar: every rate, coloured by whether it works. Lower bar: for the selected rate, where
+      the band arrives in the baseband. The workable ranges get narrower as the rate falls, which
+      means a lower rate has to be held to a tighter accuracy to stay inside one.</p>
     </div>
     <div class="canvasbox"><canvas id="c-zones" height="212" aria-label="Admissible bandpass sampling rate wedges"></canvas></div>
     <div class="legend">
@@ -1106,19 +1158,23 @@ console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: r
         <input type="range" id="s-z-f1" min="1" max="200" step="0.5" value="100"></div>
       <div class="sl"><label for="s-z-bw">band width<b><span id="v-z-bw">2.0</span> MHz</b></label>
         <input type="range" id="s-z-bw" min="0.5" max="40" step="0.5" value="2"></div>
-      <div class="sl"><label for="s-z-fs">your <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><b><span id="v-z-fs">4.00</span> MHz</b></label>
+      <div class="sl"><label for="s-z-fs">selected sampling rate <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><b><span id="v-z-fs">4.00</span> MHz</b></label>
         <input type="range" id="s-z-fs" min="0.5" max="120" step="0.05" value="4"></div>
     </div>
     <div class="readout">
-      <div class="cell"><div class="k">Naive rate</div><div class="v" id="r-z-bb">204.0</div></div>
-      <div class="cell"><div class="k">Lowest valid rate</div><div class="v" id="r-z-min">4.00</div></div>
+      <div class="cell"><div class="k">Rate the simple rule asks for</div><div class="v" id="r-z-bb">204.0</div></div>
+      <div class="cell"><div class="k">Lowest rate that works</div><div class="v" id="r-z-min">4.00</div></div>
       <div class="cell"><div class="k">Zone <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></div><div class="v" id="r-z-n">51</div></div>
-      <div class="cell"><div class="k">Comes back</div><div class="v" id="r-z-inv">upright</div></div>
+      <div class="cell"><div class="k">Arrives</div><div class="v" id="r-z-inv">upright</div></div>
     </div>
     <div class="verdict ok" id="r-z-verdict"><span class="ic">✓</span><span id="r-z-msg"></span></div>
-    <figcaption>Two constraints remain: the hardware must still be able to receive
-    102 MHz at its input, and the filter is now a bandpass rather than a simple lowpass.
-    This saves on sample rate, not on analogue design.</figcaption>
+    <figcaption>Widening the band, or moving it, redraws the whole upper bar: which rates work is a
+    property of the band, not a fixed list. Two costs are unchanged by any of this. The input circuit
+    must still respond accurately to the highest frequency in the band, 102 MHz here, because that is
+    the wave physically arriving at it. And the filter in front must now pass only the band itself,
+    rejecting everything above and below, since any content in another zone folds down onto the
+    signal just as readily. The saving is in how often the converter has to measure, and nowhere
+    else.</figcaption>
   </figure>
 </section>
 
@@ -1520,6 +1576,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
           changes, not how fast it is sampled.</td></tr>
         <tr><td><b>Position vs width</b></td><td>What limits the rate is how <em>wide</em> the band is, not
           how high it sits. This is what makes deliberate undersampling possible.</td></tr>
+        <tr><td><b>Zones and baseband</b></td><td>A sample rate cuts the frequency axis into slices half
+          the rate wide, numbered from 1. Slice 1, from 0 to half the rate, is the <em>baseband</em>: the
+          only range the samples can express. Every other slice folds onto it, odd ones upright and even
+          ones mirrored.</td></tr>
       </tbody>
     </table>
   </div>
@@ -2316,7 +2376,7 @@ function segment(id, cb) {
     var topY = P.m.t, stripH = 46;
     /* ---- panel A: validity strip over fs ---- */
     g.font = "600 11px " + FONT; g.textAlign = "left"; g.textBaseline = "alphabetic";
-    g.fillStyle = C.muted; g.fillText("admissible sample rates", P.m.l, topY - 5);
+    g.fillStyle = C.muted; g.fillText("every sampling rate, and whether the band survives it", P.m.l, topY - 5);
     var n = Math.round(P.pw());
     for (var i = 0; i < n; i++) {
       var r = P.x0 + (P.x1 - P.x0) * (i + 0.5) / n;
@@ -2360,7 +2420,7 @@ function segment(id, cb) {
     /* ---- panel B: where the band lands after folding ---- */
     var y2 = topY + stripH + 58, h2 = 40;
     g.textAlign = "left"; g.textBaseline = "alphabetic"; g.fillStyle = C.muted; g.font = "600 11px " + FONT;
-    g.fillText("resulting baseband, 0 … fs/2", P.m.l, y2 - 5);
+    g.fillText("where the band arrives: the baseband, 0 to half the selected rate", P.m.l, y2 - 5);
     g.fillStyle = rgba(C.muted, 0.10); g.fillRect(P.m.l, y2, P.pw(), h2);
     g.strokeStyle = C["border-strong"]; g.strokeRect(P.m.l + 0.5, y2 + 0.5, P.pw(), h2);
     var half = fs / 2;
@@ -2374,7 +2434,7 @@ function segment(id, cb) {
       g.fillStyle = rgba(C.critical, 0.55);
       g.fillRect(P.m.l + 2, y2 + 6, P.pw() - 4, h2 - 12);
       g.fillStyle = C.ink; g.font = "600 12px " + FONT; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText("band straddles a fold — irrecoverably aliased onto itself", P.m.l + P.pw() / 2, y2 + h2 / 2);
+      g.fillText("band lies across a boundary — added to itself, not recoverable", P.m.l + P.pw() / 2, y2 + h2 / 2);
     }
     if (ok) {
       g.fillStyle = C.ink; g.font = "600 11px " + FONT; g.textAlign = "center"; g.textBaseline = "middle";
@@ -2391,7 +2451,7 @@ function segment(id, cb) {
       P.vline(q, rgba(C.muted, 0.8), [3, 3], 1);
       P.tip(P.hx, P.hy, [
         { t: "fs = " + fmt(q) + " MHz", c: C.ink },
-        clean(q) ? { t: "alias-free · zone n=" + zoneOf(q), c: C.s3 } : { t: "band straddles a fold", c: C.critical }
+        clean(q) ? { t: "works · band sits in zone " + zoneOf(q), c: C.s3 } : { t: "band lies across a boundary", c: C.critical }
       ]);
     }
   }
@@ -2402,16 +2462,17 @@ function segment(id, cb) {
     txt("r-z-min", fmt(minLegal()));
     var ok = clean(fs), n = zoneOf(fs);
     txt("r-z-n", ok ? String(n) : "—");
-    txt("r-z-inv", ok ? (n % 2 === 1 ? "upright" : "inverted") : "—");
+    txt("r-z-inv", ok ? (n % 2 === 1 ? "upright" : "mirrored") : "—");
     if (ok) {
       var save = (2 * f2()) / fs;
-      verdict("r-z-verdict", "r-z-msg", "ok", "This rate works. The band folds down into zone " + n + ", " +
-        (n % 2 === 1 ? "the right way up" : "phase-flipped, so you will need to un-mirror it in software") + " — " + fmt(save, 1) +
-        "× cheaper than the " + fmt(2 * f2(), 1) + " MHz that \"twice the highest frequency\" would demand." +
-        (n > 8 ? " Look how narrow this green stripe is, though: at rates this low, your clock accuracy is what limits you." : ""));
+      verdict("r-z-verdict", "r-z-msg", "ok", "This rate works. The band sits inside zone " + n +
+        " and folds down " + (n % 2 === 1 ? "the right way up." : "mirrored, so the order of its frequencies is reversed and software has to reverse it back.") +
+        " The converter measures " + fmt(save, 1) + " times less often than the " + fmt(2 * f2(), 1) +
+        " MHz that \"twice the highest frequency\" would ask for." +
+        (n > 8 ? " Note how narrow the green stretch around the marker is: at rates this low, a small drift in the sampling clock moves the band across a boundary, so the clock has to be held to a matching accuracy." : ""));
     } else {
-      verdict("r-z-verdict", "r-z-msg", "bad", "This rate does not work. The band straddles a boundary at a multiple of " +
-        fmt(fs / 2) + " MHz, so part of it folds onto the rest and the two get added together. Nudge the slider to the nearest green stripe — the cheapest one that works is " +
+      verdict("r-z-verdict", "r-z-msg", "bad", "This rate does not work. Its zones are " +
+        fmt(fs / 2) + " MHz wide, and one of the boundaries between them falls inside the band, so the part below that boundary and the part above it fold down on top of each other and are added together. Move the slider to the nearest green stretch. The lowest rate that works for this band is " +
         fmt(minLegal()) + " MHz.");
     }
     draw();

@@ -66,11 +66,21 @@ Analytic functions are rigid. They cannot vary locally without that variation be
 
 ## Sampling makes copies of the spectrum
 
-To determine when sampling loses information, consider the signal's **spectrum** rather than its waveform — the amount of energy at each frequency. This is the same representation produced by an audio visualiser or an FFT.
+To determine when sampling loses information, consider the signal's **[spectrum](../waves/#spectrum)** rather than its waveform — the amount of energy at each frequency. This is the same representation produced by an audio visualiser or an FFT.
 
 The central fact of the theory is the following. Sampling in time *duplicates* the spectrum in frequency. Not approximately: it makes exact copies, spaced exactly fs apart, and adds them all together:
 
 **Xs(f)=T1k=−∞∑∞X(f−kfs)**
+
+- **X(f)** — the spectrum of the original signal — what was actually present.
+
+- **Xs(f)** — the spectrum the samples represent.
+
+- **∑k** — sum over every integer k, including negatives.
+
+- **X(f−kfs)** — the original spectrum, shifted by k sample rates.
+
+- **T** — the sampling period: the time between one measurement and the next, equal to 1 divided by the sample rate.
 
 In words: **the samples do not contain X. They contain X plus every copy of X shifted by a multiple of the sample rate.** If those copies do not overlap, the middle one can be cropped out and the original recovered exactly. If they overlap, they have been *summed*, and a sum of two numbers cannot be separated.
 
@@ -127,6 +137,10 @@ Written as math, that function is:
 
 **falias=f0−fs⋅round(f0/fs)**  
 *the same thing, in symbols*
+
+That reflection gives the frequency axis a repeating structure worth naming, because the rest of this page uses it. Sampling at a rate divides the whole axis into consecutive slices, each one half the sample rate wide: 0 to half, half to one whole rate, one whole rate to one and a half, and so on upwards without end. These slices are the **zones**, numbered from 1. Zone 1 has a name of its own: the **baseband**. It runs from 0 to half the sample rate, and it is the only stretch of the frequency axis that a set of samples can express at all. Every other zone is folded down onto it, which is why a measurement can only ever report a frequency in that range.
+
+Folding maps each zone onto the baseband in turn. Odd-numbered zones arrive **upright**, the right way up. Even-numbered zones arrive **mirrored**, low frequencies and high frequencies swapped, which is the phase flip described below. Two frequencies in the same zone stay distinct after folding; two in different zones can land on the same place and become impossible to tell apart.
 
 Two frequencies are aliases of each other exactly when their sum or difference is a multiple of the sample rate. On the reflected segments there is an additional effect: the wave returns **phase-flipped**, so a rising sweep is heard as a falling one. This is why an undersampled radio band arrives with its spectrum mirrored, and it can be heard directly in [the audible demonstration](#hear).
 
@@ -333,19 +347,39 @@ In none of those three is there an obvious signal, a sample rate, or anything a 
 
 "Sample at twice the highest frequency" is the commonly cited form of the rule, and it is stricter than necessary. What matters is that the copies do not overlap, which depends on how *wide* the signal's band is, not on how high it sits.
 
-For example, FM radio between 100 and 102 MHz is only 2 MHz wide. Sampling at 204 MHz is not required. 4 MHz suffices — a 51× reduction — because at that rate the band folds down into a slot where nothing else is present. Software-defined radios rely on this technique, as do many instrumentation front-ends.
+Take FM radio between 100 and 102 MHz. The highest frequency present is 102 MHz, so the familiar rule asks for 204 million measurements per second. But the signal only occupies 2 MHz of the axis; everything below 100 MHz and above 102 MHz is empty. Sampling folds the whole axis down into the baseband — the stretch from 0 to half the sampling rate, which is all a set of samples can express — and if the fold happens to place this 2 MHz of content where nothing else lands, none of it is lost. Sampling at 4 million measurements per second does exactly that.
 
-Only certain rates work. The valid ones form a set of windows:
+The saving is in the converter alone. A part that measures 4 million times a second is far slower, cheaper and lower-powered than one that measures 204 million times a second, and that is the entire point of the technique. Nothing else gets easier: the analogue input must still respond accurately to a 102 MHz wave, and the filter in front of it must now pass 100 to 102 MHz while rejecting everything else, which is harder to build than a filter that simply removes everything above a limit. Software-defined radios and instrumentation front-ends are built this way.
+
+### Why only some rates work
+
+Recall that a sampling rate cuts the frequency axis into zones, each half the rate wide, and that every zone folds down onto the baseband. For this to be usable, the band has to sit *inside a single zone*. If it does, the whole band folds down together and keeps its internal spacing, so it can be recovered. If instead the band lies across the boundary between two zones, the part below the boundary and the part above it fold down on top of each other and are added together. That is the case the figure calls **straddling**, and it destroys the signal: the two halves are summed into one set of numbers with no way to separate them again.
+
+With the band at 100 to 102 MHz and a rate of 4 MHz, the zones are 2 MHz wide, so their boundaries fall at 0, 2, 4 and so on — including at exactly 100 and 102. The band fills one zone precisely and nothing straddles. Change the rate to 4.4 MHz and the zones become 2.2 MHz wide, with boundaries at 99 and 101.2. Now the band lies across 101.2, the two parts fold onto one another, and the signal is gone. The band did not move; only the spacing of the boundaries did.
+
+This is why raising the rate does not always help and lowering it does not always hurt. Workable rates come in separate ranges with unusable gaps between them, given by:
 
 **n2f2≤fs≤n−12f1,n=1,2,…,⌊f2−f1f2⌋**
 
-Rather than evaluate this by hand, adjust the sliders. Green means the band lands cleanly inside one zone; orange means it straddles a boundary and folds onto itself, which is unrecoverable.
+- **f1,f2** — the bottom and top of the signal's band.
 
-> **Figure 7 · live — Which sample rates are legal for a high-frequency band**
+- **n** — the number of the zone the band folds down from. n=1 is ordinary sampling.
+
+- **⌊ ⌋** — round down to an integer.
+
+Rather than evaluate that by hand, use the figure. It has two parts, and they answer two different questions about the same choice of rate.
+
+The **upper bar** is a survey: it runs along every sampling rate the slider can reach, from left to right, and colours each one according to whether a band of the chosen position and width would survive it. Green means the band falls inside a single zone at that rate; orange means it would straddle a boundary. The dashed marker shows which rate is currently selected. The green stretches are labelled with the number of the zone the band ends up in.
+
+The **lower bar** zooms in on that one selected rate and shows the outcome: the baseband, from 0 to half the selected rate, with the band drawn where it actually arrives after folding. When the selected rate is a green one, a solid block shows the stretch of the baseband the band now occupies, and everything else in the baseband is free. When the rate is an orange one, there is no meaningful position to draw, because the band has been added to itself.
+
+So the upper bar answers "which rates are usable at all", and the lower bar answers "if this rate is used, where does the signal end up". Moving the rate slider moves the marker in the upper bar and redraws the lower one.
+
+> **Figure 7 · live — Which sampling rates work for a band, and where it ends up**
 >
-> Green bands are rates that work. They become narrower at lower rates; the lowest valid rate is also the least tolerant.
+> Upper bar: every rate, coloured by whether it works. Lower bar: for the selected rate, where the band arrives in the baseband. The workable ranges get narrower as the rate falls, which means a lower rate has to be held to a tighter accuracy to stay inside one.
 >
-> Two constraints remain: the hardware must still be able to receive 102 MHz at its input, and the filter is now a bandpass rather than a simple lowpass. This saves on sample rate, not on analogue design.
+> Widening the band, or moving it, redraws the whole upper bar: which rates work is a property of the band, not a fixed list. Two costs are unchanged by any of this. The input circuit must still respond accurately to the highest frequency in the band, 102 MHz here, because that is the wave physically arriving at it. And the filter in front must now pass only the band itself, rejecting everything above and below, since any content in another zone folds down onto the signal just as readily. The saving is in how often the converter has to measure, and nowhere else.
 >
 > *(interactive figure — see the web page)*
 
@@ -379,6 +413,12 @@ First, it rolls off the top of the band: content near the ceiling comes out abou
 The theorem assumes samples land at exactly nT. If they land slightly early or late, the correct signal is read at the wrong moment, and the faster the signal is changing, the greater the error. Note what is *not* in the formula below: the sample rate. Jitter is governed by how fast the *input* is changing.
 
 **SNR=−20log10(2πfinσt) dB**
+
+- **fin** — frequency of the measured signal.
+
+- **σt** — typical timing error per sample.
+
+- **SNR** — signal-to-noise ratio — how far above the noise the data sits.
 
 > **Figure 9 · calculator — The resolution cost of timing jitter**
 >
@@ -493,9 +533,12 @@ Nyquist's name was attached later, and the mechanism is uncertain; the most like
 | **Staircase output** | Costs about 4 dB at the top of the band and leaves partial copies behind. Fixable in software, or by oversampling. |
 | **Jitter** | Timing error degrades the signal in proportion to how fast the signal changes, not how fast it is sampled. |
 | **Position vs width** | What limits the rate is how *wide* the band is, not how high it sits. This is what makes deliberate undersampling possible. |
+| **Zones and baseband** | A sample rate cuts the frequency axis into slices half the rate wide, numbered from 1. Slice 1, from 0 to half the rate, is the *baseband*: the only range the samples can express. Every other slice folds onto it, odd ones upright and even ones mirrored. |
 
 > Sampling never destroys information; *overlap* does. Every practical rule, from anti-alias filters to mipmaps to averaging metrics buckets, is a method for keeping the copies apart.
 
 An interactive companion to the Wikipedia article [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem). Every figure computes its curves live in the browser — no precomputed data and no network calls. The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output is the actual phenomenon rather than a recording.
 
 Sources behind [the history section](#history): Shannon, *Communication in the Presence of Noise* (1949); Kotelnikov (1933); Whittaker (1915); Landau, *Necessary density conditions* (1967).
+
+Text adapted from Wikipedia (CC BY-SA 4.0) and Xiph.Org’s *A Digital Media Primer for Geeks* (CC BY-SA 3.0). This page is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); see [LICENSE](https://github.com/ssemakov/digital-media-study/blob/main/LICENSE).
