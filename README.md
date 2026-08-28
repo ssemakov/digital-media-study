@@ -7,7 +7,8 @@ Interactive explainers on digital audio and video, aimed at software engineers.
 - **`/waves`** — _Waves, for programmers._ Amplitude, frequency, phase, superposition, spectrum
   and wavelength, each defined and demonstrated. Ends with the spectrogram window tradeoff.
 - **`/sampling`** — _Sampling, for programmers._ The Nyquist–Shannon theorem made interactive:
-  aliasing, reconstruction, and why the stair-step picture is wrong. _Coming soon._
+  aliasing, reconstruction, and why the stair-step picture is wrong.
+  Published through §9; the remaining sections are still in review.
 - **`/primer`** — _A digital media primer for geeks._ Bit depth and dynamic range, dither,
   µ-law companding, interlacing, gamma, Y′CbCr and chroma subsampling, pixel formats,
   containers. _Coming soon._
