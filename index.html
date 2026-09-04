@@ -126,6 +126,19 @@
       h1 em {
         font-style: normal;
         color: var(--s1);
+        background: linear-gradient(100deg, var(--s1) 0%, var(--s3) 50%, var(--s1) 100%);
+        background-size: 250% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: drift 8s ease-in-out infinite alternate;
+      }
+      @keyframes drift {
+        from { background-position: 0% 50%; }
+        to { background-position: 100% 50%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        h1 em { animation: none; }
       }
       .lede {
         font-size: 17.5px;
