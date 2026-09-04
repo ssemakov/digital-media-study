@@ -206,15 +206,64 @@ func main() {
 }
 ```
 
-Replacing `sinc` with a box gives nearest-neighbour interpolation. Replacing it with a triangle gives linear interpolation. Replacing it with a cubic gives bicubic. **Sinc is the kernel that is exactly correct**; the others are approximations to it. Truncating the loop to a few neighbours and tapering the ends gives **Lanczos**, the resampling filter used in most image libraries.
+Every practical interpolator is that same loop with a different weight function. Swap the `sinc` call for one of these and nothing else changes:
 
-Two properties make it work: sinc(0)=1, and sinc is exactly zero at every other integer. Each sample's kernel contributes its full value at its own instant and *zero* at every other sample instant. The curve passes through every sample point exactly, and the kernels determine only the values in between.
+```go
+// box: 1 for the nearest sample, 0 for every other. Nearest-neighbour interpolation.
+func box(u float64) float64 {
+	if u >= -0.5 && u < 0.5 {
+		return 1
+	}
+	return 0
+}
+
+// triangle: weight falls off in a straight line, reaching 0 at the next sample. Linear interpolation.
+func triangle(u float64) float64 {
+	u = math.Abs(u)
+	if u < 1 {
+		return 1 - u
+	}
+	return 0
+}
+
+// cubic (Catmull-Rom): a smooth curve through the four nearest samples. Bicubic, when applied in 2-D.
+func cubic(u float64) float64 {
+	u = math.Abs(u)
+	if u < 1 {
+		return 1.5*u*u*u - 2.5*u*u + 1
+	}
+	if u < 2 {
+		return -0.5*u*u*u + 2.5*u*u - 4*u + 2
+	}
+	return 0
+}
+
+// lanczos: sinc cut off at three samples either side, tapered so the cut does not ring.
+func lanczos(u float64) float64 {
+	if math.Abs(u) >= 3 {
+		return 0
+	}
+	return sinc(u) * sinc(u/3)
+}
+```
+
+| Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
+|---|---|---|---|
+| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. |
+| **triangle** (linear, bilinear in 2-D) | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
+| **cubic** (bicubic in 2-D) | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
+| **Lanczos**, a = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
+| **sinc** (ideal) | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
+
+**Sinc is the kernel that is exactly correct**; the others are approximations to it, cheaper because each touches only a handful of samples. Figure 4 below lets you swap between them and measures what each approximation costs.
+
+Two properties make it work: sinc(0)=1, and sinc is exactly zero at every other integer. Each sample's kernel contributes its full value at its own instant and *zero* at every other sample instant. The curve passes through every sample point exactly, and the kernels determine only the values in between. All four approximations above share those two properties, so they also pass through every sample. What they lack is a third: the spectrum of sinc is exactly the box that cropped out the middle copy, so it adds nothing outside the band. Every other kernel's spectrum leaks past the band edge, and that leak is the error the figure measures.
 
 > **Figure 4 · live — The waveform built from kernels**
 >
-> Each measurement contributes one scaled sinc. Summing enough of them reconstructs the original. Enable "show kernels" to see the individual contributions.
+> Each measurement contributes one scaled kernel. Summing enough of them reconstructs the original. Enable "show kernels" to see the individual contributions, and switch the kernel to compare sinc with its approximations.
 >
-> Reducing the kernel count makes the error appear at the *edges* first; the middle remains accurate longest. This is why practical resamplers use a few dozen taps around each output point rather than the full infinite sum, and why they remain accurate.
+> Reducing the kernel count makes the error appear at the *edges* first; the middle remains accurate longest. This is why practical resamplers use a few dozen taps around each output point rather than the full infinite sum, and why they remain accurate. With every kernel kept, switching kernels shows what each approximation costs. Box is worst, triangle next, cubic closer still. Lanczos lands within a hair of the truncated sinc, and sometimes beats it, because its taper is exactly the fix for that edge error.
 >
 > *(interactive figure — see the web page)*
 

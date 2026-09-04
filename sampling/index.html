@@ -728,26 +728,110 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
 console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span class="c">// reconstruct halfway between two samples</span>
 </code></pre>
 
-    <p>Replacing <code>sinc</code> with a box gives nearest-neighbour interpolation. Replacing it with
-    a triangle gives linear interpolation. Replacing it with a cubic gives bicubic. <strong>Sinc is the
-    kernel that is exactly correct</strong>; the others are approximations to it. Truncating the loop
-    to a few neighbours and tapering the ends gives
-    <strong>Lanczos</strong>, the resampling filter used in most image libraries.</p>
+    <p>Every practical interpolator is that same loop with a different weight function. Swap the
+    <code>sinc</code> call for one of these and nothing else changes:</p>
+  </div>
+
+  <div class="prose">
+<pre><code class="go"><span class="c">// box: 1 for the nearest sample, 0 for every other. Nearest-neighbour interpolation.</span>
+<span class="k">func</span> box(u <span class="k">float64</span>) <span class="k">float64</span> {
+	<span class="k">if</span> u &gt;= -<span class="n">0.5</span> &amp;&amp; u &lt; <span class="n">0.5</span> {
+		<span class="k">return</span> <span class="n">1</span>
+	}
+	<span class="k">return</span> <span class="n">0</span>
+}
+
+<span class="c">// triangle: weight falls off in a straight line, reaching 0 at the next sample. Linear interpolation.</span>
+<span class="k">func</span> triangle(u <span class="k">float64</span>) <span class="k">float64</span> {
+	u = math.Abs(u)
+	<span class="k">if</span> u &lt; <span class="n">1</span> {
+		<span class="k">return</span> <span class="n">1</span> - u
+	}
+	<span class="k">return</span> <span class="n">0</span>
+}
+
+<span class="c">// cubic (Catmull-Rom): a smooth curve through the four nearest samples. Bicubic, when applied in 2-D.</span>
+<span class="k">func</span> cubic(u <span class="k">float64</span>) <span class="k">float64</span> {
+	u = math.Abs(u)
+	<span class="k">if</span> u &lt; <span class="n">1</span> {
+		<span class="k">return</span> <span class="n">1.5</span>*u*u*u - <span class="n">2.5</span>*u*u + <span class="n">1</span>
+	}
+	<span class="k">if</span> u &lt; <span class="n">2</span> {
+		<span class="k">return</span> -<span class="n">0.5</span>*u*u*u + <span class="n">2.5</span>*u*u - <span class="n">4</span>*u + <span class="n">2</span>
+	}
+	<span class="k">return</span> <span class="n">0</span>
+}
+
+<span class="c">// lanczos: sinc cut off at three samples either side, tapered so the cut does not ring.</span>
+<span class="k">func</span> lanczos(u <span class="k">float64</span>) <span class="k">float64</span> {
+	<span class="k">if</span> math.Abs(u) &gt;= <span class="n">3</span> {
+		<span class="k">return</span> <span class="n">0</span>
+	}
+	<span class="k">return</span> sinc(u) * sinc(u/<span class="n">3</span>)
+}
+</code><code class="js" hidden><span class="c">// box: 1 for the nearest sample, 0 for every other. Nearest-neighbour interpolation.</span>
+<span class="k">function</span> box(u) {
+  <span class="k">return</span> u &gt;= -<span class="n">0.5</span> &amp;&amp; u &lt; <span class="n">0.5</span> ? <span class="n">1</span> : <span class="n">0</span>;
+}
+
+<span class="c">// triangle: weight falls off in a straight line, reaching 0 at the next sample. Linear interpolation.</span>
+<span class="k">function</span> triangle(u) {
+  u = Math.abs(u);
+  <span class="k">return</span> u &lt; <span class="n">1</span> ? <span class="n">1</span> - u : <span class="n">0</span>;
+}
+
+<span class="c">// cubic (Catmull-Rom): a smooth curve through the four nearest samples. Bicubic, when applied in 2-D.</span>
+<span class="k">function</span> cubic(u) {
+  u = Math.abs(u);
+  <span class="k">if</span> (u &lt; <span class="n">1</span>) <span class="k">return</span> <span class="n">1.5</span> * u * u * u - <span class="n">2.5</span> * u * u + <span class="n">1</span>;
+  <span class="k">if</span> (u &lt; <span class="n">2</span>) <span class="k">return</span> -<span class="n">0.5</span> * u * u * u + <span class="n">2.5</span> * u * u - <span class="n">4</span> * u + <span class="n">2</span>;
+  <span class="k">return</span> <span class="n">0</span>;
+}
+
+<span class="c">// lanczos: sinc cut off at three samples either side, tapered so the cut does not ring.</span>
+<span class="k">function</span> lanczos(u) {
+  <span class="k">return</span> Math.abs(u) &lt; <span class="n">3</span> ? sinc(u) * sinc(u / <span class="n">3</span>) : <span class="n">0</span>;
+}
+</code></pre>
+  </div>
+
+  <div class="prose tw">
+    <table>
+      <thead><tr><th style="width:20%">Kernel</th><th>Samples touched</th><th>Weights halfway between two samples</th><th>On an upscaled image</th></tr></thead>
+      <tbody>
+        <tr><td><b>box</b><br>nearest-neighbour</td><td>1</td><td><code>1</code> for one neighbour, <code>0</code> for the other</td><td>Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art.</td></tr>
+        <tr><td><b>triangle</b><br>linear, bilinear in 2-D</td><td>2</td><td><code>0.5 · 0.5</code>, a plain average</td><td>Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering.</td></tr>
+        <tr><td><b>cubic</b><br>bicubic in 2-D</td><td>4</td><td><code>−0.06 · 0.56 · 0.56 · −0.06</code></td><td>Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors.</td></tr>
+        <tr><td><b>Lanczos</b>, <i>a</i> = 3</td><td>6</td><td><code>0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02</code></td><td>Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries.</td></tr>
+        <tr><td><b>sinc</b><br>ideal</td><td>all of them</td><td>every sample, decaying as 1/distance</td><td>The original, exactly, given infinitely many samples. Not implementable as written.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <p><strong>Sinc is the kernel that is exactly correct</strong>; the others are approximations to
+    it, cheaper because each touches only a handful of samples. Figure 4 below lets you swap between
+    them and measures what each approximation costs.</p>
 
     <p>Two properties make it work: <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span><span class="mopen">(</span><span class="mord">0</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>, and <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6679em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span></span></span></span> is
     exactly zero at every other integer. Each sample's kernel contributes its full value at
     its own instant and <em>zero</em> at every other sample instant. The curve passes
-    through every sample point exactly, and the kernels determine only the values in between.</p>
+    through every sample point exactly, and the kernels determine only the values in between.
+    All four approximations above share those two properties, so they also pass through every
+    sample. What they lack is a third: the spectrum of sinc is exactly the box that cropped out the
+    middle copy, so it adds nothing outside the band. Every other kernel's spectrum leaks past the
+    band edge, and that leak is the error the figure measures.</p>
   </div>
 
   <figure id="fig-sinc">
     <div class="head">
       <div class="n">Figure 4 · live</div>
       <h4>The waveform built from kernels</h4>
-      <p>Each measurement contributes one scaled sinc. Summing enough of them reconstructs the
-      original. Enable "show kernels" to see the individual contributions.</p>
+      <p>Each measurement contributes one scaled kernel. Summing enough of them reconstructs the
+      original. Enable "show kernels" to see the individual contributions, and switch the kernel to
+      compare sinc with its approximations.</p>
     </div>
-    <div class="canvasbox"><canvas id="c-sinc" height="290" aria-label="Sinc kernels summing to a reconstructed waveform"></canvas></div>
+    <div class="canvasbox"><canvas id="c-sinc" height="290" aria-label="Interpolation kernels summing to a reconstructed waveform"></canvas></div>
     <div class="legend">
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>original <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span></span></span></span></span>
       <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>samples</span>
@@ -763,6 +847,10 @@ console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span cl
         <div class="seg" id="seg-sig">
           <button data-v="tone" class="on">sine</button><button data-v="two">two tones</button><button data-v="pulse">a blip</button>
         </div></div>
+      <div style="flex:0 0 auto"><span class="fieldlab">kernel</span>
+        <div class="seg" id="seg-kern">
+          <button data-v="sinc" class="on">sinc</button><button data-v="box">box</button><button data-v="tri">triangle</button><button data-v="cubic">cubic</button><button data-v="lanczos">Lanczos</button>
+        </div></div>
       <label class="chk" style="flex:0 0 auto;padding-bottom:4px"><input type="checkbox" id="k-k-show" checked> show kernels</label>
     </div>
     <div class="readout">
@@ -772,7 +860,10 @@ console.log(valueAt(<span class="n">2.5</span>, samples, T));           <span cl
     </div>
     <figcaption>Reducing the kernel count makes the error appear at the <em>edges</em> first; the middle
     remains accurate longest. This is why practical resamplers use a few dozen taps around each output
-    point rather than the full infinite sum, and why they remain accurate.</figcaption>
+    point rather than the full infinite sum, and why they remain accurate. With every kernel kept,
+    switching kernels shows what each approximation costs. Box is worst, triangle next, cubic closer
+    still. Lanczos lands within a hair of the truncated sinc, and sometimes beats it, because its
+    taper is exactly the fix for that edge error.</figcaption>
   </figure>
 
   <div class="prose">
@@ -2095,8 +2186,21 @@ function segment(id, cb) {
 (function () {
   var P = new Plot("c-sinc", { l: 40, r: 16, t: 18, b: 32 });
   if (!P.cv) return;
-  var N = 7, fs = 3, sig = "tone", showK = true;
+  var N = 7, fs = 3, sig = "tone", showK = true, kname = "sinc";
   var T0 = -4, T1 = 4;
+  var KERN = {
+    sinc: sinc,
+    box: function (u) { return u >= -0.5 && u < 0.5 ? 1 : 0; },
+    tri: function (u) { u = Math.abs(u); return u < 1 ? 1 - u : 0; },
+    cubic: function (u) {                      // Catmull-Rom
+      u = Math.abs(u);
+      if (u < 1) return 1.5 * u * u * u - 2.5 * u * u + 1;
+      if (u < 2) return -0.5 * u * u * u + 2.5 * u * u - 4 * u + 2;
+      return 0;
+    },
+    lanczos: function (u) { return Math.abs(u) < 3 ? sinc(u) * sinc(u / 3) : 0; }
+  };
+  function kern(u) { return KERN[kname](u); }
 
   function x(t) {
     if (sig === "tone") return Math.sin(2 * PI * 0.8 * t);
@@ -2115,7 +2219,7 @@ function segment(id, cb) {
   }
   function recon(t, K) {
     var T = 1 / fs, s = 0;
-    for (var i = 0; i < K.length; i++) s += K[i][1] * sinc((t - K[i][0]) / T);
+    for (var i = 0; i < K.length; i++) s += K[i][1] * kern((t - K[i][0]) / T);
     return s;
   }
 
@@ -2128,7 +2232,7 @@ function segment(id, cb) {
     if (showK) {
       for (var i = 0; i < K.length; i++) {
         (function (k) {
-          P.curve(function (t) { return k[1] * sinc((t - k[0]) / T); }, rgba(C.muted, 0.55), 1);
+          P.curve(function (t) { return k[1] * kern((t - k[0]) / T); }, rgba(C.muted, 0.55), 1);
         })(K[i]);
       }
     }
@@ -2163,6 +2267,7 @@ function segment(id, cb) {
   on("s-k-fs", "input", function (e) { fs = +e.target.value; update(); });
   on("k-k-show", "change", function (e) { showK = e.target.checked; update(); });
   segment("seg-sig", function (v) { sig = v; update(); });
+  segment("seg-kern", function (v) { kname = v; update(); });
   register(P, draw); update();
 })();
 
