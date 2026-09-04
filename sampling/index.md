@@ -172,7 +172,23 @@ The samples contain all the information. To recover the signal: crop the spectru
 
 **x(t)=n∑x(nT)⋅sinc(Tt−nT),sinc(u)=πusinπu**
 
-The sum is an interpolation loop, of the same form as interpolation code written with a different kernel:
+The kernels in common use, written in the same variable u = (t − nT)/T, the distance from a sample in units of the sample spacing:
+
+**box(u) = 1 if |u| < 1/2, else 0**
+**tri(u) = max(0, 1 − |u|)**
+**cubic(u) = 1.5|u|³ − 2.5|u|² + 1 if |u| < 1; −0.5|u|³ + 2.5|u|² − 4|u| + 2 if 1 ≤ |u| < 2; else 0**
+**lanczos(u) = sinc(u)·sinc(u/3) if |u| < 3, else 0**
+
+The sum is an interpolation loop. Every practical interpolator is the same loop with a different weight function; the table compares them and the code below implements all of them:
+
+| Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
+|---|---|---|---|
+| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. |
+| **triangle** (linear, bilinear in 2-D) | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
+| **cubic** (bicubic in 2-D) | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
+| **Lanczos**, a = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
+| **sinc** (ideal) | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
+
 
 ```go
 package main
@@ -190,25 +206,6 @@ func sinc(u float64) float64 {
 	return math.Sin(math.Pi*u) / (math.Pi * u)
 }
 
-// the value at ANY time t, exactly, from the samples alone
-func valueAt(t float64, samples []float64, T float64) float64 {
-	sum := 0.0
-	for n := 0; n < len(samples); n++ {
-		sum += samples[n] * sinc((t-float64(n)*T)/T) // each sample, weighted by its distance from t
-	}
-	return sum
-}
-
-func main() {
-	T := 1.0                                       // sampling period: seconds between samples
-	samples := []float64{0, 1, 0, -1, 0, 1, 0, -1} // a sampled sine, four samples per cycle
-	fmt.Println(valueAt(2.5, samples, T))          // reconstruct halfway between two samples
-}
-```
-
-Every practical interpolator is that same loop with a different weight function. Swap the `sinc` call for one of these and nothing else changes:
-
-```go
 // box: 1 for the nearest sample, 0 for every other. Nearest-neighbour interpolation.
 func box(u float64) float64 {
 	if u >= -0.5 && u < 0.5 {
@@ -245,19 +242,27 @@ func lanczos(u float64) float64 {
 	}
 	return sinc(u) * sinc(u/3)
 }
-```
 
-| Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
-|---|---|---|---|
-| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. |
-| **triangle** (linear, bilinear in 2-D) | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
-| **cubic** (bicubic in 2-D) | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
-| **Lanczos**, a = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
-| **sinc** (ideal) | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
+// the value at ANY time t from the samples alone.
+// Exact with sinc; swap in any kernel above for an approximation.
+func valueAt(t float64, samples []float64, T float64) float64 {
+	sum := 0.0
+	for n := 0; n < len(samples); n++ {
+		sum += samples[n] * sinc((t-float64(n)*T)/T) // each sample, weighted by its distance from t
+	}
+	return sum
+}
+
+func main() {
+	T := 1.0                                       // sampling period: seconds between samples
+	samples := []float64{0, 1, 0, -1, 0, 1, 0, -1} // a sampled sine, four samples per cycle
+	fmt.Println(valueAt(2.5, samples, T))          // reconstruct halfway between two samples
+}
+```
 
 **Sinc is the kernel that is exactly correct**; the others are approximations to it, cheaper because each touches only a handful of samples. Figure 4 below lets you swap between them and measures what each approximation costs.
 
-Two properties make it work: sinc(0)=1, and sinc is exactly zero at every other integer. Each sample's kernel contributes its full value at its own instant and *zero* at every other sample instant. The curve passes through every sample point exactly, and the kernels determine only the values in between. All four approximations above share those two properties, so they also pass through every sample. What they lack is a third: the spectrum of sinc is exactly the box that cropped out the middle copy, so it adds nothing outside the band. Every other kernel's spectrum leaks past the band edge, and that leak is the error the figure measures.
+What all of them share with sinc is two properties: the kernel is 1 at its centre and exactly zero at every other integer. Each sample's kernel therefore contributes its full value at its own instant and *zero* at every other sample instant, so the curve passes through every sample point exactly and the kernel decides only the values in between. What sinc alone has is a third property: its spectrum is exactly the box that cropped out the middle copy, so it adds nothing outside the band. Every other kernel's spectrum leaks past the band edge, and that leak is the error the figure measures.
 
 > **Figure 4 · live — The waveform built from kernels**
 >
