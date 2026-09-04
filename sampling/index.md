@@ -148,7 +148,7 @@ Two frequencies are aliases of each other exactly when their sum or difference i
 >
 > Increase f0 past half the sample rate. The samples can no longer distinguish the two signals, and the orange curve is the one the system will reproduce.
 >
-> Enable "staircase output" to see the behaviour of low-cost playback: each value is held until the next arrives. The staircase follows the *orange* curve. No downstream processing can undo an alias; the incorrect result was fixed at the moment of measurement.
+> Enable "staircase output" to see the behaviour of low-cost playback: each value is held until the next arrives. The staircase follows the *orange* curve; it is the box kernel of the rebuilding section, the crudest of the interpolators compared in Figure 4. No downstream processing can undo an alias; the incorrect result was fixed at the moment of measurement.
 >
 > *(interactive figure — see the web page)*
 
@@ -183,7 +183,7 @@ The sum is an interpolation loop. Every practical interpolator is the same loop 
 
 | Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
 |---|---|---|---|
-| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. |
+| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. Its frequency response, and the droop it causes, is worked out under real systems. |
 | **triangle** (linear, bilinear in 2-D) | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
 | **cubic** (bicubic in 2-D) | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
 | **Lanczos**, a = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
@@ -447,12 +447,14 @@ The theorem assumes instantaneous measurements, infinite precision, a perfect fi
 
 ### Staircase output, and the droop it causes
 
-Low-cost playback holds each sample until the next arrives — the staircase that can be toggled on in Figure 2. In image terms it is nearest-neighbour upsampling. It is simple and mostly works, but it has two side effects worth noting.
+Low-cost playback holds each sample until the next arrives — the staircase that can be toggled on in Figure 2. In the terms of the rebuilding section, it is `valueAt` with `box` in place of `sinc`; in image terms it is nearest-neighbour upsampling. Figure 4 with the kernel set to box shows what that costs in the time domain; this section shows the same cost in the frequency domain. It is simple and mostly works, but it has two side effects worth noting.
 
 First, it rolls off the top of the band: content near the ceiling comes out about **4 dB quieter** than it should (a factor of 2/π). Second, it does not fully remove the spectral copies that sampling created; it only attenuates them. Both effects are described by one curve:
 
 **H(f)=sinc(f/fs)**  
 *the staircase's frequency response*
+
+Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
 
 > **Figure 8 · live — The effect of the staircase on the spectrum**
 >

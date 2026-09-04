@@ -628,7 +628,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     </div>
     <div class="verdict ok" id="r-t-verdict"><span class="ic">✓</span><span id="r-t-msg"></span></div>
     <figcaption>Enable "staircase output" to see the behaviour of low-cost playback: each value is
-    held until the next arrives. The staircase follows the <em>orange</em> curve. No downstream
+    held until the next arrives. The staircase follows the <em>orange</em> curve; it is the box kernel
+    of the rebuilding section, the crudest of the interpolators compared in Figure 4. No downstream
     processing can undo an alias; the incorrect result was fixed at the moment of measurement.</figcaption>
   </figure>
 
@@ -688,7 +689,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v600 v585 h43z"/></svg></span></span>
     <table>
       <thead><tr><th style="width:20%">Kernel</th><th>Samples touched</th><th>Weights halfway between two samples</th><th>On an upscaled image</th></tr></thead>
       <tbody>
-        <tr><td><b>box</b><br>nearest-neighbour</td><td>1</td><td><code>1</code> for one neighbour, <code>0</code> for the other</td><td>Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art.</td></tr>
+        <tr><td><b>box</b><br>nearest-neighbour</td><td>1</td><td><code>1</code> for one neighbour, <code>0</code> for the other</td><td>Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. Its frequency response, and the droop it causes, is worked out under <a href="#practice">real systems</a>.</td></tr>
         <tr><td><b>triangle</b><br>linear, bilinear in 2-D</td><td>2</td><td><code>0.5 · 0.5</code>, a plain average</td><td>Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering.</td></tr>
         <tr><td><b>cubic</b><br>bicubic in 2-D</td><td>4</td><td><code>−0.06 · 0.56 · 0.56 · −0.06</code></td><td>Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors.</td></tr>
         <tr><td><b>Lanczos</b>, <i>a</i> = 3</td><td>6</td><td><code>0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02</code></td><td>Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries.</td></tr>
@@ -1285,8 +1286,11 @@ console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: r
 
     <h3>Staircase output, and the droop it causes</h3>
     <p>Low-cost playback holds each sample until the next arrives — the staircase that can be toggled
-    on in Figure 2. In image terms it is nearest-neighbour upsampling. It is simple and mostly works,
-    but it has two side effects worth noting.</p>
+    on in Figure 2. In the terms of <a href="#recon">the rebuilding section</a>, it is
+    <code>valueAt</code> with <code>box</code> in place of <code>sinc</code>; in image terms it is
+    nearest-neighbour upsampling. <a href="#fig-sinc">Figure 4</a> with the kernel set to box shows
+    what that costs in the time domain; this section shows the same cost in the frequency domain.
+    It is simple and mostly works, but it has two side effects worth noting.</p>
     <p>First, it rolls off the top of the band: content near the ceiling comes out about
     <strong>4 dB quieter</strong> than it should (a factor of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2/</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>). Second, it does not fully
     remove the spectral copies that sampling created; it only attenuates them. Both effects are described by one
@@ -1304,6 +1308,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 c10,0,16.667,-5,20,-15 v-585 v0 v-585 c-2.667,-10,-9.667,-15,-21,-15
 c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.35em;"><span></span></span></span></span></span></span></span></span></span></span>
     <span class="tag">the staircase's frequency response</span>
+  </div>
+
+  <div class="prose">
+    <p>Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the
+    band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top
+    of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak
+    the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum
+    of the error Figure 4 measures with the box kernel selected.</p>
   </div>
 
   <figure id="fig-zoh">
