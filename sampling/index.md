@@ -10,7 +10,7 @@ If no component of the signal oscillates faster than B times per second, then me
 
 Claude Shannon, 1949. "Perfectly" is literal here: the reconstruction is exact, and the formula that performs it is built in [the section on rebuilding the original](#recon).
 
-This page contains twelve live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
+This page contains nine live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
 
 > fs is the **sample rate** — measurements per second (44100 for CD audio, 60 for a 60 fps game loop, 1 for a metric scraped every second). T=1/fs is the gap between measurements. B is the **bandwidth**: the highest frequency present in the measured signal. That is the complete set of terms.
 
@@ -148,7 +148,7 @@ Two frequencies are aliases of each other exactly when their sum or difference i
 >
 > Increase f0 past half the sample rate. The samples can no longer distinguish the two signals, and the orange curve is the one the system will reproduce.
 >
-> Enable "staircase output" to see the behaviour of low-cost playback: each value is held until the next arrives. The staircase follows the *orange* curve. No downstream processing can undo an alias; the incorrect result was fixed at the moment of measurement.
+> Enable "staircase output" to see the behaviour of low-cost playback: each value is held until the next arrives. The staircase follows the *orange* curve; it is the box kernel of the rebuilding section, the crudest of the interpolators compared in Figure 4. No downstream processing can undo an alias; the incorrect result was fixed at the moment of measurement.
 >
 > *(interactive figure — see the web page)*
 
@@ -172,7 +172,15 @@ The samples contain all the information. To recover the signal: crop the spectru
 
 **x(t)=n∑x(nT)⋅sinc(Tt−nT),sinc(u)=πusinπu**
 
-The sum is an interpolation loop, of the same form as interpolation code written with a different kernel:
+The sum is an interpolation loop. Every practical interpolator is the same loop with a different weight function; the table compares them and the code below implements all of them:
+
+| Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
+|---|---|---|---|
+| **box** nearest-neighbour | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. Its frequency response, and the droop it causes, is worked out under [real systems](#practice). |
+| **triangle** linear, bilinear in 2-D | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
+| **cubic** bicubic in 2-D | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
+| **Lanczos**, *a* = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
+| **sinc** ideal | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
 
 ```go
 package main
@@ -190,7 +198,45 @@ func sinc(u float64) float64 {
 	return math.Sin(math.Pi*u) / (math.Pi * u)
 }
 
-// the value at ANY time t, exactly, from the samples alone
+// box: 1 for the nearest sample, 0 for every other. Nearest-neighbour interpolation.
+func box(u float64) float64 {
+	if u >= -0.5 && u < 0.5 {
+		return 1
+	}
+	return 0
+}
+
+// triangle: weight falls off in a straight line, reaching 0 at the next sample. Linear interpolation.
+func triangle(u float64) float64 {
+	u = math.Abs(u)
+	if u < 1 {
+		return 1 - u
+	}
+	return 0
+}
+
+// cubic (Catmull-Rom): a smooth curve through the four nearest samples. Bicubic, when applied in 2-D.
+func cubic(u float64) float64 {
+	u = math.Abs(u)
+	if u < 1 {
+		return 1.5*u*u*u - 2.5*u*u + 1
+	}
+	if u < 2 {
+		return -0.5*u*u*u + 2.5*u*u - 4*u + 2
+	}
+	return 0
+}
+
+// lanczos: sinc cut off at three samples either side, tapered so the cut does not ring.
+func lanczos(u float64) float64 {
+	if math.Abs(u) >= 3 {
+		return 0
+	}
+	return sinc(u) * sinc(u/3)
+}
+
+// the value at ANY time t from the samples alone.
+// Exact with sinc; swap in any kernel above for an approximation.
 func valueAt(t float64, samples []float64, T float64) float64 {
 	sum := 0.0
 	for n := 0; n < len(samples); n++ {
@@ -206,15 +252,15 @@ func main() {
 }
 ```
 
-Replacing `sinc` with a box gives nearest-neighbour interpolation. Replacing it with a triangle gives linear interpolation. Replacing it with a cubic gives bicubic. **Sinc is the kernel that is exactly correct**; the others are approximations to it. Truncating the loop to a few neighbours and tapering the ends gives **Lanczos**, the resampling filter used in most image libraries.
+**Sinc is the kernel that is exactly correct**; the others are approximations to it, cheaper because each touches only a handful of samples. Figure 4 below lets you swap between them and measures what each approximation costs.
 
-Two properties make it work: sinc(0)=1, and sinc is exactly zero at every other integer. Each sample's kernel contributes its full value at its own instant and *zero* at every other sample instant. The curve passes through every sample point exactly, and the kernels determine only the values in between.
+What all of them share with sinc is two properties: the kernel is 1 at its centre and exactly zero at every other integer. Each sample's kernel therefore contributes its full value at its own instant and *zero* at every other sample instant, so the curve passes through every sample point exactly and the kernel decides only the values in between. What sinc alone has is a third property: its spectrum is exactly the box that cropped out the middle copy, so it adds nothing outside the band. Every other kernel's spectrum leaks past the band edge, and that leak is the error the figure measures.
 
 > **Figure 4 · live — The waveform built from kernels**
 >
-> Each measurement contributes one scaled sinc. Summing enough of them reconstructs the original. Enable "show kernels" to see the individual contributions.
+> Each measurement contributes one scaled kernel. Summing enough of them reconstructs the original. Enable "show kernels" to see the individual contributions, and switch the kernel to compare sinc with its approximations.
 >
-> Reducing the kernel count makes the error appear at the *edges* first; the middle remains accurate longest. This is why practical resamplers use a few dozen taps around each output point rather than the full infinite sum, and why they remain accurate.
+> Reducing the kernel count makes the error appear at the *edges* first; the middle remains accurate longest. This is why practical resamplers use a few dozen taps around each output point rather than the full infinite sum, and why they remain accurate. With every kernel kept, switching kernels shows what each approximation costs. Box is worst, triangle next, cubic closer still. Lanczos lands within a hair of the truncated sinc, and sometimes beats it, because its taper is exactly the fix for that edge error.
 >
 > *(interactive figure — see the web page)*
 
@@ -382,3 +428,68 @@ So the upper bar answers "which rates are usable at all", and the lower bar answ
 > Widening the band, or moving it, redraws the whole upper bar: which rates work is a property of the band, not a fixed list. Two costs are unchanged by any of this. The input circuit must still respond accurately to the highest frequency in the band, 102 MHz here, because that is the wave physically arriving at it. And the filter in front must now pass only the band itself, rejecting everything above and below, since any content in another zone folds down onto the signal just as readily. The saving is in how often the converter has to measure, and nowhere else.
 >
 > *(interactive figure — see the web page)*
+
+---
+
+*§9*
+
+## What goes wrong in real systems
+
+The theorem assumes instantaneous measurements, infinite precision, a perfect filter, and a perfectly steady clock. Real systems fail all four assumptions. The cost of each follows, roughly in the order it begins to matter.
+
+### Staircase output, and the droop it causes
+
+Low-cost playback holds each sample until the next arrives — the staircase that can be toggled on in Figure 2. In the terms of [the rebuilding section](#recon), it is `valueAt` with `box` in place of `sinc`; in image terms it is nearest-neighbour upsampling. [Figure 4](#fig-sinc) with the kernel set to box shows what that costs in the time domain; this section shows the same cost in the frequency domain. It is simple and mostly works, but it has two side effects worth noting.
+
+First, it rolls off the top of the band: content near the ceiling comes out about **4 dB quieter** than it should (a factor of 2/π). Second, it does not fully remove the spectral copies that sampling created; it only attenuates them. Both effects are described by one curve:
+
+**H(f)=sinc(f/fs)**  
+*the staircase's frequency response*
+
+Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
+
+> **Figure 8 · live — The effect of the staircase on the spectrum**
+>
+> Green is the signal, attenuated at the top. Orange is the residual copies not removed. Raise the oversampling ratio to reduce both.
+>
+> "Compensate in software" pre-boosts the high end by the exact inverse of the attenuation — a few-tap filter, and a standard technique inside audio DACs. Oversampling addresses both problems simultaneously, which is why interpolating converters exist: the difficult part is done in inexpensive digital logic so the subsequent analogue filter can be simple.
+>
+> *(interactive figure — see the web page)*
+
+### Clock jitter: the timer is not perfectly periodic
+
+The theorem assumes samples land at exactly nT. If they land slightly early or late, the correct signal is read at the wrong moment, and the faster the signal is changing, the greater the error. Note what is *not* in the formula below: the sample rate. Jitter is governed by how fast the *input* is changing.
+
+**SNR=−20log10(2πfinσt) dB**
+
+- **fin** — frequency of the measured signal.
+
+- **σt** — typical timing error per sample.
+
+- **SNR** — signal-to-noise ratio — how far above the noise the data sits.
+
+> **Figure 9 · calculator — The resolution cost of timing jitter**
+>
+> "Effective bits" is the actual resolution obtained, regardless of the spec-sheet value. Every doubling of input frequency costs half a bit.
+>
+> The picosecond scale here is for high-speed converters, but the formula is scale-free. The same reasoning applies to ordinary software: if a timer drifts by 5 ms while sampling something that changes meaningfully over 50 ms, roughly 10% noise has been added.
+>
+> *(interactive figure — see the web page)*
+
+### Oversampling provides additional resolution
+
+Sampling faster than strictly necessary is not wasted. Quantisation noise — the rounding error from storing values with finite precision — spreads evenly across the entire sampled frequency range. Sampling twice as fast spreads the same total noise over twice the range, so only half of it lands in the band of interest. The rest is then filtered away.
+
+The rate is **+3 dB, or half a bit, per doubling**. Modest on its own, but adding feedback that deliberately moves noise *out* of the band (a delta-sigma modulator) makes the same doubling yield 9, 15, or 21 dB instead. This is how a converter built around a 1-bit comparator produces 20-bit audio: it runs 128× faster and uses the surplus.
+
+> #### Why 44.1 kHz was tight
+> 
+> Human hearing extends to about 20 kHz; half of 44.1 kHz is 22.05 kHz. That leaves a 2 kHz gap for the filter to transition from fully passing to fully blocking — about a seventh of an octave. This is difficult in analogue. Oversampling converters addressed it, and 96 kHz production rates avoid it entirely.
+
+> #### Why filters become inexpensive quickly
+> 
+> At fs=2.2B the filter has a fifth of an octave to do its work — a 10th-order design with poor phase behaviour. At fs=8B it has two full octaves, and a simple 3rd-order filter suffices. Oversampling trades inexpensive computation for expensive analogue design.
+
+An interactive companion to the Wikipedia article [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem). Every figure computes its curves live in the browser — no precomputed data and no network calls. The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output is the actual phenomenon rather than a recording.
+
+Text adapted from Wikipedia (CC BY-SA 4.0) and Xiph.Org’s *A Digital Media Primer for Geeks* (CC BY-SA 3.0). This page is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); see [LICENSE](https://github.com/ssemakov/digital-media-study/blob/main/LICENSE).
