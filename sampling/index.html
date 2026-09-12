@@ -1313,8 +1313,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   <div class="prose">
     <p>Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the
     band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top
-    of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak
-    the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum
+    of that sinc's main lobe (a lobe is one hump of the curve between two zero crossings; the main
+    lobe is the central one, and the side lobes are the smaller ones beyond it), the residual copies
+    are its side lobes, and together they are the leak the rebuilding section promised every kernel
+    other than sinc would have. Figure 8 is the spectrum
     of the error Figure 4 measures with the box kernel selected.</p>
   </div>
 
@@ -1349,10 +1351,23 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <div class="prose">
     <h3>Clock jitter: the timer is not perfectly periodic</h3>
-    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. If they land slightly early or late, the correct
-    signal is read at the wrong moment, and the faster the signal is changing, the greater the
-    error. Note what is <em>not</em> in the formula below: the sample rate. Jitter is governed by
-    how fast the <em>input</em> is changing.</p>
+    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. A real clock is early or late by a
+    small, varying amount, so each sample reads the value the signal had a moment before or after the
+    instant it is filed under. The damage is set by the slope at that instant: a flat stretch of
+    signal reads the same either way, a steep one does not. To first order the timing error simply
+    multiplies the slope:</p>
+  </div>
+
+  <div class="prose eqbox">
+    <span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">Δ</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mord mathnormal">t</span></span></span></span></span>
+    <span class="tag">slope × timing error</span>
+  </div>
+
+  <div class="prose">
+    <p>For a sine at frequency <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and amplitude <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span> the steepest slope is
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">A</span></span></span></span>, so random timing errors of typical size <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> add noise of about
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> relative to the signal. In decibels, that ratio is the ceiling jitter places on the
+    signal-to-noise ratio:</p>
   </div>
 
   <div class="prose eqbox">
@@ -1365,9 +1380,65 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     <dt>SNR</dt><dd>signal-to-noise ratio — how far above the noise the data sits.</dd>
   </dl>
 
+  <div class="prose">
+    <p>Note what is <em>not</em> in the formula: the sample rate. Each sample's error depends only on
+    how far the input moved during that sample's own timing error, so taking more samples neither
+    helps nor hurts. This is the opposite of quantisation noise, which is a fixed total that
+    oversampling spreads thin and filters away. Jitter noise grows with the input frequency instead,
+    and like aliasing it is fixed at the moment of capture: nothing downstream knows the true
+    instants, so nothing downstream can put the samples back.</p>
+    <p>The kind of timing error matters. Random jitter turns into a raised noise floor, which is what
+    the formula describes. Periodic jitter, such as power-supply ripple leaking into the clock, does
+    something different: it produces a pair of spurious tones on either side of the input frequency,
+    the same signature as frequency modulation, and no amount of averaging removes them.</p>
+  </div>
+
+  <figure id="fig-jitter">
+    <div class="head">
+      <div class="n">Figure 9 · live</div>
+      <h4>Timing error becomes amplitude error</h4>
+      <p>Each sample is taken a little early or late, then filed under the instant it was meant for.
+      The orange bars are the resulting amplitude errors. Raise the input frequency and the same
+      timing wobble does more damage.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-jit" height="270" aria-label="A sine sampled with timing jitter, showing the amplitude error at each sample"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the signal</span>
+      <span style="color:var(--muted)"><i class="dot" style="background:var(--muted)"></i>value at the intended instant</span>
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>value actually captured</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>amplitude error</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-jit-f">input frequency<b><span id="v-jit-f">5.0</span> Hz</b></label>
+        <input type="range" id="s-jit-f" min="0.5" max="11" step="0.5" value="5"></div>
+      <div class="sl"><label for="s-jit-s">timing jitter<b><span id="v-jit-s">4.0</span> ms</b></label>
+        <input type="range" id="s-jit-s" min="0" max="15" step="0.5" value="4"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Worst error in view</div><div class="v" id="r-jit-pk">—</div></div>
+      <div class="cell"><div class="k">SNR, measured</div><div class="v" id="r-jit-snr">—</div></div>
+      <div class="cell"><div class="k">SNR, from the formula</div><div class="v" id="r-jit-pred">—</div></div>
+    </div>
+    <figcaption>The sample rate here is fixed at 24 Hz and never enters the readout. Only the slope
+    of the input and the size of the wobble do. The measured figure tracks the formula until the
+    jitter becomes a sizeable fraction of a cycle, where the small-error approximation gives
+    out.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>The numbers are unforgiving at the top of a band. Sixteen-bit audio at 20 kHz needs jitter
+    under about 100 ps to keep all sixteen bits; the calculator's default, a 100 MHz input with 1 ps
+    of jitter, stops at 64 dB, roughly ten bits, whatever the converter's spec sheet says. For
+    software the lesson is more useful than the numbers. Jitter only costs anything if the samples
+    are assumed to have landed at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. Record the actual timestamp with each reading and the
+    samples are irregular but exact, and the interpolation loop from
+    <a href="#recon">the rebuilding section</a> can rebuild the signal from them. Assume a uniform
+    grid and the wobble is baked in as noise.</p>
+  </div>
+
   <figure id="fig-jit">
     <div class="head">
-      <div class="n">Figure 9 · calculator</div>
+      <div class="n">Figure 10 · calculator</div>
       <h4>The resolution cost of timing jitter</h4>
       <p>"Effective bits" is the actual resolution obtained, regardless of the spec-sheet value.
       Every doubling of input frequency costs half a bit.</p>
@@ -1476,7 +1547,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
 <figure id="fig-wheel">
     <div class="head">
-      <div class="n">Figure 10 · live</div>
+      <div class="n">Figure 11 · live</div>
       <h4>A spinning wheel, evaluated once per frame</h4>
       <p>Both wheels turn at the same speed, forwards, always. The left one is drawn continuously;
       the right one moves only at the frame instants. Watch the marked spoke on the right as the
@@ -1514,7 +1585,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <figure id="fig-img">
     <div class="head">
-      <div class="n">Figure 11 · live</div>
+      <div class="n">Figure 12 · live</div>
       <h4>Shrinking an image by dropping pixels</h4>
       <p>The source is a band of stripes that get steadily finer from left to right — the spatial
       version of the rising tone heard earlier. Both reductions below produce the same number of
@@ -1549,7 +1620,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <figure id="fig-metric">
     <div class="head">
-      <div class="n">Figure 12 · live</div>
+      <div class="n">Figure 13 · live</div>
       <h4>Thinning a metrics series</h4>
       <p>A per-second series with periodic spikes, reduced to one point per bucket. Move the offset
       slider: it shifts only <em>which</em> second each kept sample lands on, and the series itself
@@ -2661,7 +2732,59 @@ function segment(id, cb) {
 })();
 
 /* ================================================================
-   FIGURE 9 — jitter calculator
+   FIGURE 9 — jitter in the time domain
+   ================================================================ */
+(function () {
+  var P = new Plot("c-jit", { l: 40, r: 16, t: 18, b: 32 });
+  if (!P.cv) return;
+  var fin = 5, sig = 4e-3, FS = 24, N = 4000;
+  function x(t) { return Math.sin(2 * PI * fin * t); }
+  // seeded unit-variance gaussian draws, so the picture stays put while sliding
+  function gauss(n) {
+    var s = 12345, out = [];
+    function u() { s = (s + 0x6D2B79F5) | 0; var t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+    for (var i = 0; i < n; i++) out.push(Math.sqrt(-2 * Math.log(u() + 1e-12)) * Math.cos(2 * PI * u()));
+    return out;
+  }
+  var Z = gauss(N);
+  function samples() {
+    var out = [];
+    for (var n = 0; n <= FS; n++) { var t = n / FS; out.push([t, x(t), x(t + sig * Z[n])]); }
+    return out;
+  }
+  function draw() {
+    var g = P.ctx, S = samples();
+    P.clear(); P.dom(0, 1, -1.5, 1.5);
+    P.gridY([-1, 1]); P.gridX([0, 0.25, 0.5, 0.75, 1]);
+    P.clipPlot();
+    P.curve(x, C.s1, 2);
+    g.strokeStyle = rgba(C.s2, 0.85); g.lineWidth = 2; g.setLineDash([]);
+    S.forEach(function (p) { g.beginPath(); g.moveTo(P.X(p[0]), P.Y(p[1])); g.lineTo(P.X(p[0]), P.Y(p[2])); g.stroke(); });
+    P.dots(S.map(function (p) { return [p[0], p[1]]; }), rgba(C.muted, 0.7), 3);
+    P.dots(S.map(function (p) { return [p[0], p[2]]; }), C.s3, 4.2);
+    P.unclip();
+    P.axisX([0, 0.25, 0.5, 0.75, 1], function (v) { return v + "s"; }, "time");
+    P.axisY([-1, 0, 1], function (v) { return v.toFixed(0); }, "amplitude");
+  }
+  function update() {
+    txt("v-jit-f", fmt(fin, 1)); txt("v-jit-s", fmt(sig * 1e3, 1));
+    var S = samples(), pk = 0;
+    S.forEach(function (p) { pk = Math.max(pk, Math.abs(p[2] - p[1])); });
+    txt("r-jit-pk", fmt(pk * 100, 0) + " % of amplitude");
+    if (sig === 0) { txt("r-jit-snr", "∞"); txt("r-jit-pred", "∞"); draw(); return; }
+    var ss = 0;
+    for (var i = 0; i < N; i++) { var t = i / N, e = x(t + sig * Z[i]) - x(t); ss += e * e; }
+    txt("r-jit-snr", fmt(20 * Math.log10((1 / Math.SQRT2) / Math.sqrt(ss / N)), 1) + " dB");
+    txt("r-jit-pred", fmt(-20 * Math.log10(2 * PI * fin * sig), 1) + " dB");
+    draw();
+  }
+  on("s-jit-f", "input", function (e) { fin = +e.target.value; update(); });
+  on("s-jit-s", "input", function (e) { sig = +e.target.value * 1e-3; update(); });
+  register(P, draw); update();
+})();
+
+/* ================================================================
+   FIGURE 10 — jitter calculator
    ================================================================ */
 (function () {
   if (!$("n-j-f")) return;
@@ -2678,7 +2801,7 @@ function segment(id, cb) {
     var jitterBinds = snrJ < snrQ;
     txt("r-j-lim", jitterBinds ? "jitter" : "quantiser");
     if (jitterBinds) {
-      var need = 1 / (2 * PI * f * Math.pow(10, -snrQ / 20)) * 1e12;
+      var need = Math.pow(10, -snrQ / 20) / (2 * PI * f) * 1e12;
       verdict("r-j-verdict", "r-j-msg", "bad", "The clock is your bottleneck: timing wobble is throwing away " +
         fmt(b - (tot - 1.76) / 6.02, 1) + " bits of the " + b +
         " you paid for. To get all of them at this input frequency you would need jitter below " + (need < 0.01 ? need.toFixed(4) : fmt(need, 3)) +

@@ -454,7 +454,7 @@ First, it rolls off the top of the band: content near the ceiling comes out abou
 **H(f)=sinc(f/fs)**  
 *the staircase's frequency response*
 
-Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
+Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe (a lobe is one hump of the curve between two zero crossings; the main lobe is the central one, and the side lobes are the smaller ones beyond it), the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
 
 > **Figure 8 · live — The effect of the staircase on the spectrum**
 >
@@ -466,7 +466,12 @@ Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it 
 
 ### Clock jitter: the timer is not perfectly periodic
 
-The theorem assumes samples land at exactly nT. If they land slightly early or late, the correct signal is read at the wrong moment, and the faster the signal is changing, the greater the error. Note what is *not* in the formula below: the sample rate. Jitter is governed by how fast the *input* is changing.
+The theorem assumes samples land at exactly nT. A real clock is early or late by a small, varying amount, so each sample reads the value the signal had a moment before or after the instant it is filed under. The damage is set by the slope at that instant: a flat stretch of signal reads the same either way, a steep one does not. To first order the timing error simply multiplies the slope:
+
+**Δx ≈ x′(t)·δt**  
+*slope × timing error*
+
+For a sine at frequency fin and amplitude A the steepest slope is 2π·fin·A, so random timing errors of typical size σt add noise of about 2π·fin·σt relative to the signal. In decibels, that ratio is the ceiling jitter places on the signal-to-noise ratio:
 
 **SNR=−20log10(2πfinσt) dB**
 
@@ -476,7 +481,21 @@ The theorem assumes samples land at exactly nT. If they land slightly early or l
 
 - **SNR** — signal-to-noise ratio — how far above the noise the data sits.
 
-> **Figure 9 · calculator — The resolution cost of timing jitter**
+Note what is *not* in the formula: the sample rate. Each sample's error depends only on how far the input moved during that sample's own timing error, so taking more samples neither helps nor hurts. This is the opposite of quantisation noise, which is a fixed total that oversampling spreads thin and filters away. Jitter noise grows with the input frequency instead, and like aliasing it is fixed at the moment of capture: nothing downstream knows the true instants, so nothing downstream can put the samples back.
+
+The kind of timing error matters. Random jitter turns into a raised noise floor, which is what the formula describes. Periodic jitter, such as power-supply ripple leaking into the clock, does something different: it produces a pair of spurious tones on either side of the input frequency, the same signature as frequency modulation, and no amount of averaging removes them.
+
+> **Figure 9 · live — Timing error becomes amplitude error**
+>
+> Each sample is taken a little early or late, then filed under the instant it was meant for. The orange bars are the resulting amplitude errors. Raise the input frequency and the same timing wobble does more damage.
+>
+> The sample rate here is fixed at 24 Hz and never enters the readout. Only the slope of the input and the size of the wobble do. The measured figure tracks the formula until the jitter becomes a sizeable fraction of a cycle, where the small-error approximation gives out.
+>
+> *(interactive figure — see the web page)*
+
+The numbers are unforgiving at the top of a band. Sixteen-bit audio at 20 kHz needs jitter under about 100 ps to keep all sixteen bits; the calculator's default, a 100 MHz input with 1 ps of jitter, stops at 64 dB, roughly ten bits, whatever the converter's spec sheet says. For software the lesson is more useful than the numbers. Jitter only costs anything if the samples are assumed to have landed at nT. Record the actual timestamp with each reading and the samples are irregular but exact, and the interpolation loop from the rebuilding section can rebuild the signal from them. Assume a uniform grid and the wobble is baked in as noise.
+
+> **Figure 10 · calculator — The resolution cost of timing jitter**
 >
 > "Effective bits" is the actual resolution obtained, regardless of the spec-sheet value. Every doubling of input frequency costs half a bit.
 >
@@ -520,7 +539,7 @@ Each of these is the same theorem in different units.
 
 Three of those rows are worth seeing rather than reading. Each figure below is the same reduction — keep one value out of every N — in a setting where nobody would describe the work as sampling.
 
-> **Figure 10 · live — A spinning wheel, evaluated once per frame**
+> **Figure 11 · live — A spinning wheel, evaluated once per frame**
 >
 > Both wheels turn at the same speed, forwards, always. The left one is drawn continuously; the right one moves only at the frame instants. Watch the marked spoke on the right as the speed passes half the frame rate: it slows, stops, and then runs backwards, while the wheel itself never changes direction.
 >
@@ -528,7 +547,7 @@ Three of those rows are worth seeing rather than reading. Each figure below is t
 >
 > *(interactive figure — see the web page)*
 
-> **Figure 11 · live — Shrinking an image by dropping pixels**
+> **Figure 12 · live — Shrinking an image by dropping pixels**
 >
 > The source is a band of stripes that get steadily finer from left to right — the spatial version of the rising tone heard earlier. Both reductions below produce the same number of output pixels; only the method differs. The dashed line marks where the stripes become finer than the reduced grid can hold.
 >
@@ -536,7 +555,7 @@ Three of those rows are worth seeing rather than reading. Each figure below is t
 >
 > *(interactive figure — see the web page)*
 
-> **Figure 12 · live — Thinning a metrics series**
+> **Figure 13 · live — Thinning a metrics series**
 >
 > A per-second series with periodic spikes, reduced to one point per bucket. Move the offset slider: it shifts only *which* second each kept sample lands on, and the series itself never changes.
 >
