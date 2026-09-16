@@ -495,11 +495,15 @@
             }
           },
           grid: function (ctx, w, h, c) {
-            var cols = 12, rows = 5, cw = w / cols, ch = h / rows;
+            /* a wave sweeps the grid and each cell rounds it to one of four
+               levels: the quantisation the primer is about, made visible */
+            var cols = 12, rows = 5, cw = w / cols, ch = h / rows, steps = 3;
             for (var r = 0; r < rows; r++) {
               for (var col = 0; col < cols; col++) {
-                var val = 0.5 + 0.5 * Math.sin(t * 1.2 + col * 0.5 + r * 0.8);
-                ctx.fillStyle = alpha(c.ink, (0.05 + val * 0.2).toFixed(3));
+                var wave = 0.5 + 0.5 * Math.sin(t * 1.09 - col * 0.55 - r * 0.42);
+                var level = Math.round(wave * steps) / steps;
+                var hue = level > 0.66 ? c.s1 : level > 0.33 ? c.s3 : c.ink;
+                ctx.fillStyle = alpha(hue, (0.07 + level * 0.48).toFixed(3));
                 ctx.fillRect(col * cw + 1, r * ch + 1, cw - 2, ch - 2);
               }
             }
