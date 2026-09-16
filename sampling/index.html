@@ -216,6 +216,15 @@ input[type=number]{background:var(--surface);border:1px solid var(--border-stron
 .legend i.dot{width:9px;height:9px;border-radius:50%}
 .legend i.dash{background:none!important;border-top:2px dashed currentColor;height:0;border-radius:0}
 .legend i.blk{width:14px;height:10px;border-radius:3px;opacity:.55}
+.numrow{display:grid;grid-template-columns:82px repeat(30,minmax(22px,1fr));gap:2px 0;padding:8px 18px 10px;
+  font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;overflow-x:auto;border-bottom:1px solid var(--border)}
+.numrow span{text-align:center;padding:2px 0;color:var(--ink-2)}
+.numrow .lab{text-align:left;font-family:var(--sans);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-right:6px;white-space:nowrap}
+.numrow .t{color:var(--muted)}
+.numrow .sp{color:var(--ink);font-weight:700}
+.numrow .k{color:var(--s2);font-weight:700}
+.numrow .a{color:var(--s3);font-weight:700;border-top:2px solid var(--s3)}
+.numrow .dim{color:var(--muted);opacity:.5}
 .readout{display:flex;flex-wrap:wrap;gap:0;padding:0 18px 14px}
 .readout .cell{flex:1 1 120px;padding:10px 14px 10px 0;border-right:1px solid var(--border);margin-right:14px}
 .readout .cell:last-child{border-right:0;margin-right:0}
@@ -272,7 +281,7 @@ footer a{color:var(--ink-2)}
       <a href="#reduce">In code</a>
       <a href="#bandpass">Undersampling</a>
       <a href="#practice">Real systems</a>
-      <a href="#wild">In the wild</a>
+      <a href="#wild">In practice</a>
       <a href="#history">History</a>
       <a href="#sheet">Recap</a>
     </div>
@@ -1628,9 +1637,11 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     <div class="head">
       <div class="n">Figure 13 · live</div>
       <h4>Thinning a metrics series</h4>
-      <p>A per-second series with periodic spikes, reduced to one point per bucket. Move the offset
-      slider: it shifts only <em>which</em> second each kept sample lands on, and the series itself
-      never changes.</p>
+      <p>A per-second series reduced to one point per bucket. Move the offset slider: it shifts only
+      <em>which</em> second each kept sample lands on, and the series itself never changes. The rows
+      of numbers under the chart show the first 30 seconds literally: the series, the values kept,
+      and the bucket averages. Switch to the smooth series for the case where thinning is
+      harmless.</p>
     </div>
     <div class="canvasbox"><canvas id="c-metric" height="250" aria-label="A spiky metrics series thinned by keeping every N-th point and by bucket averaging"></canvas></div>
     <div class="legend">
@@ -1638,9 +1649,14 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
       <span style="color:var(--s2)"><i class="dot" style="background:var(--s2)"></i>every N-th point</span>
       <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>bucket average</span>
     </div>
+    <div class="numrow" id="m-nums" aria-label="The first 30 seconds of the series as numbers, with the kept values and bucket averages"></div>
     <div class="ctl">
+      <div style="flex:0 0 auto"><span class="fieldlab">series</span>
+        <div class="seg" id="seg-m-sig">
+          <button data-v="spiky" class="on">spiky</button><button data-v="smooth">smooth</button>
+        </div></div>
       <div class="sl"><label for="s-m-n">bucket size<b><span id="v-m-n">10</span> s</b></label>
-        <input type="range" id="s-m-n" min="2" max="30" step="1" value="10"></div>
+        <input type="range" id="s-m-n" min="1" max="30" step="1" value="10"></div>
       <div class="sl"><label for="s-m-off">sampling offset<b><span id="v-m-off">0</span> s</b></label>
         <input type="range" id="s-m-off" min="0" max="29" step="1" value="0"></div>
     </div>
@@ -1656,7 +1672,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     happened to land is the same failure as the two different signals that produced identical
     measurements earlier on this page. The average is lower than the true peak, but it
     is lower for a stated reason and it does not change with the offset; if peaks are what matter,
-    aggregate with max over the bucket rather than reading one point from it.</figcaption>
+    aggregate with max over the bucket rather than reading one point from it. The smooth series is
+    the case the theorem blesses: nothing in it changes faster than the bucket, so every method
+    agrees and the offset moves nothing. Thinning is only a problem when the series contains detail
+    the bucket cannot hold.</figcaption>
   </figure>
 
   <details class="deep">
@@ -3104,20 +3123,43 @@ function segment(id, cb) {
 (function () {
   var P = new Plot("c-metric", { l: 44, r: 14, t: 14, b: 32 });
   if (!P.cv) return;
-  var N = 10, off = 0, LEN = 300, SPIKE = 10;
+  var N = 10, off = 0, LEN = 300, SPIKE = 10, kind = "spiky";
   var series = new Float64Array(LEN);
 
   /* a plausible per-second metric: slow drift, small noise, and a sharp
      spike every SPIKE seconds — the thing an on-call engineer cares about.
      SPIKE and the default bucket size share a factor on purpose: that is the
-     case where the kept samples either always hit the spikes or always miss */
-  (function build() {
+     case where the kept samples either always hit the spikes or always miss.
+     The smooth variant has nothing faster than a couple of minutes, so no
+     bucket on the slider can undersample it. */
+  function build() {
     for (var i = 0; i < LEN; i++) {
-      var base = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 7.3 + 1.1);
-      var spike = (i % SPIKE === 3) ? 58 : 0;
-      series[i] = base + spike;
+      if (kind === "smooth") series[i] = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 23 + 1.1);
+      else series[i] = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 7.3 + 1.1) + ((i % SPIKE === 3) ? 58 : 0);
     }
-  })();
+  }
+  build();
+  function isSpike(i) { return kind === "spiky" && i % SPIKE === 3; }
+
+  /* the first 30 seconds, as numbers */
+  function nums(d, b) {
+    var box = $("m-nums"); if (!box) return;
+    var W = 30, i, out = ['<span class="lab">second</span>'];
+    for (i = 0; i < W; i++) out.push('<span class="t">' + i + '</span>');
+    out.push('<span class="lab">series</span>');
+    for (i = 0; i < W; i++) out.push('<span' + (isSpike(i) ? ' class="sp"' : '') + '>' + Math.round(series[i]) + '</span>');
+    out.push('<span class="lab">every N-th</span>');
+    var kept = {}; d.forEach(function (p) { kept[p[0]] = p[1]; });
+    for (i = 0; i < W; i++) out.push(kept[i] !== undefined ? '<span class="k">' + Math.round(kept[i]) + '</span>' : '<span class="dim">·</span>');
+    out.push('<span class="lab">average</span>');
+    if (off > 0) out.push('<span class="dim" style="grid-column:span ' + Math.min(off, W) + '">·</span>');
+    for (i = 0; i < b.length; i++) {
+      var start = off + i * N; if (start >= W) break;
+      var span = Math.min(N, W - start);
+      out.push('<span class="a" style="grid-column:span ' + span + '">' + (span > 1 ? fmt(b[i][1], 1) : Math.round(b[i][1])) + '</span>');
+    }
+    box.innerHTML = out.join("");
+  }
 
   function dropped() {
     var pts = [];
@@ -3170,19 +3212,26 @@ function segment(id, cb) {
   function update() {
     txt("v-m-n", String(N)); txt("v-m-off", String(off));
     var d = dropped(), b = bucketed(), i;
-    var truePeak = 0, dPeak = 0, bPeak = 0, hit = 0, total = 0;
+    var truePeak = 0, dPeak = 0, bPeak = 0, hit = 0, total = 0, dev = 0;
     for (i = 0; i < LEN; i++) if (series[i] > truePeak) truePeak = series[i];
-    for (i = 0; i < LEN; i++) if (i % SPIKE === 3) total++;
+    for (i = 0; i < LEN; i++) if (isSpike(i)) total++;
     for (i = 0; i < d.length; i++) {
       if (d[i][1] > dPeak) dPeak = d[i][1];
-      if (Math.round(d[i][0]) % SPIKE === 3) hit++;
+      if (isSpike(Math.round(d[i][0]))) hit++;
+      if (i < b.length) dev = Math.max(dev, Math.abs(d[i][1] - b[i][1]));
     }
     for (i = 0; i < b.length; i++) if (b[i][1] > bPeak) bPeak = b[i][1];
     txt("r-m-true", fmt(truePeak, 1));
     txt("r-m-drop", fmt(dPeak, 1));
     txt("r-m-avg", fmt(bPeak, 1));
-    txt("r-m-hit", hit + " of " + total);
-    if (hit === 0) verdict("r-m-verdict", "r-m-msg", "bad",
+    txt("r-m-hit", kind === "spiky" ? hit + " of " + total : "—");
+    nums(d, b);
+    if (N === 1) verdict("r-m-verdict", "r-m-msg", "ok",
+      "A bucket of one second keeps everything: both outputs are the series itself, and the offset has nothing to move.");
+    else if (kind === "smooth") verdict("r-m-verdict", "r-m-msg", "ok",
+      "This series has no detail faster than the bucket, so it does not matter which second is kept. Every N-th and the average never differ by more than " +
+      fmt(dev, 1) + ", and dragging the offset changes nothing worth noticing. Thinning is safe here, and the theorem says why.");
+    else if (hit === 0) verdict("r-m-verdict", "r-m-msg", "bad",
       "At this offset the kept samples land between every spike, so the thinned series peaks at " +
       fmt(dPeak, 1) + " and the real peak of " + fmt(truePeak, 1) +
       " is absent from the record. The chart looks calm and is wrong.");
@@ -3203,6 +3252,7 @@ function segment(id, cb) {
     update();
   });
   on("s-m-off", "input", function (e) { off = +e.target.value; update(); });
+  segment("seg-m-sig", function (v) { kind = v; build(); update(); });
   register(P, draw);
   (function () { var s = $("s-m-off"); if (s) s.max = String(N - 1); })();
   update();

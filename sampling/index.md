@@ -559,9 +559,9 @@ Three of those rows are worth seeing rather than reading. Each figure below is t
 
 > **Figure 13 · live — Thinning a metrics series**
 >
-> A per-second series with periodic spikes, reduced to one point per bucket. Move the offset slider: it shifts only *which* second each kept sample lands on, and the series itself never changes.
+> A per-second series reduced to one point per bucket. Move the offset slider: it shifts only *which* second each kept sample lands on, and the series itself never changes. The rows of numbers under the chart show the first 30 seconds literally: the series, the values kept, and the bucket averages. Switch to the smooth series for the case where thinning is harmless.
 >
-> Dragging the offset changes what the thinned series reports, sometimes by a large factor, while the underlying data is untouched. A number that depends on where the sampling clock happened to land is the same failure as the two different signals that produced identical measurements earlier on this page. The average is lower than the true peak, but it is lower for a stated reason and it does not change with the offset; if peaks are what matter, aggregate with max over the bucket rather than reading one point from it.
+> Dragging the offset changes what the thinned series reports, sometimes by a large factor, while the underlying data is untouched. A number that depends on where the sampling clock happened to land is the same failure as the two different signals that produced identical measurements earlier on this page. The average is lower than the true peak, but it is lower for a stated reason and it does not change with the offset; if peaks are what matter, aggregate with max over the bucket rather than reading one point from it. The smooth series is the case the theorem blesses: nothing in it changes faster than the bucket, so every method agrees and the offset moves nothing. Thinning is only a problem when the series contains detail the bucket cannot hold.
 >
 > *(interactive figure — see the web page)*
 
