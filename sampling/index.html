@@ -174,6 +174,8 @@ figure .head p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
 .canvasbox{padding:12px 14px 4px;position:relative}
 canvas{display:block;width:100%;touch-action:pan-y}
 figcaption{padding:10px 18px 16px;font-size:13.5px;color:var(--muted);line-height:1.55}
+.credit{padding:0 18px 14px;margin-top:-8px;font-size:11.5px;color:var(--muted)}
+.credit a{color:var(--muted)}
 
 /* controls */
 .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;padding:14px 18px;border-top:1px solid var(--border);
@@ -214,6 +216,15 @@ input[type=number]{background:var(--surface);border:1px solid var(--border-stron
 .legend i.dot{width:9px;height:9px;border-radius:50%}
 .legend i.dash{background:none!important;border-top:2px dashed currentColor;height:0;border-radius:0}
 .legend i.blk{width:14px;height:10px;border-radius:3px;opacity:.55}
+.numrow{display:grid;grid-template-columns:82px repeat(30,minmax(22px,1fr));gap:2px 0;padding:8px 18px 10px;
+  font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;overflow-x:auto;border-bottom:1px solid var(--border)}
+.numrow span{text-align:center;padding:2px 0;color:var(--ink-2)}
+.numrow .lab{text-align:left;font-family:var(--sans);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-right:6px;white-space:nowrap}
+.numrow .t{color:var(--muted)}
+.numrow .sp{color:var(--ink);font-weight:700}
+.numrow .k{color:var(--s2);font-weight:700}
+.numrow .a{color:var(--s3);font-weight:700;border-top:2px solid var(--s3)}
+.numrow .dim{color:var(--muted);opacity:.5}
 .readout{display:flex;flex-wrap:wrap;gap:0;padding:0 18px 14px}
 .readout .cell{flex:1 1 120px;padding:10px 14px 10px 0;border-right:1px solid var(--border);margin-right:14px}
 .readout .cell:last-child{border-right:0;margin-right:0}
@@ -270,6 +281,9 @@ footer a{color:var(--ink-2)}
       <a href="#reduce">In code</a>
       <a href="#bandpass">Undersampling</a>
       <a href="#practice">Real systems</a>
+      <a href="#wild">In practice</a>
+      <a href="#history">History</a>
+      <a href="#sheet">Recap</a>
     </div>
     <a class="iconbtn" href="https://github.com/ssemakov/digital-media-study" title="Source on GitHub" aria-label="Source on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
     <button class="iconbtn" id="themebtn" title="Toggle light / dark" aria-label="Toggle light or dark theme">◐</button>
@@ -299,7 +313,7 @@ footer a{color:var(--ink-2)}
       <a href="#recon">the section on rebuilding the original</a>.</p>
     </div>
 
-    <p>This page contains nine live figures; each claim in the text has an associated slider that
+    <p>This page contains thirteen live figures; each claim in the text has an associated slider that
     can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more
     advanced material is placed in
     <strong>Go deeper</strong> panels that can be skipped without loss of continuity.</p>
@@ -1157,7 +1171,10 @@ console.log(<span class="s">"right:"</span>, right); <span class="ok">// ~0.5: r
     the bucket, and when animating a spinning wheel by evaluating its angle once per frame. These are
     all the same bug.</p>
     <p>In none of those three is there an obvious signal, a sample rate, or anything a programmer
-    would call a filter — there is a frame loop, an image resize, and a rollup query.</p>
+    would call a filter — there is a frame loop, an image resize, and a rollup query. Each one is
+    worked through, with the failure made visible, in
+    <a href="#wild">the survey of where this appears in practice</a>, alongside the other settings
+    this same reduction turns up in.</p>
   </div>
 
 </section>
@@ -1307,8 +1324,10 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
   <div class="prose">
     <p>Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the
     band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top
-    of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak
-    the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum
+    of that sinc's main lobe (a lobe is one hump of the curve between two zero crossings; the main
+    lobe is the central one, and the side lobes are the smaller ones beyond it), the residual copies
+    are its side lobes, and together they are the leak the rebuilding section promised every kernel
+    other than sinc would have. Figure 8 is the spectrum
     of the error Figure 4 measures with the box kernel selected.</p>
   </div>
 
@@ -1343,10 +1362,23 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
 
   <div class="prose">
     <h3>Clock jitter: the timer is not perfectly periodic</h3>
-    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. If they land slightly early or late, the correct
-    signal is read at the wrong moment, and the faster the signal is changing, the greater the
-    error. Note what is <em>not</em> in the formula below: the sample rate. Jitter is governed by
-    how fast the <em>input</em> is changing.</p>
+    <p>The theorem assumes samples land at exactly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. A real clock is early or late by a
+    small, varying amount, so each sample reads the value the signal had a moment before or after the
+    instant it is filed under. The damage is set by the slope at that instant: a flat stretch of
+    signal reads the same either way, a steep one does not. To first order the timing error simply
+    multiplies the slope:</p>
+  </div>
+
+  <div class="prose eqbox">
+    <span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">Δ</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0519em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03785em;">δ</span><span class="mord mathnormal">t</span></span></span></span></span>
+    <span class="tag">slope × timing error</span>
+  </div>
+
+  <div class="prose">
+    <p>For a sine at frequency <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and amplitude <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span> the steepest slope is
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">A</span></span></span></span>, so random timing errors of typical size <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> add noise of about
+    <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">in</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> relative to the signal. In decibels, that ratio is the ceiling jitter places on the
+    signal-to-noise ratio:</p>
   </div>
 
   <div class="prose eqbox">
@@ -1359,9 +1391,65 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     <dt>SNR</dt><dd>signal-to-noise ratio — how far above the noise the data sits.</dd>
   </dl>
 
+  <div class="prose">
+    <p>Note what is <em>not</em> in the formula: the sample rate. Each sample's error depends only on
+    how far the input moved during that sample's own timing error, so taking more samples neither
+    helps nor hurts. This is the opposite of quantisation noise, which is a fixed total that
+    oversampling spreads thin and filters away. Jitter noise grows with the input frequency instead,
+    and like aliasing it is fixed at the moment of capture: nothing downstream knows the true
+    instants, so nothing downstream can put the samples back.</p>
+    <p>The kind of timing error matters. Random jitter turns into a raised noise floor, which is what
+    the formula describes. Periodic jitter, such as power-supply ripple leaking into the clock, does
+    something different: it produces a pair of spurious tones on either side of the input frequency,
+    the same signature as frequency modulation, and no amount of averaging removes them.</p>
+  </div>
+
+  <figure id="fig-jitter">
+    <div class="head">
+      <div class="n">Figure 9 · live</div>
+      <h4>Timing error becomes amplitude error</h4>
+      <p>Each sample is taken a little early or late, then filed under the instant it was meant for.
+      The orange bars are the resulting amplitude errors. Raise the input frequency and the same
+      timing wobble does more damage.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-jit" height="270" aria-label="A sine sampled with timing jitter, showing the amplitude error at each sample"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the signal</span>
+      <span style="color:var(--muted)"><i class="dot" style="background:var(--muted)"></i>value at the intended instant</span>
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>value actually captured</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>amplitude error</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-jit-f">input frequency<b><span id="v-jit-f">5.0</span> Hz</b></label>
+        <input type="range" id="s-jit-f" min="0.5" max="11" step="0.5" value="5"></div>
+      <div class="sl"><label for="s-jit-s">timing jitter<b><span id="v-jit-s">4.0</span> ms</b></label>
+        <input type="range" id="s-jit-s" min="0" max="15" step="0.5" value="4"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Worst error in view</div><div class="v" id="r-jit-pk">—</div></div>
+      <div class="cell"><div class="k">SNR, measured</div><div class="v" id="r-jit-snr">—</div></div>
+      <div class="cell"><div class="k">SNR, from the formula</div><div class="v" id="r-jit-pred">—</div></div>
+    </div>
+    <figcaption>The sample rate here is fixed at 24 Hz and never enters the readout. Only the slope
+    of the input and the size of the wobble do. The measured figure tracks the formula until the
+    jitter becomes a sizeable fraction of a cycle, where the small-error approximation gives
+    out.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <p>The numbers are unforgiving at the top of a band. Sixteen-bit audio at 20 kHz needs jitter
+    under about 100 ps to keep all sixteen bits; the calculator's default, a 100 MHz input with 1 ps
+    of jitter, stops at 64 dB, roughly ten bits, whatever the converter's spec sheet says. For
+    software the lesson is more useful than the numbers. Jitter only costs anything if the samples
+    are assumed to have landed at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. Record the actual timestamp with each reading and the
+    samples are irregular but exact, and the interpolation loop from
+    <a href="#recon">the rebuilding section</a> can rebuild the signal from them. Assume a uniform
+    grid and the wobble is baked in as noise.</p>
+  </div>
+
   <figure id="fig-jit">
     <div class="head">
-      <div class="n">Figure 9 · calculator</div>
+      <div class="n">Figure 10 · calculator</div>
       <h4>The resolution cost of timing jitter</h4>
       <p>"Effective bits" is the actual resolution obtained, regardless of the spec-sheet value.
       Every doubling of input frequency costs half a bit.</p>
@@ -1412,12 +1500,311 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     </div>
   </div>
 </section>
+
+<hr class="rule">
+
+<section id="wild">
+  <div class="prose">
+    <p class="kicker">§10</p>
+    <h2>Where this appears in practice</h2>
+    <p>Each of these is the same theorem in different units.</p>
+  </div>
+
+  <div class="prose tw">
+    <table>
+      <thead><tr><th style="width:26%">Where</th><th>What sampling too slowly looks like</th></tr></thead>
+      <tbody>
+        <tr><td><b>Audio</b></td><td>A synth's harmonics fold down into audible artefacts that move in the
+          <em>wrong direction</em> when the pitch changes. Common in naive digital oscillators, which is
+          why bandlimited waveform generation exists.</td></tr>
+        <tr><td><b>Images &amp; textures</b></td><td>Moiré on striped shirts and brick walls. Shrinking
+          by dropping pixels causes aliasing; mipmaps exist so the GPU never samples a texture faster
+          than the screen can represent.</td></tr>
+        <tr><td><b>Video &amp; animation</b></td><td>Wagon wheels appearing to spin backwards. A wheel turning at
+          26 revolutions per second, filmed at 24 fps, reads as 2 rps —
+          <code>aliasOf(26, 24)</code>. Motion blur is the anti-aliasing filter.</td></tr>
+        <tr><td><b>Rendering</b></td><td>Jagged edges and shimmering thin geometry. Supersampling means
+          sampling above the geometry's rate and filtering down, which is the oversampling argument of
+          <a href="#practice">what goes wrong in real systems</a>, in two
+          dimensions.</td></tr>
+        <tr><td><b>Metrics &amp; monitoring</b></td><td>A 60-second scrape on a job that spikes every 55
+          seconds produces a slow oscillation that does not exist. Averaging over the bucket instead of
+          point-sampling it is the fix, and it is an anti-alias filter.</td></tr>
+        <tr><td><b>Control loops</b></td><td>A sensor read too slowly makes disturbances appear slower than
+          they are, so the controller responds to a nonexistent signal. The sample rate must exceed the
+          system's actual dynamics, not merely appear fast.</td></tr>
+        <tr><td><b>Radio / SDR</b></td><td>Deliberate aliasing, done correctly — the technique of
+          <a href="#bandpass">undersampling on purpose</a>. Fold a band down instead of sampling at
+          its carrier frequency.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <div class="note good">
+      <div class="t">A useful check</div>
+      <p style="margin:0">Before reducing a rate — decimating an array, shrinking an
+      image, thinning a series, dropping frames — ask: <em>what is the fastest component present, and is
+      it faster than half the new rate?</em> If it is, filter first. That single question prevents
+      essentially every aliasing bug.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>Three of those rows are worth seeing rather than reading. Each figure below is the same
+    reduction — keep one value out of every N — in a setting where nobody would describe the work
+    as sampling.</p>
+  </div>
+
+<figure id="fig-wheel">
+    <div class="head">
+      <div class="n">Figure 11 · live</div>
+      <h4>A spinning wheel, evaluated once per frame</h4>
+      <p>Both wheels turn at the same speed, forwards, always. The left one is drawn continuously;
+      the right one moves only at the frame instants. Watch the marked spoke on the right as the
+      speed passes half the frame rate: it slows, stops, and then runs backwards, while the wheel
+      itself never changes direction.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-wheel" height="238" aria-label="Two wheels, one turning continuously and one sampled at a frame rate"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>the actual rotation</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>what the frames show</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-w-spd">wheel speed<b><span id="v-w-spd">3.0</span> rev/s</b></label>
+        <input type="range" id="s-w-spd" min="0" max="10" step="0.1" value="3"></div>
+      <div class="sl"><label for="s-w-fps">frame rate<b><span id="v-w-fps">12</span> fps</b></label>
+        <input type="range" id="s-w-fps" min="2" max="30" step="1" value="12"></div>
+      <div style="flex:0 0 auto;padding-bottom:2px">
+        <button class="btn" id="b-w-run">&#9654; run</button>
+      </div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">True speed</div><div class="v" id="r-w-true">3.0 rev/s</div></div>
+      <div class="cell"><div class="k">Apparent speed</div><div class="v" id="r-w-app">3.0 rev/s</div></div>
+      <div class="cell"><div class="k">Frames per turn</div><div class="v" id="r-w-fpr">4.00</div></div>
+      <div class="cell"><div class="k">Direction seen</div><div class="v" id="r-w-dir">forward</div></div>
+    </div>
+    <div class="verdict ok" id="r-w-verdict"><span class="ic">&#10003;</span><span id="r-w-msg"></span></div>
+    <figcaption>The wheel is the sampled signal and the frame rate is the sample rate; nothing else
+    is different. Apparent speed is <code>aliasOf(speed, fps)</code>, the folding function from
+    <a href="#alias">the section on aliasing</a>, and the backwards range is one of the
+    phase-flipped zones on the folding map plotted there. This is why film of a moving car shows the
+    wheels turning the wrong way, and why a game loop that advances an angle once per frame produces
+    the same artefact.</figcaption>
+  </figure>
+
+  <figure id="fig-img">
+    <div class="head">
+      <div class="n">Figure 12 · live</div>
+      <h4>Shrinking an image by dropping pixels</h4>
+      <p>The source is a band of stripes that get steadily finer from left to right — the spatial
+      version of the rising tone heard earlier. Both reductions below produce the same number of
+      output pixels; only the method differs. The dashed line marks where the stripes become finer
+      than the reduced grid can hold. Below the stripes, a photograph is reduced the same two ways
+      in both directions.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-img" height="520" aria-label="A stripe frequency sweep and a photograph of a striped shirt, each reduced by dropping pixels and by area averaging"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>every N-th pixel</span>
+      <span style="color:var(--s3)"><i style="background:var(--s3)"></i>area average</span>
+      <span style="color:var(--s1)"><i class="dash" style="color:var(--s1)"></i>half the output rate</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-i-n">reduction factor<b><span id="v-i-n">4</span>&times;</b></label>
+        <input type="range" id="s-i-n" min="1" max="6" step="0.25" value="4"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Source</div><div class="v" id="r-i-src">480 px wide</div></div>
+      <div class="cell"><div class="k">Output</div><div class="v" id="r-i-out">120 px wide</div></div>
+      <div class="cell"><div class="k">Pixels read</div><div class="v" id="r-i-read">25.0%</div></div>
+      <div class="cell"><div class="k">Limit falls at</div><div class="v" id="r-i-lim">28% across</div></div>
+    </div>
+    <div class="verdict bad" id="r-i-verdict"><span class="ic">&#10007;</span><span id="r-i-msg"></span></div>
+    <figcaption>Left of the dashed line the two reductions agree, because the stripes are coarse
+    enough for both. Right of it they diverge: dropping pixels produces wide bands that are not in
+    the source, which is the same folding as before, in space rather than time, and is what a
+    moir&eacute; pattern is. Averaging reads every pixel in each block, so the same region fades
+    towards flat grey — the detail is lost rather than replaced by something false. Raising the
+    reduction factor drags the dashed line to the left, which is exactly what happens when a
+    thumbnail gets smaller. Mipmaps exist to precompute the bottom band. The photograph shows the
+    same thing in two dimensions: dropping pixels turns the shirt's stripes into a coarse moir&eacute;
+    that shifts as the factor changes, while averaging fades them to plain grey cloth.</figcaption>
+    <div class="credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Striped_shirt_woman_with_trees_(Unsplash).jpg">Striped shirt woman with trees</a>, Unsplash via Wikimedia Commons, CC0. Cropped and reduced to 256&times;192.</div>
+  </figure>
+
+  <figure id="fig-metric">
+    <div class="head">
+      <div class="n">Figure 13 · live</div>
+      <h4>Thinning a metrics series</h4>
+      <p>A per-second series reduced to one point per bucket. Move the offset slider: it shifts only
+      <em>which</em> second each kept sample lands on, and the series itself never changes. The rows
+      of numbers under the chart show the first 30 seconds literally: the series, the values kept,
+      and the bucket averages. Switch to the smooth series for the case where thinning is
+      harmless.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-metric" height="250" aria-label="A spiky metrics series thinned by keeping every N-th point and by bucket averaging"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>the real series</span>
+      <span style="color:var(--s2)"><i class="dot" style="background:var(--s2)"></i>every N-th point</span>
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>bucket average</span>
+    </div>
+    <div class="numrow" id="m-nums" aria-label="The first 30 seconds of the series as numbers, with the kept values and bucket averages"></div>
+    <div class="ctl">
+      <div style="flex:0 0 auto"><span class="fieldlab">series</span>
+        <div class="seg" id="seg-m-sig">
+          <button data-v="spiky" class="on">spiky</button><button data-v="smooth">smooth</button>
+        </div></div>
+      <div class="sl"><label for="s-m-n">bucket size<b><span id="v-m-n">10</span> s</b></label>
+        <input type="range" id="s-m-n" min="1" max="30" step="1" value="10"></div>
+      <div class="sl"><label for="s-m-off">sampling offset<b><span id="v-m-off">0</span> s</b></label>
+        <input type="range" id="s-m-off" min="0" max="29" step="1" value="0"></div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">True peak</div><div class="v" id="r-m-true">0.00</div></div>
+      <div class="cell"><div class="k">Every N-th reports</div><div class="v" id="r-m-drop">0.00</div></div>
+      <div class="cell"><div class="k">Average reports</div><div class="v" id="r-m-avg">0.00</div></div>
+      <div class="cell"><div class="k">Spikes kept</div><div class="v" id="r-m-hit">0 of 0</div></div>
+    </div>
+    <div class="verdict bad" id="r-m-verdict"><span class="ic">&#10007;</span><span id="r-m-msg"></span></div>
+    <figcaption>Dragging the offset changes what the thinned series reports, sometimes by a large
+    factor, while the underlying data is untouched. A number that depends on where the sampling clock
+    happened to land is the same failure as the two different signals that produced identical
+    measurements earlier on this page. The average is lower than the true peak, but it
+    is lower for a stated reason and it does not change with the offset; if peaks are what matter,
+    aggregate with max over the bucket rather than reading one point from it. The smooth series is
+    the case the theorem blesses: nothing in it changes faster than the bucket, so every method
+    agrees and the offset moves nothing. Thinning is only a problem when the series contains detail
+    the bucket cannot hold.</figcaption>
+  </figure>
+
+  <details class="deep">
+    <summary><span class="chip">Go deeper</span> The generalisations, briefly</summary>
+    <div class="body">
+      <p><strong>Non-uniform sampling.</strong> Even spacing is convenient, not required. Landau
+      (1967) proved that what matters is the <em>average density</em> of samples: it must be at least
+      the total measure of the spectrum's support. Irregular or slightly jittered sample times still
+      reconstruct — the expansion becomes a frame rather than an orthonormal basis, which costs
+      numerical conditioning rather than information.</p>
+      <p><strong>Sub-Nyquist sampling.</strong> If a signal occupies several narrow bands with lots of
+      empty space between them, the Landau rate counts only the occupied measure, and multicoset
+      samplers approach it. Compressed sensing goes further, dropping the bandlimit assumption
+      entirely in favour of <em>sparsity</em>: roughly <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">lo<span style="margin-right:0.01389em;">g</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mclose">))</span></span></span></span> measurements for a
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>-sparse signal. This does not break Nyquist; it is a different theorem with a stronger prior
+      and a nonlinear reconstruction step.</p>
+      <p><strong>More than one dimension.</strong> Everything generalises to sampling on a lattice in
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8491em;"></span><span class="mord"><span class="mord mathbb">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">d</span></span></span></span></span></span></span></span></span></span></span>, where the copies land on the dual lattice and non-overlap becomes a
+      sphere-packing question. That's why hexagonal sampling beats a square grid by 13.4% for
+      isotropic image content, and why Bayer demosaicing is best understood as multidimensional
+      reconstruction from a non-uniform lattice rather than as heuristic guessing.</p>
+      <p><strong>Sampling derivatives.</strong> Measure both a signal and its rate of change and each
+      stream needs only half the rate. This generalises to <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> interleaved channels at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> each
+      — the principle behind time-interleaved converters, where channel mismatch shows up as spurious
+      copies at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span>.</p>
+    </div>
+  </details>
+</section>
+
+<hr class="rule">
+
+<section id="history">
+  <div class="prose">
+    <p class="kicker">§11</p>
+    <h2>Neither man in the name proved it first</h2>
+    <p>The theorem was discovered independently at least six times, and the usual attribution is
+    inaccurate in ways worth knowing.</p>
+  </div>
+
+  <div class="prose tw">
+    <table>
+      <thead><tr><th style="width:88px">Year</th><th>Who</th><th>What they did</th></tr></thead>
+      <tbody>
+        <tr><td><b>1915</b></td><td>E. T. Whittaker</td><td>Wrote down the sinc interpolation series as
+          pure interpolation theory, with no sampling interpretation attached.</td></tr>
+        <tr><td><b>1928</b></td><td>Harry Nyquist</td><td>Showed a channel of width <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> carries <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>
+          independent pulses per second. About telegraph signalling capacity, <em>not</em> about
+          sampling a continuous waveform.</td></tr>
+        <tr><td><b>1933</b></td><td>Vladimir Kotelnikov</td><td>First complete statement <em>and</em>
+          proof in a communications context. Published in Russian, and invisible to the West for
+          decades.</td></tr>
+        <tr><td><b>1939</b></td><td>Herbert Raabe</td><td>Independent proof, in his dissertation.</td></tr>
+        <tr><td><b>1948–49</b></td><td>Claude Shannon</td><td>Stated it as Theorem 13 and made it common
+          knowledge among engineers — while noting it "is a fact which is common knowledge in the
+          communication art."</td></tr>
+        <tr><td><b>1949</b></td><td>Isao Someya</td><td>Independent Japanese publication; it's "Someya's
+          theorem" in Japan.</td></tr>
+        <tr><td><b>1967</b></td><td>Henry Landau</td><td>The deepest generalisation — the density
+          condition for arbitrary, non-uniform sampling sets.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <p>Nyquist's name was attached later, and the mechanism is uncertain; the most likely account is that
+    Shannon referred to the "Nyquist interval" of <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> seconds and the name persisted. Some authors
+    write <strong>WKS</strong> for Whittaker–Kotelnikov–Shannon; more complete attributions write
+    Whittaker–Kotelnikov–Raabe–Shannon–Someya. "Nyquist–Shannon" credits one person for the wrong paper
+    and omits the one who proved it first in the correct context.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="sheet">
+  <div class="prose">
+    <p class="kicker">§12</p>
+    <h2>The complete summary</h2>
+  </div>
+
+  <div class="prose tw">
+    <table>
+      <thead><tr><th style="width:30%">Idea</th><th>What to remember</th></tr></thead>
+      <tbody>
+        <tr><td><b>The rule</b></td><td>Sample faster than twice the fastest component present and no
+          information is lost. Strictly faster; equal is not sufficient.</td></tr>
+        <tr><td><b>Why it works</b></td><td>Sampling adds copies of the spectrum every <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>. Keep them
+          from overlapping and the original can be cropped back out exactly.</td></tr>
+        <tr><td><b>Aliasing</b></td><td>Overlapping copies are <em>summed</em>. A fast wave returns
+          permanently relabelled as a slow one. <code>aliasOf(f, fs)</code> gives where it lands —
+          mirrored repeat, not clamp and not wrap.</td></tr>
+        <tr><td><b>Rebuilding</b></td><td>A weighted sum of sincs, one per sample. Interpolation with
+          the exactly correct kernel; Lanczos is its practical truncation.</td></tr>
+        <tr><td><b>The fix</b></td><td>Filter <em>before</em> reducing the rate, never after. Afterward is too
+          late: the incorrect data is already indistinguishable from the correct data.</td></tr>
+        <tr><td><b>Oversampling</b></td><td>Does not improve the theorem; makes the filters inexpensive and
+          provides half a bit of real resolution per doubling.</td></tr>
+        <tr><td><b>Staircase output</b></td><td>Costs about 4 dB at the top of the band and leaves partial
+          copies behind. Fixable in software, or by oversampling.</td></tr>
+        <tr><td><b>Jitter</b></td><td>Timing error degrades the signal in proportion to how fast the signal
+          changes, not how fast it is sampled.</td></tr>
+        <tr><td><b>Position vs width</b></td><td>What limits the rate is how <em>wide</em> the band is, not
+          how high it sits. This is what makes deliberate undersampling possible.</td></tr>
+        <tr><td><b>Zones and baseband</b></td><td>A sample rate cuts the frequency axis into slices half
+          the rate wide, numbered from 1. Slice 1, from 0 to half the rate, is the <em>baseband</em>: the
+          only range the samples can express. Every other slice folds onto it, odd ones upright and even
+          ones mirrored.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <div class="note">
+      <div class="t">The key point</div>
+      <p style="margin:0">Sampling never destroys information; <em>overlap</em> does. Every practical
+      rule, from anti-alias filters to mipmaps to averaging metrics buckets, is a method for
+      keeping the copies apart.</p>
+    </div>
+  </div>
+</section>
+
 <footer class="prose">
   <p>An interactive companion to the Wikipedia article
   <a href="https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem">Nyquist–Shannon sampling theorem</a>.
   Every figure computes its curves live in the browser — no precomputed data and no network calls.
   The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output
   is the actual phenomenon rather than a recording.</p>
+  <p style="margin-bottom:0">Sources behind <a href="#history">the history section</a>: Shannon, <em>Communication in the Presence of Noise</em>
+  (1949); Kotelnikov (1933); Whittaker (1915); Landau, <em>Necessary density conditions</em> (1967).</p>
   <p style="font-size:12.5px;margin:18px 0 0">Text adapted from Wikipedia (CC BY-SA 4.0) and Xiph.Org&rsquo;s <em>A Digital Media Primer for Geeks</em> (CC BY-SA 3.0). This page is licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>; see <a href="https://github.com/ssemakov/digital-media-study/blob/main/LICENSE">LICENSE</a>.</p>
 </footer>
 
@@ -2370,7 +2757,59 @@ function segment(id, cb) {
 })();
 
 /* ================================================================
-   FIGURE 9 — jitter calculator
+   FIGURE 9 — jitter in the time domain
+   ================================================================ */
+(function () {
+  var P = new Plot("c-jit", { l: 40, r: 16, t: 18, b: 32 });
+  if (!P.cv) return;
+  var fin = 5, sig = 4e-3, FS = 24, N = 4000;
+  function x(t) { return Math.sin(2 * PI * fin * t); }
+  // seeded unit-variance gaussian draws, so the picture stays put while sliding
+  function gauss(n) {
+    var s = 12345, out = [];
+    function u() { s = (s + 0x6D2B79F5) | 0; var t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+    for (var i = 0; i < n; i++) out.push(Math.sqrt(-2 * Math.log(u() + 1e-12)) * Math.cos(2 * PI * u()));
+    return out;
+  }
+  var Z = gauss(N);
+  function samples() {
+    var out = [];
+    for (var n = 0; n <= FS; n++) { var t = n / FS; out.push([t, x(t), x(t + sig * Z[n])]); }
+    return out;
+  }
+  function draw() {
+    var g = P.ctx, S = samples();
+    P.clear(); P.dom(0, 1, -1.5, 1.5);
+    P.gridY([-1, 1]); P.gridX([0, 0.25, 0.5, 0.75, 1]);
+    P.clipPlot();
+    P.curve(x, C.s1, 2);
+    g.strokeStyle = rgba(C.s2, 0.85); g.lineWidth = 2; g.setLineDash([]);
+    S.forEach(function (p) { g.beginPath(); g.moveTo(P.X(p[0]), P.Y(p[1])); g.lineTo(P.X(p[0]), P.Y(p[2])); g.stroke(); });
+    P.dots(S.map(function (p) { return [p[0], p[1]]; }), rgba(C.muted, 0.7), 3);
+    P.dots(S.map(function (p) { return [p[0], p[2]]; }), C.s3, 4.2);
+    P.unclip();
+    P.axisX([0, 0.25, 0.5, 0.75, 1], function (v) { return v + "s"; }, "time");
+    P.axisY([-1, 0, 1], function (v) { return v.toFixed(0); }, "amplitude");
+  }
+  function update() {
+    txt("v-jit-f", fmt(fin, 1)); txt("v-jit-s", fmt(sig * 1e3, 1));
+    var S = samples(), pk = 0;
+    S.forEach(function (p) { pk = Math.max(pk, Math.abs(p[2] - p[1])); });
+    txt("r-jit-pk", fmt(pk * 100, 0) + " % of amplitude");
+    if (sig === 0) { txt("r-jit-snr", "∞"); txt("r-jit-pred", "∞"); draw(); return; }
+    var ss = 0;
+    for (var i = 0; i < N; i++) { var t = i / N, e = x(t + sig * Z[i]) - x(t); ss += e * e; }
+    txt("r-jit-snr", fmt(20 * Math.log10((1 / Math.SQRT2) / Math.sqrt(ss / N)), 1) + " dB");
+    txt("r-jit-pred", fmt(-20 * Math.log10(2 * PI * fin * sig), 1) + " dB");
+    draw();
+  }
+  on("s-jit-f", "input", function (e) { fin = +e.target.value; update(); });
+  on("s-jit-s", "input", function (e) { sig = +e.target.value * 1e-3; update(); });
+  register(P, draw); update();
+})();
+
+/* ================================================================
+   FIGURE 10 — jitter calculator
    ================================================================ */
 (function () {
   if (!$("n-j-f")) return;
@@ -2387,7 +2826,7 @@ function segment(id, cb) {
     var jitterBinds = snrJ < snrQ;
     txt("r-j-lim", jitterBinds ? "jitter" : "quantiser");
     if (jitterBinds) {
-      var need = 1 / (2 * PI * f * Math.pow(10, -snrQ / 20)) * 1e12;
+      var need = Math.pow(10, -snrQ / 20) / (2 * PI * f) * 1e12;
       verdict("r-j-verdict", "r-j-msg", "bad", "The clock is your bottleneck: timing wobble is throwing away " +
         fmt(b - (tot - 1.76) / 6.02, 1) + " bits of the " + b +
         " you paid for. To get all of them at this input frequency you would need jitter below " + (need < 0.01 ? need.toFixed(4) : fmt(need, 3)) +
@@ -2538,20 +2977,26 @@ function segment(id, cb) {
     }
   })();
 
+  function nice(v) { return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(2).replace(/0$/, ""); }
+  function keepLabel(n) { return n === 1 ? "1× — every pixel kept, identical to the source" : "1 pixel kept in every " + nice(n); }
+
   function naive(n) {
     var m = Math.floor(W / n), out = new Float32Array(m);
-    for (var i = 0; i < m; i++) out[i] = row[i * n];
+    for (var i = 0; i < m; i++) out[i] = row[Math.min(W - 1, Math.floor(i * n))];
     return out;
   }
-  function averaged(n) {
-    var m = Math.floor(W / n), out = new Float32Array(m);
+  /* box average over a window n wide, n not necessarily an integer:
+     each source pixel is weighted by how much of it falls inside the window */
+  function boxDown(src, len, n) {
+    var m = Math.floor(len / n), out = new Float32Array(m);
     for (var i = 0; i < m; i++) {
-      var s = 0;
-      for (var j = 0; j < n; j++) s += row[i * n + j];
+      var lo = i * n, hi = lo + n, s = 0;
+      for (var x = Math.floor(lo); x < Math.min(len, Math.ceil(hi)); x++) s += src[x] * (Math.min(hi, x + 1) - Math.max(lo, x));
       out[i] = s / n;
     }
     return out;
   }
+  function averaged(n) { return boxDown(row, W, n); }
   function strip(data) {
     var m = data.length, cv = document.createElement("canvas");
     cv.width = m; cv.height = 1;
@@ -2567,9 +3012,49 @@ function segment(id, cb) {
   /* where the stripes first exceed what the reduced grid can represent */
   function limitX() { return W * (1 / (2 * N) - F0) / (F1 - F0); }
 
-  function band(cv, x, y, w, h, text, color) {
+  /* A photograph, reduced the same two ways in both directions. The striped
+     shirt is the classic moiré subject. 256×192, CC0 via Wikimedia Commons. */
+  var PW = 256, PH = 192, pix = null, img = new Image();
+  img.onload = function () {
+    var cv = document.createElement("canvas"); cv.width = PW; cv.height = PH;
+    var g = cv.getContext("2d"); g.drawImage(img, 0, 0, PW, PH);
+    pix = g.getImageData(0, 0, PW, PH).data;
+    update();
+  };
+  img.src = "data:image/jpeg;base64,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";
+  function photo2D(n, average) {
+    var m = Math.floor(PW / n), k = Math.floor(PH / n), cv = document.createElement("canvas");
+    cv.width = m; cv.height = k;
+    var g = cv.getContext("2d"), im = g.createImageData(m, k), o = im.data, i, j, c, x, y;
+    if (!average) {
+      for (j = 0; j < k; j++) for (i = 0; i < m; i++) {
+        var q = 4 * (Math.min(PH - 1, Math.floor(j * n)) * PW + Math.min(PW - 1, Math.floor(i * n))), o4 = 4 * (j * m + i);
+        o[o4] = pix[q]; o[o4 + 1] = pix[q + 1]; o[o4 + 2] = pix[q + 2];
+      }
+    } else {
+      /* separable: box-average every row, then every column of the result */
+      var line = new Float32Array(PW), col = new Float32Array(PH), tmp = new Float32Array(m * PH);
+      for (c = 0; c < 3; c++) {
+        for (y = 0; y < PH; y++) {
+          for (x = 0; x < PW; x++) line[x] = pix[4 * (y * PW + x) + c];
+          var r = boxDown(line, PW, n);
+          for (i = 0; i < m; i++) tmp[y * m + i] = r[i];
+        }
+        for (i = 0; i < m; i++) {
+          for (y = 0; y < PH; y++) col[y] = tmp[y * m + i];
+          var d = boxDown(col, PH, n);
+          for (j = 0; j < k; j++) o[4 * (j * m + i) + c] = d[j];
+        }
+      }
+    }
+    for (i = 3; i < o.length; i += 4) o[i] = 255;
+    g.putImageData(im, 0, 0);
+    return cv;
+  }
+
+  function band(cv, x, y, w, h, text, color, smooth) {
     var g = P.ctx;
-    g.imageSmoothingEnabled = false;
+    g.imageSmoothingEnabled = !!smooth;
     g.drawImage(cv, x, y, w, h);
     g.imageSmoothingEnabled = true;
     g.strokeStyle = color ? rgba(color, 0.9) : C.grid;
@@ -2581,12 +3066,15 @@ function segment(id, cb) {
   }
 
   function draw() {
-    P.clear();
     var g = P.ctx;
     var pad = 16, w = P.W - 2 * pad, h = 52, gap = 26, y0 = 6;
+    var yP = y0 + 3 * h + 2 * gap + 50, pw = Math.floor((w - 2 * gap) / 3), ph = Math.round(pw * PH / PW);
+    var need = pix ? yP + ph + 26 : 268;
+    if (P.h !== need) { P.h = need; P.fit(); }
+    P.clear();
     band(strip(row), pad, y0, w, h, "source: stripes, getting finer to the right", null);
-    band(strip(naive(N)), pad, y0 + h + gap, w, h, "every " + N + "th pixel — false wide bands appear", C.s2);
-    band(strip(averaged(N)), pad, y0 + 2 * (h + gap), w, h, "area average — fades to flat where detail cannot fit", C.s3);
+    band(strip(naive(N)), pad, y0 + h + gap, w, h, N === 1 ? keepLabel(1) : keepLabel(N) + " — false wide bands appear", C.s2);
+    band(strip(averaged(N)), pad, y0 + 2 * (h + gap), w, h, N === 1 ? keepLabel(1) : "area average — fades to flat where detail cannot fit", C.s3);
 
     /* the line the eye should follow */
     var lx = pad + w * limitX() / W;
@@ -2598,20 +3086,30 @@ function segment(id, cb) {
       g.textBaseline = "bottom";
       g.textAlign = lx > P.W - 150 ? "right" : "left";
       g.fillText("half the output rate — look right of here",
-        lx > P.W - 150 ? lx - 5 : lx + 5, y0 + 3 * h + 2 * gap + 20);
+        lx > P.W - 150 ? lx - 5 : lx + 5, y0 + 3 * h + 2 * gap + 40);
+    }
+
+    if (pix) {
+      band(img, pad, yP, pw, ph, "photo: source", null, true);
+      band(photo2D(N, false), pad + pw + gap, yP, pw, ph, N === 1 ? keepLabel(1) : keepLabel(N) + " — moiré on the shirt", C.s2);
+      band(photo2D(N, true), pad + 2 * (pw + gap), yP, pw, ph, N === 1 ? keepLabel(1) : "area average — stripes fade to grey", C.s3);
     }
   }
 
   function update() {
     var m = Math.floor(W / N), lx = limitX();
-    txt("v-i-n", String(N));
+    txt("v-i-n", nice(N));
     txt("r-i-src", W + " px wide");
     txt("r-i-out", m + " px wide");
     txt("r-i-read", fmt(100 / N, 1) + "%");
     txt("r-i-lim", lx > 0 && lx < W ? fmt(100 * lx / W, 0) + "% across" : "—");
-    verdict("r-i-verdict", "r-i-msg", "bad",
-      "Right of the dashed line the stripes are finer than the reduced grid can hold. Dropping pixels there does not blur them, it replaces them with wide bands that are not in the source — the same folding as before, now in space, and known as a moiré pattern. Averaging reads all " +
-      N + " pixels of each block, so the same region fades towards flat grey: the detail is lost rather than replaced with something false.");
+    if (N === 1) {
+      verdict("r-i-verdict", "r-i-msg", "ok",
+        "At 1× nothing is dropped and nothing is averaged: both outputs are the source, pixel for pixel. Raise the factor and watch where the two methods part ways.");
+    } else {
+      verdict("r-i-verdict", "r-i-msg", "bad",
+        "Right of the dashed line the stripes are finer than the reduced grid can hold. Dropping pixels there does not blur them, it replaces them with wide bands that are not in the source — the same folding as before, now in space, and known as a moiré pattern. Averaging reads every pixel of each block, so the same region fades towards flat grey: the detail is lost rather than replaced with something false. The shirt shows the same thing in two dimensions.");
+    }
     draw();
   }
 
@@ -2625,20 +3123,43 @@ function segment(id, cb) {
 (function () {
   var P = new Plot("c-metric", { l: 44, r: 14, t: 14, b: 32 });
   if (!P.cv) return;
-  var N = 10, off = 0, LEN = 300, SPIKE = 10;
+  var N = 10, off = 0, LEN = 300, SPIKE = 10, kind = "spiky";
   var series = new Float64Array(LEN);
 
   /* a plausible per-second metric: slow drift, small noise, and a sharp
      spike every SPIKE seconds — the thing an on-call engineer cares about.
      SPIKE and the default bucket size share a factor on purpose: that is the
-     case where the kept samples either always hit the spikes or always miss */
-  (function build() {
+     case where the kept samples either always hit the spikes or always miss.
+     The smooth variant has nothing faster than a couple of minutes, so no
+     bucket on the slider can undersample it. */
+  function build() {
     for (var i = 0; i < LEN; i++) {
-      var base = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 7.3 + 1.1);
-      var spike = (i % SPIKE === 3) ? 58 : 0;
-      series[i] = base + spike;
+      if (kind === "smooth") series[i] = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 23 + 1.1);
+      else series[i] = 22 + 6 * Math.sin(i / 41) + 2 * Math.sin(i / 7.3 + 1.1) + ((i % SPIKE === 3) ? 58 : 0);
     }
-  })();
+  }
+  build();
+  function isSpike(i) { return kind === "spiky" && i % SPIKE === 3; }
+
+  /* the first 30 seconds, as numbers */
+  function nums(d, b) {
+    var box = $("m-nums"); if (!box) return;
+    var W = 30, i, out = ['<span class="lab">second</span>'];
+    for (i = 0; i < W; i++) out.push('<span class="t">' + i + '</span>');
+    out.push('<span class="lab">series</span>');
+    for (i = 0; i < W; i++) out.push('<span' + (isSpike(i) ? ' class="sp"' : '') + '>' + Math.round(series[i]) + '</span>');
+    out.push('<span class="lab">every N-th</span>');
+    var kept = {}; d.forEach(function (p) { kept[p[0]] = p[1]; });
+    for (i = 0; i < W; i++) out.push(kept[i] !== undefined ? '<span class="k">' + Math.round(kept[i]) + '</span>' : '<span class="dim">·</span>');
+    out.push('<span class="lab">average</span>');
+    if (off > 0) out.push('<span class="dim" style="grid-column:span ' + Math.min(off, W) + '">·</span>');
+    for (i = 0; i < b.length; i++) {
+      var start = off + i * N; if (start >= W) break;
+      var span = Math.min(N, W - start);
+      out.push('<span class="a" style="grid-column:span ' + span + '">' + (span > 1 ? fmt(b[i][1], 1) : Math.round(b[i][1])) + '</span>');
+    }
+    box.innerHTML = out.join("");
+  }
 
   function dropped() {
     var pts = [];
@@ -2691,19 +3212,26 @@ function segment(id, cb) {
   function update() {
     txt("v-m-n", String(N)); txt("v-m-off", String(off));
     var d = dropped(), b = bucketed(), i;
-    var truePeak = 0, dPeak = 0, bPeak = 0, hit = 0, total = 0;
+    var truePeak = 0, dPeak = 0, bPeak = 0, hit = 0, total = 0, dev = 0;
     for (i = 0; i < LEN; i++) if (series[i] > truePeak) truePeak = series[i];
-    for (i = 0; i < LEN; i++) if (i % SPIKE === 3) total++;
+    for (i = 0; i < LEN; i++) if (isSpike(i)) total++;
     for (i = 0; i < d.length; i++) {
       if (d[i][1] > dPeak) dPeak = d[i][1];
-      if (Math.round(d[i][0]) % SPIKE === 3) hit++;
+      if (isSpike(Math.round(d[i][0]))) hit++;
+      if (i < b.length) dev = Math.max(dev, Math.abs(d[i][1] - b[i][1]));
     }
     for (i = 0; i < b.length; i++) if (b[i][1] > bPeak) bPeak = b[i][1];
     txt("r-m-true", fmt(truePeak, 1));
     txt("r-m-drop", fmt(dPeak, 1));
     txt("r-m-avg", fmt(bPeak, 1));
-    txt("r-m-hit", hit + " of " + total);
-    if (hit === 0) verdict("r-m-verdict", "r-m-msg", "bad",
+    txt("r-m-hit", kind === "spiky" ? hit + " of " + total : "—");
+    nums(d, b);
+    if (N === 1) verdict("r-m-verdict", "r-m-msg", "ok",
+      "A bucket of one second keeps everything: both outputs are the series itself, and the offset has nothing to move.");
+    else if (kind === "smooth") verdict("r-m-verdict", "r-m-msg", "ok",
+      "This series has no detail faster than the bucket, so it does not matter which second is kept. Every N-th and the average never differ by more than " +
+      fmt(dev, 1) + ", and dragging the offset changes nothing worth noticing. Thinning is safe here, and the theorem says why.");
+    else if (hit === 0) verdict("r-m-verdict", "r-m-msg", "bad",
       "At this offset the kept samples land between every spike, so the thinned series peaks at " +
       fmt(dPeak, 1) + " and the real peak of " + fmt(truePeak, 1) +
       " is absent from the record. The chart looks calm and is wrong.");
@@ -2724,6 +3252,7 @@ function segment(id, cb) {
     update();
   });
   on("s-m-off", "input", function (e) { off = +e.target.value; update(); });
+  segment("seg-m-sig", function (v) { kind = v; build(); update(); });
   register(P, draw);
   (function () { var s = $("s-m-off"); if (s) s.max = String(N - 1); })();
   update();

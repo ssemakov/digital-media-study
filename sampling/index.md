@@ -10,7 +10,7 @@ If no component of the signal oscillates faster than B times per second, then me
 
 Claude Shannon, 1949. "Perfectly" is literal here: the reconstruction is exact, and the formula that performs it is built in [the section on rebuilding the original](#recon).
 
-This page contains nine live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
+This page contains thirteen live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
 
 > fs is the **sample rate** — measurements per second (44100 for CD audio, 60 for a 60 fps game loop, 1 for a metric scraped every second). T=1/fs is the gap between measurements. B is the **bandwidth**: the highest frequency present in the measured signal. That is the complete set of terms.
 
@@ -172,15 +172,23 @@ The samples contain all the information. To recover the signal: crop the spectru
 
 **x(t)=n∑x(nT)⋅sinc(Tt−nT),sinc(u)=πusinπu**
 
+The kernels in common use, written in the same variable u = (t − nT)/T, the distance from a sample in units of the sample spacing:
+
+**box(u) = 1 if |u| < 1/2, else 0**
+**tri(u) = max(0, 1 − |u|)**
+**cubic(u) = 1.5|u|³ − 2.5|u|² + 1 if |u| < 1; −0.5|u|³ + 2.5|u|² − 4|u| + 2 if 1 ≤ |u| < 2; else 0**
+**lanczos(u) = sinc(u)·sinc(u/3) if |u| < 3, else 0**
+
 The sum is an interpolation loop. Every practical interpolator is the same loop with a different weight function; the table compares them and the code below implements all of them:
 
 | Kernel | Samples touched | Weights halfway between two samples | On an upscaled image |
 |---|---|---|---|
-| **box** nearest-neighbour | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. Its frequency response, and the droop it causes, is worked out under [real systems](#practice). |
-| **triangle** linear, bilinear in 2-D | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
-| **cubic** bicubic in 2-D | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
-| **Lanczos**, *a* = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
-| **sinc** ideal | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
+| **box** (nearest-neighbour) | 1 | `1` for one neighbour, `0` for the other | Blocky pixels and hard stair-steps. Cheapest, and the right choice for pixel art. Its frequency response, and the droop it causes, is worked out under real systems. |
+| **triangle** (linear, bilinear in 2-D) | 2 | `0.5 · 0.5`, a plain average | Soft, slightly blurred edges. What a GPU does when asked for bilinear texture filtering. |
+| **cubic** (bicubic in 2-D) | 4 | `−0.06 · 0.56 · 0.56 · −0.06` | Smooth, with a faint halo at sharp edges from the two negative weights. The usual default in image editors. |
+| **Lanczos**, a = 3 | 6 | `0.02 · −0.14 · 0.61 · 0.61 · −0.14 · 0.02` | Sharpest of the practical set, with slight ringing next to hard edges. The "best quality" option in ImageMagick, Pillow, ffmpeg and most image libraries. |
+| **sinc** (ideal) | all of them | every sample, decaying as 1/distance | The original, exactly, given infinitely many samples. Not implementable as written. |
+
 
 ```go
 package main
@@ -383,7 +391,7 @@ func main() {
 
 The same error appears when shrinking an image by taking every N-th pixel instead of area-averaging, when thinning a metrics series by keeping every N-th point instead of averaging the bucket, and when animating a spinning wheel by evaluating its angle once per frame. These are all the same bug.
 
-In none of those three is there an obvious signal, a sample rate, or anything a programmer would call a filter — there is a frame loop, an image resize, and a rollup query.
+In none of those three is there an obvious signal, a sample rate, or anything a programmer would call a filter — there is a frame loop, an image resize, and a rollup query. Each one is worked through, with the failure made visible, in [the survey of where this appears in practice](#wild), alongside the other settings this same reduction turns up in.
 
 ---
 
@@ -439,14 +447,14 @@ The theorem assumes instantaneous measurements, infinite precision, a perfect fi
 
 ### Staircase output, and the droop it causes
 
-Low-cost playback holds each sample until the next arrives — the staircase that can be toggled on in Figure 2. In the terms of [the rebuilding section](#recon), it is `valueAt` with `box` in place of `sinc`; in image terms it is nearest-neighbour upsampling. [Figure 4](#fig-sinc) with the kernel set to box shows what that costs in the time domain; this section shows the same cost in the frequency domain. It is simple and mostly works, but it has two side effects worth noting.
+Low-cost playback holds each sample until the next arrives — the staircase that can be toggled on in Figure 2. In the terms of the rebuilding section, it is `valueAt` with `box` in place of `sinc`; in image terms it is nearest-neighbour upsampling. Figure 4 with the kernel set to box shows what that costs in the time domain; this section shows the same cost in the frequency domain. It is simple and mostly works, but it has two side effects worth noting.
 
 First, it rolls off the top of the band: content near the ceiling comes out about **4 dB quieter** than it should (a factor of 2/π). Second, it does not fully remove the spectral copies that sampling created; it only attenuates them. Both effects are described by one curve:
 
 **H(f)=sinc(f/fs)**  
 *the staircase's frequency response*
 
-Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe, the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
+Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it passes the band untouched and removes every copy. The box in time has a sinc spectrum. The droop is the top of that sinc's main lobe (a lobe is one hump of the curve between two zero crossings; the main lobe is the central one, and the side lobes are the smaller ones beyond it), the residual copies are its side lobes, and together they are the leak the rebuilding section promised every kernel other than sinc would have. Figure 8 is the spectrum of the error Figure 4 measures with the box kernel selected.
 
 > **Figure 8 · live — The effect of the staircase on the spectrum**
 >
@@ -458,7 +466,12 @@ Note the symmetry with the ideal kernel. Sinc in time has a box spectrum, so it 
 
 ### Clock jitter: the timer is not perfectly periodic
 
-The theorem assumes samples land at exactly nT. If they land slightly early or late, the correct signal is read at the wrong moment, and the faster the signal is changing, the greater the error. Note what is *not* in the formula below: the sample rate. Jitter is governed by how fast the *input* is changing.
+The theorem assumes samples land at exactly nT. A real clock is early or late by a small, varying amount, so each sample reads the value the signal had a moment before or after the instant it is filed under. The damage is set by the slope at that instant: a flat stretch of signal reads the same either way, a steep one does not. To first order the timing error simply multiplies the slope:
+
+**Δx ≈ x′(t)·δt**  
+*slope × timing error*
+
+For a sine at frequency fin and amplitude A the steepest slope is 2π·fin·A, so random timing errors of typical size σt add noise of about 2π·fin·σt relative to the signal. In decibels, that ratio is the ceiling jitter places on the signal-to-noise ratio:
 
 **SNR=−20log10(2πfinσt) dB**
 
@@ -468,7 +481,21 @@ The theorem assumes samples land at exactly nT. If they land slightly early or l
 
 - **SNR** — signal-to-noise ratio — how far above the noise the data sits.
 
-> **Figure 9 · calculator — The resolution cost of timing jitter**
+Note what is *not* in the formula: the sample rate. Each sample's error depends only on how far the input moved during that sample's own timing error, so taking more samples neither helps nor hurts. This is the opposite of quantisation noise, which is a fixed total that oversampling spreads thin and filters away. Jitter noise grows with the input frequency instead, and like aliasing it is fixed at the moment of capture: nothing downstream knows the true instants, so nothing downstream can put the samples back.
+
+The kind of timing error matters. Random jitter turns into a raised noise floor, which is what the formula describes. Periodic jitter, such as power-supply ripple leaking into the clock, does something different: it produces a pair of spurious tones on either side of the input frequency, the same signature as frequency modulation, and no amount of averaging removes them.
+
+> **Figure 9 · live — Timing error becomes amplitude error**
+>
+> Each sample is taken a little early or late, then filed under the instant it was meant for. The orange bars are the resulting amplitude errors. Raise the input frequency and the same timing wobble does more damage.
+>
+> The sample rate here is fixed at 24 Hz and never enters the readout. Only the slope of the input and the size of the wobble do. The measured figure tracks the formula until the jitter becomes a sizeable fraction of a cycle, where the small-error approximation gives out.
+>
+> *(interactive figure — see the web page)*
+
+The numbers are unforgiving at the top of a band. Sixteen-bit audio at 20 kHz needs jitter under about 100 ps to keep all sixteen bits; the calculator's default, a 100 MHz input with 1 ps of jitter, stops at 64 dB, roughly ten bits, whatever the converter's spec sheet says. For software the lesson is more useful than the numbers. Jitter only costs anything if the samples are assumed to have landed at nT. Record the actual timestamp with each reading and the samples are irregular but exact, and the interpolation loop from the rebuilding section can rebuild the signal from them. Assume a uniform grid and the wobble is baked in as noise.
+
+> **Figure 10 · calculator — The resolution cost of timing jitter**
 >
 > "Effective bits" is the actual resolution obtained, regardless of the spec-sheet value. Every doubling of input frequency costs half a bit.
 >
@@ -490,6 +517,105 @@ The rate is **+3 dB, or half a bit, per doubling**. Modest on its own, but addin
 > 
 > At fs=2.2B the filter has a fifth of an octave to do its work — a 10th-order design with poor phase behaviour. At fs=8B it has two full octaves, and a simple 3rd-order filter suffices. Oversampling trades inexpensive computation for expensive analogue design.
 
+---
+
+*§10*
+
+## Where this appears in practice
+
+Each of these is the same theorem in different units.
+
+| Where | What sampling too slowly looks like |
+|---|---|
+| **Audio** | A synth's harmonics fold down into audible artefacts that move in the *wrong direction* when the pitch changes. Common in naive digital oscillators, which is why bandlimited waveform generation exists. |
+| **Images & textures** | Moiré on striped shirts and brick walls. Shrinking by dropping pixels causes aliasing; mipmaps exist so the GPU never samples a texture faster than the screen can represent. |
+| **Video & animation** | Wagon wheels appearing to spin backwards. A wheel turning at 26 revolutions per second, filmed at 24 fps, reads as 2 rps — `aliasOf(26, 24)`. Motion blur is the anti-aliasing filter. |
+| **Rendering** | Jagged edges and shimmering thin geometry. Supersampling means sampling above the geometry's rate and filtering down, which is the oversampling argument of [what goes wrong in real systems](#practice), in two dimensions. |
+| **Metrics & monitoring** | A 60-second scrape on a job that spikes every 55 seconds produces a slow oscillation that does not exist. Averaging over the bucket instead of point-sampling it is the fix, and it is an anti-alias filter. |
+| **Control loops** | A sensor read too slowly makes disturbances appear slower than they are, so the controller responds to a nonexistent signal. The sample rate must exceed the system's actual dynamics, not merely appear fast. |
+| **Radio / SDR** | Deliberate aliasing, done correctly — the technique of [undersampling on purpose](#bandpass). Fold a band down instead of sampling at its carrier frequency. |
+
+> Before reducing a rate — decimating an array, shrinking an image, thinning a series, dropping frames — ask: *what is the fastest component present, and is it faster than half the new rate?* If it is, filter first. That single question prevents essentially every aliasing bug.
+
+Three of those rows are worth seeing rather than reading. Each figure below is the same reduction — keep one value out of every N — in a setting where nobody would describe the work as sampling.
+
+> **Figure 11 · live — A spinning wheel, evaluated once per frame**
+>
+> Both wheels turn at the same speed, forwards, always. The left one is drawn continuously; the right one moves only at the frame instants. Watch the marked spoke on the right as the speed passes half the frame rate: it slows, stops, and then runs backwards, while the wheel itself never changes direction.
+>
+> The wheel is the sampled signal and the frame rate is the sample rate; nothing else is different. Apparent speed is `aliasOf(speed, fps)`, the folding function from [the section on aliasing](#alias), and the backwards range is one of the phase-flipped zones on the folding map plotted there. This is why film of a moving car shows the wheels turning the wrong way, and why a game loop that advances an angle once per frame produces the same artefact.
+>
+> *(interactive figure — see the web page)*
+
+> **Figure 12 · live — Shrinking an image by dropping pixels**
+>
+> The source is a band of stripes that get steadily finer from left to right — the spatial version of the rising tone heard earlier. Both reductions below produce the same number of output pixels; only the method differs. The dashed line marks where the stripes become finer than the reduced grid can hold. Below the stripes, a photograph is reduced the same two ways in both directions.
+>
+> Left of the dashed line the two reductions agree, because the stripes are coarse enough for both. Right of it they diverge: dropping pixels produces wide bands that are not in the source, which is the same folding as before, in space rather than time, and is what a moiré pattern is. Averaging reads every pixel in each block, so the same region fades towards flat grey — the detail is lost rather than replaced by something false. Raising the reduction factor drags the dashed line to the left, which is exactly what happens when a thumbnail gets smaller. Mipmaps exist to precompute the bottom band. The photograph shows the same thing in two dimensions: dropping pixels turns the shirt's stripes into a coarse moiré that shifts as the factor changes, while averaging fades them to plain grey cloth.
+>
+> *(interactive figure — see the web page)*
+>
+> *Photo: [Striped shirt woman with trees](https://commons.wikimedia.org/wiki/File:Striped_shirt_woman_with_trees_(Unsplash).jpg), Unsplash via Wikimedia Commons, CC0. Cropped and reduced to 256×192.*
+
+> **Figure 13 · live — Thinning a metrics series**
+>
+> A per-second series reduced to one point per bucket. Move the offset slider: it shifts only *which* second each kept sample lands on, and the series itself never changes. The rows of numbers under the chart show the first 30 seconds literally: the series, the values kept, and the bucket averages. Switch to the smooth series for the case where thinning is harmless.
+>
+> Dragging the offset changes what the thinned series reports, sometimes by a large factor, while the underlying data is untouched. A number that depends on where the sampling clock happened to land is the same failure as the two different signals that produced identical measurements earlier on this page. The average is lower than the true peak, but it is lower for a stated reason and it does not change with the offset; if peaks are what matter, aggregate with max over the bucket rather than reading one point from it. The smooth series is the case the theorem blesses: nothing in it changes faster than the bucket, so every method agrees and the offset moves nothing. Thinning is only a problem when the series contains detail the bucket cannot hold.
+>
+> *(interactive figure — see the web page)*
+
+**Non-uniform sampling.** Even spacing is convenient, not required. Landau (1967) proved that what matters is the *average density* of samples: it must be at least the total measure of the spectrum's support. Irregular or slightly jittered sample times still reconstruct — the expansion becomes a frame rather than an orthonormal basis, which costs numerical conditioning rather than information.
+
+**Sub-Nyquist sampling.** If a signal occupies several narrow bands with lots of empty space between them, the Landau rate counts only the occupied measure, and multicoset samplers approach it. Compressed sensing goes further, dropping the bandlimit assumption entirely in favour of *sparsity*: roughly O(klog(N/k)) measurements for a k-sparse signal. This does not break Nyquist; it is a different theorem with a stronger prior and a nonlinear reconstruction step.
+
+**More than one dimension.** Everything generalises to sampling on a lattice in Rd, where the copies land on the dual lattice and non-overlap becomes a sphere-packing question. That's why hexagonal sampling beats a square grid by 13.4% for isotropic image content, and why Bayer demosaicing is best understood as multidimensional reconstruction from a non-uniform lattice rather than as heuristic guessing.
+
+**Sampling derivatives.** Measure both a signal and its rate of change and each stream needs only half the rate. This generalises to M interleaved channels at 2B/M each — the principle behind time-interleaved converters, where channel mismatch shows up as spurious copies at kfs/M.
+
+---
+
+*§11*
+
+## Neither man in the name proved it first
+
+The theorem was discovered independently at least six times, and the usual attribution is inaccurate in ways worth knowing.
+
+| Year | Who | What they did |
+|---|---|---|
+| **1915** | E. T. Whittaker | Wrote down the sinc interpolation series as pure interpolation theory, with no sampling interpretation attached. |
+| **1928** | Harry Nyquist | Showed a channel of width B carries 2B independent pulses per second. About telegraph signalling capacity, *not* about sampling a continuous waveform. |
+| **1933** | Vladimir Kotelnikov | First complete statement *and* proof in a communications context. Published in Russian, and invisible to the West for decades. |
+| **1939** | Herbert Raabe | Independent proof, in his dissertation. |
+| **1948–49** | Claude Shannon | Stated it as Theorem 13 and made it common knowledge among engineers — while noting it "is a fact which is common knowledge in the communication art." |
+| **1949** | Isao Someya | Independent Japanese publication; it's "Someya's theorem" in Japan. |
+| **1967** | Henry Landau | The deepest generalisation — the density condition for arbitrary, non-uniform sampling sets. |
+
+Nyquist's name was attached later, and the mechanism is uncertain; the most likely account is that Shannon referred to the "Nyquist interval" of 1/2B seconds and the name persisted. Some authors write **WKS** for Whittaker–Kotelnikov–Shannon; more complete attributions write Whittaker–Kotelnikov–Raabe–Shannon–Someya. "Nyquist–Shannon" credits one person for the wrong paper and omits the one who proved it first in the correct context.
+
+---
+
+*§12*
+
+## The complete summary
+
+| Idea | What to remember |
+|---|---|
+| **The rule** | Sample faster than twice the fastest component present and no information is lost. Strictly faster; equal is not sufficient. |
+| **Why it works** | Sampling adds copies of the spectrum every fs. Keep them from overlapping and the original can be cropped back out exactly. |
+| **Aliasing** | Overlapping copies are *summed*. A fast wave returns permanently relabelled as a slow one. `aliasOf(f, fs)` gives where it lands — mirrored repeat, not clamp and not wrap. |
+| **Rebuilding** | A weighted sum of sincs, one per sample. Interpolation with the exactly correct kernel; Lanczos is its practical truncation. |
+| **The fix** | Filter *before* reducing the rate, never after. Afterward is too late: the incorrect data is already indistinguishable from the correct data. |
+| **Oversampling** | Does not improve the theorem; makes the filters inexpensive and provides half a bit of real resolution per doubling. |
+| **Staircase output** | Costs about 4 dB at the top of the band and leaves partial copies behind. Fixable in software, or by oversampling. |
+| **Jitter** | Timing error degrades the signal in proportion to how fast the signal changes, not how fast it is sampled. |
+| **Position vs width** | What limits the rate is how *wide* the band is, not how high it sits. This is what makes deliberate undersampling possible. |
+| **Zones and baseband** | A sample rate cuts the frequency axis into slices half the rate wide, numbered from 1. Slice 1, from 0 to half the rate, is the *baseband*: the only range the samples can express. Every other slice folds onto it, odd ones upright and even ones mirrored. |
+
+> Sampling never destroys information; *overlap* does. Every practical rule, from anti-alias filters to mipmaps to averaging metrics buckets, is a method for keeping the copies apart.
+
 An interactive companion to the Wikipedia article [Nyquist–Shannon sampling theorem](https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem). Every figure computes its curves live in the browser — no precomputed data and no network calls. The audio is synthesised at runtime through a real windowed-sinc decimation chain, so the output is the actual phenomenon rather than a recording.
+
+Sources behind [the history section](#history): Shannon, *Communication in the Presence of Noise* (1949); Kotelnikov (1933); Whittaker (1915); Landau, *Necessary density conditions* (1967).
 
 Text adapted from Wikipedia (CC BY-SA 4.0) and Xiph.Org’s *A Digital Media Primer for Geeks* (CC BY-SA 3.0). This page is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); see [LICENSE](https://github.com/ssemakov/digital-media-study/blob/main/LICENSE).
