@@ -338,7 +338,9 @@ footer a{color:var(--ink-2)}
     later, because nothing distinguishes the noise from the signal.</p>
 
     <p>A digital signal has one property that changes everything: the value is quantised, so as long
-    as the noise is smaller than half a step, you can round it away completely. Copy a digital file a
+    as the noise is smaller than half a step, you can round it away completely. That covers the amplitude axis; the time axis loses nothing
+    either, for a reason that is the entire subject of <a href="/sampling">the companion page on
+    sampling</a>. Copy a digital file a
     thousand times and the thousandth copy is bit-identical to the first. That is the entire argument.
     Conversion in and out is lossy in principle, but modern converters are so far below the threshold
     of human perception that in practice the ends of the chain stopped being the problem decades ago.</p>
@@ -457,8 +459,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <p style="margin:0">If frequencies above half the sample rate reach the converter, they are not
       discarded — they <em>fold down</em> into the audible range as new tones that were
       never in the source. The result is audible distortion. The fix is a
-      filter before the converter, and it is the one step that cannot be postponed. (The companion
-      explainer on the sampling theorem covers this in detail; here it is taken as given, and the
+      filter before the converter, and it is the one step that cannot be postponed. (<a href="/sampling">The companion
+      explainer on the sampling theorem</a> covers this in detail; here it is taken as given, and the
       focus is on the other two numbers.)</p>
     </div>
   </div>
