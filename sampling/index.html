@@ -174,6 +174,8 @@ figure .head p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
 .canvasbox{padding:12px 14px 4px;position:relative}
 canvas{display:block;width:100%;touch-action:pan-y}
 figcaption{padding:10px 18px 16px;font-size:13.5px;color:var(--muted);line-height:1.55}
+.credit{padding:0 18px 14px;margin-top:-8px;font-size:11.5px;color:var(--muted)}
+.credit a{color:var(--muted)}
 
 /* controls */
 .ctl{display:flex;flex-wrap:wrap;gap:14px 22px;padding:14px 18px;border-top:1px solid var(--border);
@@ -1601,7 +1603,7 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-i-n">reduction factor<b><span id="v-i-n">4</span>&times;</b></label>
-        <input type="range" id="s-i-n" min="2" max="12" step="1" value="4"></div>
+        <input type="range" id="s-i-n" min="1" max="6" step="0.25" value="4"></div>
     </div>
     <div class="readout">
       <div class="cell"><div class="k">Source</div><div class="v" id="r-i-src">480 px wide</div></div>
@@ -1618,8 +1620,8 @@ c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v0 v585 h43z"/></svg></span></span></
     reduction factor drags the dashed line to the left, which is exactly what happens when a
     thumbnail gets smaller. Mipmaps exist to precompute the bottom band. The photograph shows the
     same thing in two dimensions: dropping pixels turns the shirt's stripes into a coarse moir&eacute;
-    that shifts as the factor changes, while averaging fades them to plain grey cloth. Photo:
-    Unsplash, via Wikimedia Commons, CC0.</figcaption>
+    that shifts as the factor changes, while averaging fades them to plain grey cloth.</figcaption>
+    <div class="credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Striped_shirt_woman_with_trees_(Unsplash).jpg">Striped shirt woman with trees</a>, Unsplash via Wikimedia Commons, CC0. Cropped and reduced to 256&times;192.</div>
   </figure>
 
   <figure id="fig-metric">
@@ -2956,20 +2958,26 @@ function segment(id, cb) {
     }
   })();
 
+  function nice(v) { return Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(2).replace(/0$/, ""); }
+  function keepLabel(n) { return n === 1 ? "1× — every pixel kept, identical to the source" : "1 pixel kept in every " + nice(n); }
+
   function naive(n) {
     var m = Math.floor(W / n), out = new Float32Array(m);
-    for (var i = 0; i < m; i++) out[i] = row[i * n];
+    for (var i = 0; i < m; i++) out[i] = row[Math.min(W - 1, Math.floor(i * n))];
     return out;
   }
-  function averaged(n) {
-    var m = Math.floor(W / n), out = new Float32Array(m);
+  /* box average over a window n wide, n not necessarily an integer:
+     each source pixel is weighted by how much of it falls inside the window */
+  function boxDown(src, len, n) {
+    var m = Math.floor(len / n), out = new Float32Array(m);
     for (var i = 0; i < m; i++) {
-      var s = 0;
-      for (var j = 0; j < n; j++) s += row[i * n + j];
+      var lo = i * n, hi = lo + n, s = 0;
+      for (var x = Math.floor(lo); x < Math.min(len, Math.ceil(hi)); x++) s += src[x] * (Math.min(hi, x + 1) - Math.max(lo, x));
       out[i] = s / n;
     }
     return out;
   }
+  function averaged(n) { return boxDown(row, W, n); }
   function strip(data) {
     var m = data.length, cv = document.createElement("canvas");
     cv.width = m; cv.height = 1;
@@ -2998,21 +3006,29 @@ function segment(id, cb) {
   function photo2D(n, average) {
     var m = Math.floor(PW / n), k = Math.floor(PH / n), cv = document.createElement("canvas");
     cv.width = m; cv.height = k;
-    var g = cv.getContext("2d"), im = g.createImageData(m, k), o = im.data;
-    for (var j = 0; j < k; j++) for (var i = 0; i < m; i++) {
-      var r = 0, gg = 0, b = 0, cnt = average ? n * n : 1;
-      if (average) {
-        for (var dy = 0; dy < n; dy++) for (var dx = 0; dx < n; dx++) {
-          var p = 4 * ((j * n + dy) * PW + i * n + dx);
-          r += pix[p]; gg += pix[p + 1]; b += pix[p + 2];
-        }
-      } else {
-        var q = 4 * (j * n * PW + i * n);
-        r = pix[q]; gg = pix[q + 1]; b = pix[q + 2];
+    var g = cv.getContext("2d"), im = g.createImageData(m, k), o = im.data, i, j, c, x, y;
+    if (!average) {
+      for (j = 0; j < k; j++) for (i = 0; i < m; i++) {
+        var q = 4 * (Math.min(PH - 1, Math.floor(j * n)) * PW + Math.min(PW - 1, Math.floor(i * n))), o4 = 4 * (j * m + i);
+        o[o4] = pix[q]; o[o4 + 1] = pix[q + 1]; o[o4 + 2] = pix[q + 2];
       }
-      var o4 = 4 * (j * m + i);
-      o[o4] = r / cnt; o[o4 + 1] = gg / cnt; o[o4 + 2] = b / cnt; o[o4 + 3] = 255;
+    } else {
+      /* separable: box-average every row, then every column of the result */
+      var line = new Float32Array(PW), col = new Float32Array(PH), tmp = new Float32Array(m * PH);
+      for (c = 0; c < 3; c++) {
+        for (y = 0; y < PH; y++) {
+          for (x = 0; x < PW; x++) line[x] = pix[4 * (y * PW + x) + c];
+          var r = boxDown(line, PW, n);
+          for (i = 0; i < m; i++) tmp[y * m + i] = r[i];
+        }
+        for (i = 0; i < m; i++) {
+          for (y = 0; y < PH; y++) col[y] = tmp[y * m + i];
+          var d = boxDown(col, PH, n);
+          for (j = 0; j < k; j++) o[4 * (j * m + i) + c] = d[j];
+        }
+      }
     }
+    for (i = 3; i < o.length; i += 4) o[i] = 255;
     g.putImageData(im, 0, 0);
     return cv;
   }
@@ -3038,8 +3054,8 @@ function segment(id, cb) {
     if (P.h !== need) { P.h = need; P.fit(); }
     P.clear();
     band(strip(row), pad, y0, w, h, "source: stripes, getting finer to the right", null);
-    band(strip(naive(N)), pad, y0 + h + gap, w, h, "every " + N + "th pixel — false wide bands appear", C.s2);
-    band(strip(averaged(N)), pad, y0 + 2 * (h + gap), w, h, "area average — fades to flat where detail cannot fit", C.s3);
+    band(strip(naive(N)), pad, y0 + h + gap, w, h, N === 1 ? keepLabel(1) : keepLabel(N) + " — false wide bands appear", C.s2);
+    band(strip(averaged(N)), pad, y0 + 2 * (h + gap), w, h, N === 1 ? keepLabel(1) : "area average — fades to flat where detail cannot fit", C.s3);
 
     /* the line the eye should follow */
     var lx = pad + w * limitX() / W;
@@ -3056,21 +3072,25 @@ function segment(id, cb) {
 
     if (pix) {
       band(img, pad, yP, pw, ph, "photo: source", null, true);
-      band(photo2D(N, false), pad + pw + gap, yP, pw, ph, "every " + N + "th pixel — moiré on the shirt", C.s2);
-      band(photo2D(N, true), pad + 2 * (pw + gap), yP, pw, ph, "area average — stripes fade to grey", C.s3);
+      band(photo2D(N, false), pad + pw + gap, yP, pw, ph, N === 1 ? keepLabel(1) : keepLabel(N) + " — moiré on the shirt", C.s2);
+      band(photo2D(N, true), pad + 2 * (pw + gap), yP, pw, ph, N === 1 ? keepLabel(1) : "area average — stripes fade to grey", C.s3);
     }
   }
 
   function update() {
     var m = Math.floor(W / N), lx = limitX();
-    txt("v-i-n", String(N));
+    txt("v-i-n", nice(N));
     txt("r-i-src", W + " px wide");
     txt("r-i-out", m + " px wide");
     txt("r-i-read", fmt(100 / N, 1) + "%");
     txt("r-i-lim", lx > 0 && lx < W ? fmt(100 * lx / W, 0) + "% across" : "—");
-    verdict("r-i-verdict", "r-i-msg", "bad",
-      "Right of the dashed line the stripes are finer than the reduced grid can hold. Dropping pixels there does not blur them, it replaces them with wide bands that are not in the source — the same folding as before, now in space, and known as a moiré pattern. Averaging reads all " +
-      N + " pixels of each block, so the same region fades towards flat grey: the detail is lost rather than replaced with something false. The shirt shows the same thing in two dimensions.");
+    if (N === 1) {
+      verdict("r-i-verdict", "r-i-msg", "ok",
+        "At 1× nothing is dropped and nothing is averaged: both outputs are the source, pixel for pixel. Raise the factor and watch where the two methods part ways.");
+    } else {
+      verdict("r-i-verdict", "r-i-msg", "bad",
+        "Right of the dashed line the stripes are finer than the reduced grid can hold. Dropping pixels there does not blur them, it replaces them with wide bands that are not in the source — the same folding as before, now in space, and known as a moiré pattern. Averaging reads every pixel of each block, so the same region fades towards flat grey: the detail is lost rather than replaced with something false. The shirt shows the same thing in two dimensions.");
+    }
     draw();
   }
 
