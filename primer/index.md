@@ -2,43 +2,43 @@
 
 *A digital media primer, for people who write software*
 
-# Everything in a media file is *numbers on a grid*. The remainder is metadata.
+# Digital audio and video represent signals as *arrays of samples*.
 
-Digital audio and video are often regarded as a specialist field. They are not. There is one fundamental idea — the sampling theorem — and then a long series of engineering decisions, most of which are historical accidents that became standards. This page covers the full stack: what a PCM sample is, why adding noise deliberately makes audio *better*, why video pixels are often not square, and why the position of a chroma sample is not standardised.
+A media file stores sampled audio and video together with information needed to interpret and play them. This page describes PCM, bit depth, dither, companding, signal reconstruction, pixel aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.
 
-Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010) — rebuilt as a set of interactive figures rather than a video.
+Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
-Monty's framing is worth restating: this field appears difficult because the equipment used to be expensive, not because the concepts are harder than anything else in computer science.
+The primer introduces the concepts and engineering constraints behind common audio and video formats.
 
-Twelve live figures. Everything is computed in the browser — the images are generated procedurally, the audio is synthesised at runtime, and the colour-space calculations run on real pixels. Heavier material sits in **Go deeper** panels that can be skipped without loss of continuity.
+The page contains twelve interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
 
 ---
 
 *§1*
 
-## Digital did not prevail because of higher accuracy
+## Digital signals and repeatable copying
 
-Begin with a fact that is contrary to common intuition: **digital came first.** The telegraph was carrying multiplexed digital signals across continents by the 1860s, decades before anyone recorded an analogue waveform. Analogue audio and video are the *newer* technology.
+Digital communication predates recorded analogue audio. By the 1860s, telegraph systems were carrying multiplexed digital signals across continents. These systems represented messages using discrete states.
 
-Digital also did not prevail on fidelity. A good analogue chain can be extremely accurate. It prevailed on a more mundane and more important property: **copies**. Every analogue component a signal passes through — every amplifier, every metre of cable, every tape generation — adds its own noise and distortion, permanently, and those errors accumulate. There is no way to remove them later, because nothing distinguishes the noise from the signal.
+A major advantage of digital storage is **repeatable copying**. In an analogue chain, amplifiers, cables, and recording media add noise and distortion. These errors accumulate during transmission and copying, and separating them from the original signal is difficult.
 
-A digital signal has one property that changes everything: the value is quantised, so as long as the noise is smaller than half a step, you can round it away completely. That covers the amplitude axis; the time axis loses nothing either, for a reason that is the entire subject of [the companion page on sampling](/sampling). Copy a digital file a thousand times and the thousandth copy is bit-identical to the first. That is the entire argument. Conversion in and out is lossy in principle, but modern converters are so far below the threshold of human perception that in practice the ends of the chain stopped being the problem decades ago.
+A digital transmission uses discrete signal levels. A receiver can recover the intended value when noise stays within the decision threshold, allowing each stage to regenerate the data. A file copied without errors remains bit-identical through successive copies. Conversion between analogue and digital signals introduces quantisation and hardware errors; the sample rate also limits bandwidth. [The companion page on sampling](/sampling) explains the conditions for reconstructing a signal from its samples.
 
-> **What actually made this an elite field**
+> **Data rates and hardware requirements**
 >
-> Not the mathematics. A single second of raw HD video is roughly 700 megabits — about 500× the data rate of CD audio. Computers could manipulate raw audio in real time about fifteen years before they could do the same for raw video, and the equipment required in the interim was prohibitively expensive. The concepts were always accessible; the hardware was not.
+> Raw HD video can require roughly 700 megabits per second, about 500× the data rate of CD audio. Real-time video processing became practical later than audio processing because it required substantially more computing power, storage, and data-transfer capacity.
 
 ---
 
 *§2*
 
-## PCM is three numbers and a byte order
+## PCM parameters and byte order
 
-Raw digital audio — **Pulse Code Modulation** — is the simplest thing it could be: measure the signal at fixed intervals, write each measurement down as an integer. To read or write a PCM stream you need exactly three parameters, plus one additional detail.
+**Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
 
-**Sample rate** — how many measurements per second. This sets the highest frequency you can represent: half the rate, and not a hertz more. **Sample format** — how each measurement is stored: how many bits, signed or unsigned, integer or float. This sets the *dynamic range*. **Channel count** — how many simultaneous streams, stored interleaved: left, right, left, right, and so on. And the additional detail: anything wider than 8 bits has a **byte order**. WAV is little-endian, AIFF is big-endian, and getting it wrong produces a loud broadband noise.
+**Sample rate** is the number of measurements per second. Half the rate is the upper frequency boundary for reconstruction. **Sample format** specifies the bit depth and representation: signed or unsigned integer, or floating point. It determines the available levels and *dynamic range*. **Channel count** specifies the number of simultaneous streams. Interleaved stereo stores left and right samples in alternating order. Values wider than 8 bits also have a **byte order**. Standard WAV PCM is little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud noise.
 
-That's the entire format. Multiply the three numbers together and you have the bitrate:
+Multiplying sample rate, bits per sample, and channel count gives the bitrate. Dividing by eight gives bytes per second:
 
 ```go
 package main
@@ -54,36 +54,36 @@ func main() {
 }
 ```
 
-> **Figure 1 · live — The three numbers, and what they cost**
+> **Figure 1 · live — PCM parameters and data size**
 >
 > The sliders show the waveform being sampled and rounded, and the resulting size in bytes.
 >
-> Note how differently the two sliders behave. Sample rate changes *which frequencies survive* — a horizontal limit. Bit depth changes *how quiet a sound can be before it disappears into the rounding* — a vertical limit. They are not interchangeable, and neither makes the waveform "steppier" in any audible way.
+> Sample rate sets the frequency range. Bit depth sets the quantisation step size and affects the noise floor. Adjust each slider to compare changes in the sampled waveform and data size.
 >
 > *(interactive figure — see the web page)*
 
-### The common rates, and why they exist
+### Common sample rates
 
-| Rate | Why it exists |
+| Rate | Use and background |
 |---|---|
 | **8 kHz** | Telephony. Speech is intelligible with about 4 kHz of bandwidth, so 8 kHz is the smallest rate that carries it. |
-| **44.1 kHz** | CD. The oddly specific number comes from early digital recorders that stored audio on video tape — the rate had to fit a whole number of samples into a video field. It had no prior use and no successor. |
-| **48 kHz** | The professional video standard, and the standard default. Divides neatly by common frame rates, which matters when audio must line up with picture. |
-| **96 / 192 kHz** | Not for extending the audible range — human hearing does not extend above 20 kHz. They exist to give anti-aliasing and reconstruction filters a gentler roll-off, and to give processing headroom during production. |
+| **44.1 kHz** | CD audio. The rate comes from early digital recorders that stored audio on video tape, where each video field had to contain a whole number of samples. |
+| **48 kHz** | Professional video and general audio production. Its relationship to common frame rates simplifies alignment between audio and picture. |
+| **96 / 192 kHz** | Production formats. Higher rates allow wider transition bands for anti-aliasing and reconstruction filters and provide headroom for signal processing. |
 
-> **One line on sample rate and aliasing**
+> **Sample rate and aliasing**
 >
-> If frequencies above half the sample rate reach the converter, they are not discarded — they *fold down* into the audible range as new tones that were never in the source. The result is audible distortion. The fix is a filter before the converter, and it is the one step that cannot be postponed. ([The companion explainer on the sampling theorem](/sampling) covers this in detail; here it is taken as given, and the focus is on the other two numbers.)
+> Frequencies above half the sample rate can *alias* into the representable band, producing tones at different frequencies. An anti-aliasing filter limits the input bandwidth before sampling. [The companion explainer on the sampling theorem](/sampling) covers this process in detail.
 
 ---
 
 *§3*
 
-## Bit depth is dynamic range, not "accuracy"
+## Bit depth and quantisation error
 
-This is the most common misunderstanding in digital audio. People assume more bits means each sample is "closer to the true value," so 16-bit audio is a slightly blurry version of the real thing and 24-bit is sharper. That is not what happens.
+Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale amplitude, increasing the bit depth places those levels closer together and reduces the error introduced by rounding.
 
-Rounding each sample to the nearest level introduces an error, and that error is bounded by half a level. The signal you can store gets no bigger — full scale is full scale. What changes is how far *below* full scale you can still hear something before it vanishes into the rounding. Bit depth sets the floor, not the ceiling. Each extra bit halves the step size, which lowers the noise floor by about 6 dB:
+Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
 
 **dynamic range≈6.02b+1.76 dB**
 
@@ -91,33 +91,33 @@ Rounding each sample to the nearest level introduces an error, and that error is
 
 - **6.02** — one extra bit doubles the number of levels; doubling is 6.02 dB.
 
-- **1.76** — a correction because rounding error is spread evenly rather than sitting at its worst case.
+- **1.76** — a constant arising from the power ratio between a full-scale sine and uniformly distributed rounding error.
 
-So 8-bit gives you about 50 dB of usable range, 16-bit about 96 dB, and 24-bit about 144 dB — which is more range than any microphone or room can actually deliver, and comfortably past the point where the air itself is the limiting factor. That's why 24-bit is a *production* format: the headroom is there so that thirty stages of gain changes and mixing don't accumulate into anything audible, not because the final result needs it.
+The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 dB for 24-bit audio. Recording and production commonly use 24-bit samples to accommodate low recording levels and repeated processing. The usable range of a recording also depends on microphone noise, converter performance, and the recording environment.
 
-> **Figure 2 · live — What rounding actually does to a signal**
+> **Figure 2 · live — A signal and its quantisation error**
 >
-> Top: the signal and its quantised version. Bottom: the rounding error. Note how the error's *shape* changes as the signal gets quieter.
+> Top: the signal and its quantised version. Bottom: the rounding error. Lower the signal level to see how the error pattern changes.
 >
-> At a healthy level the error appears as random noise — harmless. Turn the signal down and the error becomes *structured*, locked to the waveform. That structure is the real problem with quantisation, and it is what §4 addresses.
+> At higher levels, the error can resemble random noise. At low levels, a simple signal crosses a small number of quantisation levels, producing a repeating error pattern correlated with the waveform. Section 4 describes how dither affects this pattern.
 >
 > *(interactive figure — see the web page)*
 
 | Format | Range | Where it appears |
 |---|---|---|
-| **8-bit linear** | ~50 dB | Effectively extinct. Audibly noisy on anything with quiet passages. |
-| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Same byte count, far more usable range — see §5. |
-| **16-bit signed** | ~96 dB | CD, and the delivery format for almost everything. Full scale is 0 dBFS; everything else is negative. |
-| **24-bit signed** | ~144 dB | Recording and production. Headroom for processing, not for listening. |
-| **32-bit float** | very large | Mixing and mastering. ±1.0 is 0 dBFS, but going over does not clip — the level can be reduced later without damage, which is the purpose. |
+| **8-bit linear** | ~50 dB | Legacy audio and sound effects. Quantisation noise can be audible in quiet passages. |
+| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §5. |
+| **16-bit signed** | ~96 dB | CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS values. |
+| **24-bit signed** | ~144 dB | Recording and production. Additional range for low-level signals and processing. |
+| **32-bit float** | very large | Mixing and mastering. ±1.0 corresponds to 0 dBFS. Floating-point storage can retain values beyond that level for later gain reduction. |
 
 **Go deeper: Where 6.02 and 1.76 come from**
 
-With b bits the step size is q=2/2b for a signal spanning −1 to +1. Assume the rounding error is uniformly distributed across ±q/2 — true when the signal is busy enough to wander across many levels. A uniform distribution of width q has variance q2/12, so the noise power is q2/12.
+With b bits the step size is q=2/2b for a signal spanning −1 to +1. Assume the rounding error is uniformly distributed across ±q/2 as an approximation for signals that cross many levels. A uniform distribution of width q has variance q2/12, so the noise power is q2/12.
 
-A full-scale sine has power 1/2. The ratio is q2/121/2=2q212=23⋅22b, and 10log10(2322b)=20blog102+10log101.5=6.02b+1.76 dB. The 1.76 is just 10log10(3/2) — the gain from measuring against a sine's RMS rather than its peak.
+A full-scale sine has power 1/2. The ratio is q2/121/2=2q212=23⋅22b, and 10log10(2322b)=20blog102+10log101.5=6.02b+1.76 dB. The constant 1.76 equals 10log10(3/2), using the sine's RMS power as the signal reference.
 
-The assumption is worth examining. "Uniformly distributed error, uncorrelated with the signal" is exactly what stops being true for quiet or simple signals — which is why the formula describes the noise floor well in general and describes low-level behaviour badly. Dither is how you make the assumption true again.
+This estimate assumes uniformly distributed error that is uncorrelated with the signal. Quiet or simple signals can produce repeating error patterns, limiting the estimate's usefulness for low-level behaviour. Appropriate dither removes the signal dependence of the error's mean and variance.
 
 ---
 
@@ -125,11 +125,11 @@ The assumption is worth examining. "Uniformly distributed error, uncorrelated wi
 
 ## Dither: adding noise to reduce distortion
 
-This is the most counter-intuitive idea in digital audio.
+Dither is random noise added before quantisation to control the statistical properties of the rounding error.
 
-The problem from Figure 2: when a signal is quiet, or simple, the rounding error stops being random. A quiet sine wave crosses the same few levels in the same pattern every cycle, so the error repeats at the signal's own frequency. Repeating error isn't noise — it's **distortion**, and distortion generates harmonics: new tones at multiples of the original that were never in the source. Your ear is extremely good at picking those out, because they're musically related to what you're listening to.
+Figure 2 shows how a quiet sine wave crosses the same few quantisation levels in each cycle. The resulting error repeats with the waveform and produces **harmonic distortion**: additional tones at multiples of the original frequency. These harmonics can be audible, particularly in simple or low-level signals.
 
-The fix is to add a small amount of random noise *before* rounding — about one level's worth:
+The following example adds triangular noise spanning ±1 quantisation step *before* rounding:
 
 ```go
 package main
@@ -144,7 +144,7 @@ func main() {
 	x := 0.3      // input sample, in the range -1..1
 	levels := 8.0 // quantiser step count: how many values the format can store
 
-	// naive: round to the nearest step; error is correlated, audible distortion
+	// undithered: rounding error can be correlated with the signal
 	out := math.Round(x*levels) / levels
 
 	// dithered: error becomes uncorrelated noise, and the signal survives below one step
@@ -155,91 +155,91 @@ func main() {
 }
 ```
 
-The noise decorrelates the error from the signal, which converts distortion into a constant, featureless hiss. And it does something better than that: because the noise pushes the signal across a rounding boundary more often when the signal is slightly higher, information about signals *smaller than a single step* survives in the statistics. A tone quieter than the smallest number the format can represent remains audible. It is below the noise, but the ear integrates over time and recovers it, which is why a conversation remains intelligible in a noisy room.
+Dither reduces signal-correlated distortion and introduces broadband noise. It also allows information about signals *smaller than a single step* to remain in the output. Small changes in the input alter the probability of rounding to each neighbouring level, so the output statistics retain information about the signal. Under suitable listening conditions, a tone can remain audible below the noise floor.
 
-> **Figure 3 · audio + live — A tone quieter than one bit**
+> **Figure 3 · audio + live — A tone below one quantisation step**
 >
-> A sine at the level shown, quantised to the depth shown. The spectrum shows the difference: spikes indicate invented harmonics; a flat floor indicates broadband noise. Raise the volume gradually before playing.
+> A sine at the selected level, quantised to the selected bit depth. Harmonic peaks show distortion; the broadband floor shows noise. Begin playback at a low volume and increase it gradually.
 >
-> Drag the tone level below one step and listen to the undithered version: the tone does not fade out smoothly; it breaks up into audible artefacts and eventually cuts to silence. The dithered version simply gets quieter, staying recognisable well past the point where the undithered one has broken down.
+> Lower the tone level below one step and compare the two versions. The undithered tone develops artefacts and eventually rounds to silence. With dither, its level decreases continuously into the noise floor.
 >
 > *(interactive figure — see the web page)*
 
-> **Why this applies beyond audio**
+> **Dither in images**
 >
-> The same trick applies anywhere you reduce precision. Reducing an image to 256 colours produces visible banding in gradients; adding a little noise before quantising converts the bands into a fine grain your eye ignores. That's what "dithering" means in a GIF export dialog, and it's the same mathematics.
+> Dither also applies when reducing image precision. Quantising a gradient to a limited palette can produce visible bands. Adding noise before quantisation replaces these regular boundaries with a fine-grained pattern. Image formats such as GIF use dithering to represent intermediate colours with a limited palette.
 
 **Go deeper: Why triangular noise, and what noise shaping adds**
 
-Flat (rectangular, one-LSB) dither decorrelates the error's *mean* but leaves its variance modulated by the signal — you get a hiss that pumps slightly with the music. Adding two independent rectangular sources gives a **triangular** distribution spanning ±1 LSB (TPDF), which decorrelates both mean and variance. That's why the snippet above adds two calls to `random()`. The price is 4.77 dB more noise power than undithered quantisation — a trade that is almost always accepted.
+Rectangular one-LSB dither decorrelates the error's *mean*. Its variance remains signal-dependent, so the noise level can vary with the input. Adding two independent rectangular sources gives a **triangular** distribution spanning ±1 LSB (TPDF), which decorrelates both mean and variance. The example above uses two random values for this reason. TPDF dither raises noise power by 4.77 dB relative to the uniformly distributed undithered quantisation-error model.
 
-**Noise shaping** goes further. The total noise power is fixed, but its distribution across frequency is not, so you can push it out of the band where hearing is most sensitive (roughly 2–5 kHz) and pile it up near 20 kHz where you can't hear it. The measured noise gets worse; the *perceived* noise drops by 10–15 dB. This is how 16-bit delivery achieves what sounds like considerably more than 96 dB of usable range, and it's the same principle a delta-sigma converter uses to get 20 bits out of a 1-bit comparator.
+**Noise shaping** changes the distribution of quantisation noise across frequency. In audio, it can reduce noise where hearing is most sensitive, roughly 2–5 kHz, while increasing it at higher frequencies. The perceptual benefit depends on the filter and playback conditions. Noise shaping is used in 16-bit delivery and in delta-sigma converters.
 
 ---
 
 *§5*
 
-## Companding: 8 bits that behave like 14
+## Companding and non-uniform quantisation
 
-Linear 8-bit audio has poor quality — about 50 dB of range, which is not enough for speech with any variation in loudness. Yet telephony ran on 8 bits per sample for decades and sounded acceptable. The reason is that the levels do not have to be evenly spaced.
+Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying the spacing between quantisation levels.
 
-Human hearing is roughly logarithmic: a change in loudness is perceived as a *ratio*, not a difference. Going from 0.001 to 0.002 is as perceptually significant as going from 0.5 to 1.0. Even spacing wastes most of its levels on loud sounds where the differences are imperceptible.
+Perceived loudness is approximately logarithmic. Equal amplitude ratios correspond to similar changes in perceived level: both 0.001 to 0.002 and 0.5 to 1.0 are doublings. Quantisation with finer steps near silence can therefore reduce audible error in quiet signals.
 
-So **µ-law** (North America and Japan) and **A-law** (elsewhere) space the levels logarithmically: fine steps near silence, coarse steps near full scale. Same 256 values, same one byte per sample, but the quiet end gets the resolution it needs. The result behaves like roughly 14 bits of linear range.
+**µ-law** (North America and Japan) and **A-law** (elsewhere) use approximately logarithmic spacing: fine steps near silence and coarse steps near full scale. Each sample still occupies one byte, with 256 possible values. The smallest steps provide low-level resolution comparable to roughly 13–14 bits of linear PCM.
 
 > **Figure 4 · live — Even spacing versus logarithmic spacing**
 >
-> Left: where the levels sit. Right: the step size at each amplitude — smaller is better, and what matters is the step size *relative* to the signal.
+> Left: the positions of quantisation levels. Right: the step size at each amplitude. Smaller steps reduce rounding error; the step size relative to the signal determines the signal-to-noise ratio.
 >
-> Switch to "quality vs level" and the trade is clear: linear coding is better than µ-law for loud signals and substantially worse for quiet ones. µ-law gives up a little at the top — where the difference is imperceptible — to hold quality roughly constant all the way down. "Equivalent bits" compares µ-law's *smallest* step against a linear coder's: the ratio is a constant 5.5 bits, which is why 8-bit µ-law is usually quoted as behaving like 13–14 bits.
+> The "quality vs level" view compares relative step size. Linear coding has finer resolution for loud signals, while µ-law has finer resolution for quiet signals. "Equivalent bits" compares µ-law's *smallest* step with a linear quantiser's step. For the curve used here, the difference is about 5.5 bits, giving 8-bit µ-law low-level resolution comparable to 13–14-bit linear PCM.
 >
 > *(interactive figure — see the web page)*
 
-Note what this is *not*: compression in the file-size sense. There is no modelling, no prediction, no entropy coding — just a different mapping from numbers to amplitudes. It is the simplest form of perceptual coding, and the direct ancestor of the idea that every modern codec is built on: **spend bits where perception is sharp, save them where it is dull.** The video half of this page applies that same principle three more times.
+Companding changes the mapping between sample values and amplitudes while keeping the sample count and byte count fixed. It is a form of **perceptual coding**: precision is allocated according to hearing sensitivity. Gamma encoding and chroma subsampling apply related principles to images.
 
 ---
 
 *§6*
 
-## Digital audio is not a staircase
+## Reconstructing a signal from samples
 
-Searches for "digital audio" return many diagrams showing a smooth analogue curve next to a blocky digital staircase, usually to argue that analogue is smoother and therefore better. The staircase is **incorrect** — not a simplification. No digital system produces it, and nothing in the theory suggests it.
+A sample records the signal's value at one instant. A plot can display samples as points, connect them with lines, or hold each value until the next sample. These are different interpolation rules applied to the same data.
 
-The confusion comes from how samples are drawn. A sample is a single measurement at a single instant: a point, with no width. Drawing a flat step between two points is a drawing convention, not a claim about the signal. The question "what was the signal doing between these two points?" is not answered by "holding flat" — the answer is the unique smooth curve that passes through every point without varying faster than the rate allows, which is what a converter actually reconstructs.
+For a signal bandlimited to below half the sample rate, ideal reconstruction produces the unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue converter approximates this reconstruction using interpolation and filtering.
 
 > **Figure 5 · live — Three ways to draw the same samples**
 >
-> Same dots in all three. Only one of them is what comes out of a converter.
+> The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited reconstruction.
 >
-> Drop to barely more than two samples per cycle — where the staircase appears most exaggerated — and the real output is still a clean, smooth wave of exactly the right frequency and amplitude. The staircase's sharp corners would contain frequencies far above what the format can represent, which indicates that it cannot be the real signal.
+> Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves the sine wave's frequency and amplitude. The staircase and straight-line plots introduce additional high-frequency components through their discontinuities or changes in slope.
 >
 > *(interactive figure — see the web page)*
 
-> **Where the staircase does briefly exist**
+> **The hold stage in a converter**
 >
-> A low-cost converter does emit a staircase for a moment, and then a filter smooths it away — that is the "hold" stage, and its purpose is to be temporary. Modern converters oversample so heavily that the steps are far above the audible range before the filter even sees them. So the staircase exists for microseconds inside a chip, never in the stored data and never at the speaker.
+> A converter's hold stage can maintain each sample value until the next update, producing a staircase waveform internally. A reconstruction filter attenuates its high-frequency components. Oversampling moves these components farther above the audio band and simplifies filtering.
 
-**Go deeper: Why the smooth curve is the only possible answer**
+**Go deeper: Bandlimited reconstruction**
 
-Given samples spaced T apart, the reconstruction is x(t)=∑nx(nT)sinc((t−nT)/T) with sinc(u)=sin(πu)/(πu). This is not one option among many — it is the *only* signal that both passes through every sample and contains no frequency above 1/2T. Any other curve through those points, the staircase included, necessarily contains higher frequencies, and those frequencies could not have survived the sampling process in the first place.
+Given samples spaced T apart, the reconstruction is x(t)=∑nx(nT)sinc((t−nT)/T) with sinc(u)=sin(πu)/(πu). Under the sampling theorem's assumptions, this gives the unique signal consistent with every sample and bandlimited to below 1/2T. Other interpolation rules, including the staircase, introduce components above that bandwidth limit.
 
-The staircase specifically has discontinuities, and a discontinuity has energy at every frequency out to infinity. Reading a staircase as "what digital audio looks like" is therefore backwards: it's the one shape the format provably cannot contain.
+A staircase has discontinuities, whose spectra extend to arbitrarily high frequencies. Low-pass filtering suppresses these components as part of reconstruction.
 
 ---
 
 *§7*
 
-## Video is the same theorem, three times
+## Video sampling in space and time
 
-Audio is sampled along one axis: time. Video is sampled along three — time, and the two spatial axes of the picture. Everything from the first half applies to each of them independently. Sample the horizontal axis too coarsely and fine vertical stripes alias into moiré. Sample time too coarsely and a spinning wheel appears to rotate backwards. Same theorem, different units.
+Audio is sampled along the time axis. Video is sampled along time and the two spatial axes of the picture. The sampling theorem applies to each axis. Insufficient horizontal sampling can turn fine vertical stripes into moiré; insufficient temporal sampling can make a spinning wheel appear to rotate backwards.
 
-What distinguishes video from audio is not the theory but the volume of data. Raw CD audio is about 1.4 megabits per second. Raw 1080i video is over **700 megabits per second**: roughly 500 times as much. That single ratio explains most of the history. Computers could edit raw audio in real time about fifteen years before they could do the same for video, and every design decision in the next few sections was made under bandwidth pressure that audio never experienced.
+Video requires substantially higher data rates than audio. Raw CD audio is about 1.4 megabits per second. Raw 1080i video can exceed **700 megabits per second**, roughly 500 times as much. Storage and transmission requirements motivated many of the video representations described in the following sections.
 
-> **Figure 6 · calculator — What raw video actually costs**
+> **Figure 6 · calculator — Raw video data rate**
 >
-> No compression — just width × height × frames × bits. The results are larger than most people expect.
+> The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate.
 >
-> Chroma subsampling alone — covered in §11 — cuts this in half before any codec is involved, and costs almost nothing perceptible. It is the most efficient reduction in the pipeline.
+> At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. Section 11 shows how reducing colour resolution affects the image.
 >
 > *(interactive figure — see the web page)*
 
@@ -247,19 +247,19 @@ What distinguishes video from audio is not the theory but the volume of data. Ra
 
 *§8*
 
-## Pixels are often not square
+## Pixel aspect ratio
 
-On a computer, a pixel is a square and an image's shape is just its pixel count. Broadcast video never worked that way, and the assumption still breaks things today.
+An image's displayed shape depends on its pixel dimensions and its **pixel aspect ratio**. Computer graphics commonly use square pixels. Several broadcast and disc-video formats use rectangular pixels.
 
-Analogue television scanned in *lines*: the vertical resolution was fixed by the standard, but horizontally the picture was a continuous signal with no inherent pixel count at all. When it came time to digitise, the horizontal sample count was chosen from the channel's bandwidth — not to make the samples come out square. So a pixel ended up taller than it is wide, or wider than it is tall, depending on the standard.
+Analogue television scanned in *lines*. The standard fixed the vertical line count, and each line carried a continuous horizontal signal. Digitisation chose a horizontal sample count based on that signal's bandwidth. The resulting samples can correspond to rectangular pixels, depending on the format.
 
-The practical consequence: a 4:3 NTSC DVD stores **704×480** pixels, which is not a 4:3 ratio. Each stored pixel has a **10:11** shape, and the player stretches them on the way to the screen. Without that correction, the image appears slightly too tall.
+For example, a 4:3 NTSC DVD can store **704×480** pixels with a pixel aspect ratio of **10:11**. Applying that ratio gives a displayed width of 640 at a height of 480. Displaying the stored grid with square pixels changes the image's proportions.
 
 > **Figure 7 · live — Stored shape versus displayed shape**
 >
-> The circle should be a circle. Toggling the correction shows the effect of omitting it.
+> Toggle pixel aspect correction to compare the stored grid with the intended display proportions.
 >
-> Anamorphic 16:9 is the extreme case: the same 704×480 grid is declared to represent a widescreen picture, so every pixel is stretched to about 1.46× its stored width. The file gives no indication of this beyond a flag — which is why a mislabelled flag makes the picture appear either stretched or squashed.
+> An anamorphic 16:9 image can use the same 704×480 grid with a different declared aspect ratio. The player uses that information to display a widescreen picture. Incorrect aspect-ratio metadata stretches or compresses the displayed image.
 >
 > *(interactive figure — see the web page)*
 
@@ -267,89 +267,89 @@ The practical consequence: a 4:3 NTSC DVD stores **704×480** pixels, which is n
 
 *§9*
 
-## Interlacing: reducing bandwidth before compression existed
+## Interlacing and field timing
 
-Early television engineers faced a dilemma. Low frame rates flicker badly and make motion stutter. High frame rates need bandwidth that was not available. Their solution was effective and has caused difficulties ever since.
+Early television systems used interlacing to balance refresh rate and transmission bandwidth. Dividing the picture into alternating sets of scanlines allowed more frequent updates within the available bandwidth.
 
-Instead of sending whole frames, send **half** of each one: all the even-numbered scanlines in one pass, then all the odd-numbered lines in the next. Each half is a **field**. This provides the temporal smoothness of 60 updates per second at the bandwidth of 30 full frames, and because the eye integrates over the whole screen, the missing lines barely register.
+One pass carries the even-numbered scanlines and the next carries the odd-numbered lines. Each pass is a **field**. A system sending 60 fields per second carries the line count of 30 full frames per second while updating part of the picture every 1/60 second.
 
-This is the source of the difficulties. Two fields do *not* add up to one frame, because they were captured at **different moments**. Half the original content was never recorded at all. Weave two fields together and anything that moved between them shows up as a comb of interleaved stripes — not a compression artefact, but an accurate record of two different instants stored in one grid.
+Successive fields are captured at **different moments**. Combining them into a frame places alternating lines from those moments in the same image. Objects that move between fields appear at different positions on adjacent lines, producing **combing**. Deinterlacing estimates a complete image at a chosen time from the available fields.
 
 > **Figure 8 · live — Two moments in one frame**
 >
-> A shape moving left to right, captured as fields. Each deinterlacing strategy has a different cost.
+> A shape moves from left to right and is captured in successive fields. Compare how the deinterlacing methods handle motion and vertical detail.
 >
-> Set the speed to zero and every method looks perfect — combing only appears where something moved. That's the insight behind motion-adaptive deinterlacing: weave the still parts to keep full detail, and interpolate only where the fields disagree.
+> Set the speed to zero to examine a stationary image, then increase it to see combing in moving regions. Motion-adaptive deinterlacing weaves stationary regions to preserve detail and interpolates regions where the fields differ.
 >
 > *(interactive figure — see the web page)*
 
-> **The naming convention explained**
+> **Interlaced and progressive notation**
 >
-> **1080i** is 1080 lines, interlaced — 60 fields per second, each holding 540 lines. **1080p** is 1080 lines, progressive — whole frames. "480i60" means 480 lines interlaced at 60 fields per second, which is 30 frames' worth of bandwidth. Interlacing is absent from new formats but remains common in archives, which is why deinterlacing code remains necessary.
+> **1080i** denotes 1080 lines with interlaced scanning. At 60 fields per second, each field contains 540 lines. **1080p** denotes 1080 lines with progressive scanning, where each update carries a complete frame. "480i60" denotes 480 lines at 60 interlaced fields per second, equivalent to 30 full frames' worth of lines per second. Interlaced material remains common in archives.
 
 ---
 
 *§10*
 
-## Gamma: an accident that proved beneficial
+## Gamma encoding and brightness
 
-A cathode ray tube is not a linear device. Double the voltage on the gun and you get much more than double the brightness — the response goes roughly as voltage to the power of **2.5**. Left uncorrected, every image would come out with crushed shadows and blown-out highlights.
+A cathode ray tube has a nonlinear brightness response, approximately proportional to the input voltage raised to the power of **2.5**. An encoding curve compensates for this response to produce the intended brightness.
 
-Someone had to apply the inverse. The engineers made a decision that appeared to be a cost-saving measure and proved effective: put the correction in the *camera*. There would be a handful of cameras and millions of television sets, so correcting at the source was substantially cheaper. Cameras applied roughly a 1/2.2 power curve, the CRT applied its native 2.5, and the round trip came out close enough to linear. (The mismatch between 2.2 and 2.5 is not an error — it compensates for viewing in a dim room, where the eye requires slightly more contrast.)
+Television systems applied the correction in the *camera*, reducing the correction circuitry needed in each receiver. A camera curve of roughly 1/2.2 combined with a CRT response near 2.5 produces an approximately linear round trip with a small contrast increase suited to dim-room viewing.
 
-It survived the obsolescence of the CRT for the following reason. Human brightness perception is *also* roughly a power law — an exponent near 3, not far from the CRT's 2.5. The eye can distinguish far more shades in dark regions than in bright ones. Storing values with a gamma curve therefore spends bits where the eye is most sensitive and saves them where it is least sensitive. It is, accidentally, a perceptual compression scheme — the same principle as µ-law from §5, arrived at for entirely unrelated reasons.
+Gamma encoding also aligns with human brightness sensitivity. Vision distinguishes finer brightness differences in dark regions than in bright regions. A gamma curve allocates more stored levels to those dark regions, reducing visible quantisation at a given bit depth. This perceptual benefit remains useful with modern displays.
 
-> **Figure 9 · live — Why 8 bits of linear light isn't enough, and 8 bits of gamma is**
+> **Figure 9 · live — Linear and gamma encoding at the same bit depth**
 >
 > The same 8-bit budget, allocated two ways. The difference appears at the dark end of each ramp.
 >
-> When the encode and decode exponents differ, the round-trip curve bends away from the diagonal, producing a washed-out or crushed image; this is exactly what happens when software blends pixels without knowing which space they are in. Modern sRGB still uses a curve close to 2.2 for precisely the reason above; the CRT it was designed around is long gone.
+> When the encode and decode exponents differ, the round-trip curve bends away from the diagonal and changes image brightness. sRGB uses a transfer curve close to a 2.2 power law, with a linear segment near black.
 >
 > *(interactive figure — see the web page)*
 
-> **A common bug this causes**
+> **Arithmetic in linear light**
 >
-> Averaging two gamma-encoded pixels does *not* give the average brightness. Scaling an image, blurring it, or alpha-blending in gamma space makes results systematically too dark — most visibly when resizing images with fine high-contrast detail. Correct order: decode to linear, do the arithmetic, re-encode. A significant amount of graphics software still handles this incorrectly, which is why a downscaled image can appear darker than the original.
+> Averaging gamma-encoded values can make scaling, blurring, and alpha-blending results too dark, especially around high-contrast detail. For these operations, decode the values to linear light, perform the arithmetic, and re-encode the result.
 
 ---
 
 *§11*
 
-## Colour: exploiting the limits of human vision
+## Luma, chroma, and colour resolution
 
-The eye has three colour receptors, so displays use three primaries — red, green, blue — and adding them in different proportions reproduces most visible colours. RGB is the natural format for a display, and a poor format for storage.
+Human vision uses three types of cone receptors. Displays combine red, green, and blue primaries in different proportions to reproduce colours within their gamut. RGB describes the contribution of each primary.
 
-The reason: RGB spreads the picture's information evenly across three channels, but human vision does not treat those channels evenly. The eye resolves fine detail in *brightness* very well and fine detail in *colour* poorly. Video therefore converts to a different arrangement — one channel of brightness (**luma**, Y′), and two channels describing only how the colour departs from grey (**chroma**, Cb and Cr):
+Human vision resolves finer detail in *brightness* than in *colour*. Video commonly uses Y′CbCr to represent these separately: one channel for **luma** (Y′), and two colour-difference channels for **chroma** (Cb and Cr):
 
 **Y′=0.299R′+0.587G′+0.114B′,Cb=1.772B′−Y′,Cr=1.402R′−Y′**
 
-- **R′,G′,B′** — the gamma-encoded values from §10 — the prime marks matter.
+- **R′,G′,B′** — gamma-encoded values from §10, indicated by the prime marks.
 
-- **Y′** — luma: the black-and-white picture. Green dominates because your eye is most sensitive to it.
+- **Y′** — luma: a weighted combination of the gamma-encoded channels, with the largest weight on green.
 
-- **Cb,Cr** — how much bluer, and how much redder, than grey. Zero means no colour at all.
+- **Cb,Cr** — blue-difference and red-difference chroma. Both are zero for a neutral grey.
 
-Because colour detail is nearly invisible, Cb and Cr can be stored at *lower resolution* than Y′ with little perceptible loss. This is **chroma subsampling**: 4:2:0 halves both chroma dimensions, cutting the data in half before any codec runs.
+Cb and Cr can be stored at *lower resolution* than Y′ with limited perceptual loss in many images. This is **chroma subsampling**. In 4:2:0, each chroma plane has half the width and half the height of the luma plane, reducing the total sample count by half relative to 4:4:4.
 
-> **Figure 10 · live — Discarding three-quarters of the colour**
+> **Figure 10 · live — Comparing luma and chroma subsampling**
 >
-> A procedurally generated test frame, put through a real Y′CbCr round trip. Compare "subsample the colour" against "subsample the brightness by the same amount."
+> A generated test image is converted to Y′CbCr, subsampled, and converted back to RGB. Compare the effects of subsampling "the colour" and "the brightness".
 >
-> Switch to "the brightness" and the degradation becomes obvious — for a comparable measured error, and in fact a *smaller* data saving. That asymmetry is the entire justification for Y′CbCr, and it is why every camera, codec and streaming service ships 4:2:0 by default.
+> Select "the brightness" to compare the loss of fine detail. The same subsampling factor removes fewer samples from a single luma plane than from two chroma planes. Compare the visible changes with the measured error to see how spatial detail and colour affect perception.
 >
 > *(interactive figure — see the web page)*
 
-### Where, exactly, is a chroma sample?
+### Chroma sample positions
 
-This is the part that complicates interoperability. If four luma pixels share one chroma sample, *where does that chroma sample sit?* Centred among the four? Aligned with the left pair? Somewhere else?
+Chroma siting specifies the position of each chroma sample relative to the luma grid. For 4:2:0, a chroma sample may be centred within a 2×2 luma block or aligned horizontally with a luma column, depending on the format.
 
-Every answer got standardised by somebody. MPEG-1, JPEG, Theora and WebM centre it both horizontally and vertically. MPEG-2 centres it vertically but aligns it horizontally with every other luma column. PAL-DV does something different again, alternating which chroma channel each line carries. All of them are labelled "4:2:0."
+MPEG-1, JPEG, Theora, and WebM use chroma centred horizontally and vertically. MPEG-2 uses vertical centring with horizontal alignment to every other luma column. PAL-DV alternates the chroma channels between lines. These layouts share the 4:2:0 sample ratio.
 
-> **Figure 11 · live — Four standards, one label**
+> **Figure 11 · live — Chroma siting layouts**
 >
-> Large dots are luma samples; rings are chroma. Every layout below is legitimately called 4:2:0 by some standard.
+> Large dots show luma samples; rings show chroma samples. Compare the 4:2:0 layouts, with 4:2:2 included as a reference.
 >
-> If the siting is wrong, colour shifts by half a pixel against the brightness — subtle on most frames, and clearly visible on hard colour edges like subtitles or a red logo on white. This is a leading cause of transcodes that look slightly off, and it is invisible in the file's metadata.
+> Interpreting one siting layout as another can shift colour by half a pixel relative to luma. This is most visible at sharp colour boundaries, such as subtitles or a red logo on white. A conversion needs the source and destination siting information.
 >
 > *(interactive figure — see the web page)*
 
@@ -357,31 +357,31 @@ Every answer got standardised by somebody. MPEG-1, JPEG, Theora and WebM centre 
 
 *§12*
 
-## Pixel formats, fourccs, and the box it all ships in
+## Pixel formats, fourccs, and containers
 
-Between "I have Y′CbCr samples" and "I have bytes in a buffer" there is one more decision: layout. **Packed** formats interleave the channels — Y, Cb, Y, Cr, and onward. **Planar** formats keep each channel in its own contiguous block, which is what almost every codec wants, since it can then process the small chroma planes independently.
+A pixel format specifies how samples are arranged in memory. **Packed** formats interleave channel values, such as Y, Cb, Y, Cr. **Planar** formats store each channel in a separate contiguous block, allowing the planes to be processed independently.
 
-Multiply that choice by every subsampling scheme and every bit depth and the result is the **fourcc** set: four-character codes like `YV12`, `NV12`, `UYVY`, `I420`. At least fifty exist; roughly fifteen are common. The complication: a fourcc describes the *arrangement* of samples, and generally says nothing about chroma siting or which colourspace matrix was used. `YV12` alone doesn't tell you whether the chroma is sited MPEG-1 style or MPEG-2 style, or whether the matrix was BT.601 or BT.709. That information travels separately, or it doesn't travel at all.
+A **fourcc** is a four-character identifier for a format, such as `YV12`, `NV12`, `UYVY`, or `I420`. Pixel-format identifiers describe sample layout, subsampling, and bit depth. Chroma siting and colourspace matrices generally require separate metadata. For example, interpreting a `YV12` buffer also requires its siting convention and matrix, such as BT.601 or BT.709.
 
 | Fourcc | Layout | What it is |
 |---|---|---|
-| **I420** | planar | 4:2:0 as Y, then Cb, then Cr. The default format of video codecs. |
-| **YV12** | planar | Identical to I420 with Cr and Cb swapped. Confusing the two produces an incorrectly orange-and-blue picture. |
-| **NV12** | semi-planar | Y plane, then a single interleaved CbCrCbCr plane. What most hardware decoders emit. |
+| **I420** | planar | 4:2:0 as Y, then Cb, then Cr. Common in software video processing. |
+| **YV12** | planar | I420 layout with Cr and Cb swapped. Reading the planes in the wrong order changes the colours. |
+| **NV12** | semi-planar | Y plane followed by an interleaved CbCrCbCr plane. Common in hardware decoding. |
 | **UYVY / YUY2** | packed | 4:2:2 interleaved. Common in capture hardware and older editing pipelines. |
-| **P010** | semi-planar | Like NV12 but 10 bits per sample. The usual HDR working format. |
+| **P010** | semi-planar | NV12-style layout with 10-bit samples. Common in HDR video pipelines. |
 
-### Containers: the part unrelated to pixels
+### Containers and stream metadata
 
-A raw stream of compressed frames is unusable on its own. The frames vary in size unpredictably, so frame 400 cannot be located by multiplication. There is no way to tell where audio ends and video begins. There are no timestamps, so nothing tells the player how to keep them together.
+Playback requires information about stream boundaries, frame sizes, and timing. Compressed frames can vary in size, and audio and video streams need timestamps to stay synchronised.
 
-A **container** — MP4, Matroska, Ogg, AVI, WebM — solves exactly those problems and nothing else. It adds framing so each chunk's boundaries are findable, identification so streams can be told apart, timing so they can be synchronised, and space for metadata like chapters and subtitles. The crucial property is that containers are *generic*: the container is independent of the codec that produced the bytes it carries. That is why "MP4" is not a video format, and why two MP4 files can be completely different inside.
+A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded streams into a file. It provides chunk boundaries, stream identification, timing, and metadata such as chapters and subtitles. Container formats support particular sets of codecs, and files using the same container can carry different encoded streams. The container and codec together determine how a player reads and decodes the media.
 
-> **Figure 12 · live — Why streams are split and interleaved**
+> **Figure 12 · live — Interleaving audio and video streams**
 >
-> Two streams, one file, one read head. The buffer slider shows why interleaving is necessary.
+> Two streams share one file. Adjust interleaving to see how chunk placement affects the player's buffer requirement.
 >
-> As the interleaving slider moves right, the streams separate into long runs. Playback still works, but the player must then buffer everything between the audio it is playing and the video it needs — which is why a badly interleaved file stutters when streamed and plays correctly from a local disk.
+> Moving the interleaving slider right groups each stream into longer runs. A sequential reader must buffer more data to obtain matching audio and video. This increases startup delay and memory requirements during streaming; a local player can seek to the required chunks.
 >
 > *(interactive figure — see the web page)*
 
@@ -389,31 +389,31 @@ A **container** — MP4, Matroska, Ogg, AVI, WebM — solves exactly those probl
 
 *§13*
 
-## The whole primer on one page
+## Summary
 
-| Thing | What to remember |
+| Topic | Summary |
 |---|---|
-| **Why digital won** | Not accuracy — *copyability*. Analogue errors accumulate forever; digital errors round away to nothing. |
-| **PCM** | Sample rate, sample format, channel count, byte order. That's the entire format. |
-| **Sample rate** | Sets the highest frequency: half the rate. 44.1 kHz is a historical accident; 48 kHz is the standard default. |
-| **Bit depth** | Sets the noise floor, not the "accuracy". About 6 dB per bit. 16-bit is for delivery, 24-bit for production. |
-| **Dither** | Add ~1 step of noise before rounding. Converts audible distortion into inaudible hiss, and preserves signals smaller than one step. |
-| **Companding** | Log-spaced levels give 8 bits the usable range of ~14. The direct ancestor of all perceptual coding. |
-| **The staircase** | Doesn't exist. It's a drawing convention, and the one shape the format provably cannot contain. |
-| **Video scale** | ~500× the data rate of CD audio. Every video design decision was made under that pressure. |
-| **Pixel aspect** | Stored size ≠ displayed shape. 704×480 with a 10:11 pixel is a 4:3 picture. |
-| **Interlacing** | Two fields, two *moments*. Combing is not an artefact, it is an accurate record of motion. |
-| **Gamma** | A CRT workaround that survived because human vision has the same shape. Determine which space pixels are in before performing arithmetic. |
-| **Chroma subsampling** | Half the data, invisible cost — because the eye resolves brightness far better than colour. |
-| **Chroma siting** | Four incompatible layouts all called 4:2:0, and the file usually doesn't say which. |
-| **Containers** | Framing, identification, timing, metadata. Generic by design — "MP4" tells you almost nothing about the contents. |
+| **Digital copying** | Error-free digital copies preserve the sample values. Analogue transmission and copying accumulate noise and distortion. |
+| **PCM** | Sample rate, sample format, channel count, and byte order specify how to read the samples. |
+| **Sample rate** | Half the sample rate is the upper frequency boundary. Common rates include 44.1 kHz for CD audio and 48 kHz for video. |
+| **Bit depth** | Each additional bit reduces the quantisation step size by half, lowering the noise floor by about 6 dB. |
+| **Dither** | Noise added before rounding reduces signal-correlated distortion and preserves low-level information statistically. |
+| **Companding** | Non-uniform levels give 8-bit samples finer resolution near silence. µ-law and A-law apply this to speech. |
+| **Reconstruction** | Bandlimited interpolation recovers the continuous signal from samples. A hold stage requires reconstruction filtering. |
+| **Video scale** | Raw HD video can require roughly 500× the data rate of CD audio, motivating reductions in storage and bandwidth. |
+| **Pixel aspect** | Displayed shape depends on pixel dimensions and pixel aspect ratio. A 704×480 grid with 10:11 pixels displays as 4:3. |
+| **Interlacing** | Successive fields record different times. Combining them produces combing where objects move. |
+| **Gamma** | Nonlinear encoding allocates more levels to dark regions. Decode to linear light before brightness arithmetic. |
+| **Chroma subsampling** | 4:2:0 halves the sample count relative to 4:4:4 by reducing chroma resolution while retaining luma detail. |
+| **Chroma siting** | Formats with the same subsampling ratio can use different chroma positions. Conversions need the siting information. |
+| **Containers** | Containers organise streams with framing, identification, timing, and metadata. Codec information specifies how to decode them. |
 
-> **The principle running through all of it**
+> **Perceptual allocation of precision**
 >
-> Every effective decision on this page is the same one: *identify where human perception is sharp, allocate bits there, and remove them elsewhere.* µ-law does it with loudness, gamma does it with brightness, chroma subsampling does it with colour. Modern codecs apply the same idea more aggressively; once the pattern is visible, their behaviour is straightforward to understand.
+> *Perceptual coding allocates precision according to human sensitivity.* µ-law varies audio level spacing, gamma varies brightness spacing, and chroma subsampling reduces colour resolution. These techniques illustrate a principle also used in modern audio and video codecs.
 
-An interactive companion to Xiph.Org's [A Digital Media Primer for Geeks](https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks) by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA). Every figure is computed live in the browser — the test images are generated procedurally, the colourspace conversions run on real pixels, and the audio is synthesised at runtime through an actual quantiser.
+An interactive companion to Xiph.Org's [A Digital Media Primer for Geeks](https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks) by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA). Figures run in the browser using generated test images, colourspace conversions, and synthesised audio passed through a quantiser.
 
-Monty's follow-up, *Digital Show and Tell*, demonstrates several of these points on real lab equipment.
+Monty's follow-up, *Digital Show and Tell*, demonstrates several of these concepts using laboratory equipment.
 
 Text adapted from Wikipedia (CC BY-SA 4.0) and Xiph.Org’s *A Digital Media Primer for Geeks* (CC BY-SA 3.0). This page is licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); see [LICENSE](https://github.com/ssemakov/digital-media-study/blob/main/LICENSE).
