@@ -10,7 +10,7 @@ If no component of the signal oscillates faster than B times per second, then me
 
 Claude Shannon, 1949. "Perfectly" is literal here: the reconstruction is exact, and the formula that performs it is built in [the section on rebuilding the original](#recon).
 
-This page contains twelve live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
+This page contains thirteen live figures; each claim in the text has an associated slider that can be adjusted. Every equation is explained symbol by symbol directly beneath it, and the more advanced material is placed in **Go deeper** panels that can be skipped without loss of continuity.
 
 > fs is the **sample rate** — measurements per second (44100 for CD audio, 60 for a 60 fps game loop, 1 for a metric scraped every second). T=1/fs is the gap between measurements. B is the **bandwidth**: the highest frequency present in the measured signal. That is the complete set of terms.
 
