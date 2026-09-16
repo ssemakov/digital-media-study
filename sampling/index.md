@@ -549,9 +549,9 @@ Three of those rows are worth seeing rather than reading. Each figure below is t
 
 > **Figure 12 · live — Shrinking an image by dropping pixels**
 >
-> The source is a band of stripes that get steadily finer from left to right — the spatial version of the rising tone heard earlier. Both reductions below produce the same number of output pixels; only the method differs. The dashed line marks where the stripes become finer than the reduced grid can hold.
+> The source is a band of stripes that get steadily finer from left to right — the spatial version of the rising tone heard earlier. Both reductions below produce the same number of output pixels; only the method differs. The dashed line marks where the stripes become finer than the reduced grid can hold. Below the stripes, a photograph is reduced the same two ways in both directions.
 >
-> Left of the dashed line the two reductions agree, because the stripes are coarse enough for both. Right of it they diverge: dropping pixels produces wide bands that are not in the source, which is the same folding as before, in space rather than time, and is what a moiré pattern is. Averaging reads every pixel in each block, so the same region fades towards flat grey — the detail is lost rather than replaced by something false. Raising the reduction factor drags the dashed line to the left, which is exactly what happens when a thumbnail gets smaller. Mipmaps exist to precompute the bottom band.
+> Left of the dashed line the two reductions agree, because the stripes are coarse enough for both. Right of it they diverge: dropping pixels produces wide bands that are not in the source, which is the same folding as before, in space rather than time, and is what a moiré pattern is. Averaging reads every pixel in each block, so the same region fades towards flat grey — the detail is lost rather than replaced by something false. Raising the reduction factor drags the dashed line to the left, which is exactly what happens when a thumbnail gets smaller. Mipmaps exist to precompute the bottom band. The photograph shows the same thing in two dimensions: dropping pixels turns the shirt's stripes into a coarse moiré that shifts as the factor changes, while averaging fades them to plain grey cloth. Photo: Unsplash, via Wikimedia Commons, CC0.
 >
 > *(interactive figure — see the web page)*
 
