@@ -36,7 +36,13 @@ A digital transmission uses discrete signal levels. A receiver can recover the i
 
 **Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
 
+The name comes from 1930s telephony, where it described a way of sending a signal down a line rather than a way of storing it. Related methods carried the signal on a train of pulses by varying one property of each pulse: its height in pulse-amplitude modulation, its width in pulse-width modulation, its timing in pulse-position modulation. PCM instead converted each measurement to a binary *code* and sent that code as a group of on-or-off pulses. The signal *modulates* the pulse train, the pulses carry a *code*, hence the name. The transmission part is no longer relevant, and the term now refers to the representation itself: one integer per sample, uncompressed.
+
 **Sample rate** is the number of measurements per second. Half the rate is the upper frequency boundary for reconstruction. **Sample format** specifies the bit depth and representation: signed or unsigned integer, or floating point. It determines the available levels and *dynamic range*. **Channel count** specifies the number of simultaneous streams. Interleaved stereo stores left and right samples in alternating order. Values wider than 8 bits also have a **byte order**. Standard WAV PCM is little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud noise.
+
+> **Byte order**
+>
+> A 16-bit sample occupies two bytes, and a format must state which byte comes first. **Little-endian** stores the least significant byte first; **big-endian** stores the most significant byte first. The value 4660, or `0x1234`, is stored as the bytes `34 12` in little-endian order and `12 34` in big-endian order. x86 and most ARM systems are little-endian, as is WAV. Network protocols and AIFF are big-endian. The names come from *Gulliver's Travels*, where two factions dispute which end of an egg to open. Reading with the wrong order swaps the two bytes of every sample, so the low byte, which changes from one sample to the next, becomes the high byte. The waveform becomes a sequence of large jumps, heard as loud broadband noise. Single-byte formats have no byte order.
 
 Multiplying sample rate, bits per sample, and channel count gives the bitrate. Dividing by eight gives bytes per second:
 
@@ -58,7 +64,7 @@ func main() {
 >
 > The sliders show the waveform being sampled and rounded, and the resulting size in bytes.
 >
-> Sample rate sets the frequency range. Bit depth sets the quantisation step size and affects the noise floor. Adjust each slider to compare changes in the sampled waveform and data size.
+> Sample rate sets the frequency range. Bit depth sets the quantisation step size and affects the noise floor. "Distinct levels" is the number of values the sample integer can hold, 2 to the power of the bit depth: 256 at 8 bits, 65,536 at 16 bits, about 16.8 million at 24 bits. Every stored value is one of these levels. Adjust each slider to compare changes in the sampled waveform and data size.
 >
 > *(interactive figure — see the web page)*
 
@@ -95,11 +101,15 @@ Rounding a sample to the nearest level introduces an error bounded by half a ste
 
 The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 dB for 24-bit audio. Recording and production commonly use 24-bit samples to accommodate low recording levels and repeated processing. The usable range of a recording also depends on microphone noise, converter performance, and the recording environment.
 
+> **dBFS**
+>
+> Signal levels on this page are given in **dBFS**, decibels relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
+
 > **Figure 2 · live — A signal and its quantisation error**
 >
-> Top: the signal and its quantised version. Bottom: the rounding error. Lower the signal level to see how the error pattern changes.
+> A sine wave is rounded to the nearest of the 2^bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape.
 >
-> At higher levels, the error can resemble random noise. At low levels, a simple signal crosses a small number of quantisation levels, producing a repeating error pattern correlated with the waveform. Section 4 describes how dither affects this pattern.
+> At 0 dBFS with 4 bits the sine spans 8 steps and crosses all 16 levels. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. Section 4 describes this in detail.
 >
 > *(interactive figure — see the web page)*
 
