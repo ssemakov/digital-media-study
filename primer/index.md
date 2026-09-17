@@ -135,9 +135,9 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 ## Dither: adding noise to reduce distortion
 
-Dither is random noise added before quantisation to control the statistical properties of the rounding error.
+Dither is random noise added before quantisation to control the statistical properties of the rounding error. Section 3 described that error as a second signal whose character depends on the input: noise for a loud or complex signal, distortion for a quiet or simple one, silence below half a step. Dither makes the character independent of the input. With dither, the error is noise in every case, at a fixed level set by the bit depth.
 
-Figure 2 shows how a quiet sine wave crosses the same few quantisation levels in each cycle. The resulting error repeats with the waveform and produces **harmonic distortion**: additional tones at multiples of the original frequency. These harmonics can be audible, particularly in simple or low-level signals.
+Figure 2 shows the undithered case. A quiet sine crosses the same few quantisation levels in each cycle, so the error repeats with the waveform and produces **harmonic distortion**: additional tones at multiples of the original frequency. Even at full scale, a steady sine's error is periodic, a dense set of small harmonics. Enabling dither in Figure 2 changes both cases: the added noise decides each rounding at random, the output flickers between neighbouring levels with probabilities that follow the input, and the error loses its relation to the waveform.
 
 The following example adds triangular noise spanning ±1 quantisation step *before* rounding:
 
@@ -165,13 +165,13 @@ func main() {
 }
 ```
 
-Dither reduces signal-correlated distortion and introduces broadband noise. It also allows information about signals *smaller than a single step* to remain in the output. Small changes in the input alter the probability of rounding to each neighbouring level, so the output statistics retain information about the signal. Under suitable listening conditions, a tone can remain audible below the noise floor.
+Dither replaces signal-correlated distortion with broadband noise at a fixed level. It also allows information about signals *smaller than a single step* to remain in the output. Small changes in the input alter the probability of rounding to each neighbouring level, so the output statistics retain information about the signal. Under suitable listening conditions, a tone can remain audible below the noise floor. The cost is a noise floor about 4.8 dB above the undithered estimate in §3, for the triangular dither used here.
 
 > **Figure 3 · audio + live — A tone below one quantisation step**
 >
-> A sine at the selected level, quantised to the selected bit depth. Harmonic peaks show distortion; the broadband floor shows noise. Begin playback at a low volume and increase it gradually.
+> A single sine at the selected level, quantised to the selected bit depth, shown as a spectrum. Undithered, a steady sine's error is periodic at any level and appears as harmonic peaks. Dithered, the error is noise and appears as a flat floor. Begin playback at a low volume and increase it gradually.
 >
-> Lower the tone level below one step and compare the two versions. The undithered tone develops artefacts and eventually rounds to silence. With dither, its level decreases continuously into the noise floor.
+> Lower the tone level below one step and compare the two versions. The undithered tone develops artefacts and eventually rounds to silence, the third regime of §3. With dither, its level decreases continuously into the noise floor and remains audible below it.
 >
 > *(interactive figure — see the web page)*
 
