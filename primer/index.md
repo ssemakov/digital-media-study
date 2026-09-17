@@ -4,13 +4,13 @@
 
 # Digital audio and video represent signals as *arrays of samples*.
 
-A media file stores sampled audio and video together with information needed to interpret and play them. This first part describes PCM parameters, byte order, bit depth and quantisation error. Dither, companding, reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.
+A media file stores sampled audio and video together with information needed to interpret and play them. This first part describes PCM parameters, byte order, bit depth, quantisation error and dither. Companding, reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.
 
 Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
 The primer introduces the concepts and engineering constraints behind common audio and video formats.
 
-This part contains two interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
+This part contains three interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
 
 ---
 
@@ -83,7 +83,7 @@ func main() {
 
 Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale amplitude, increasing the bit depth places those levels closer together and reduces the error introduced by rounding.
 
-Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
+The **quantisation step** is the distance between two neighbouring levels. For a range of −1 to +1 and *b* bits it is 2 ÷ 2*b*: 0.125 at 4 bits, about 0.00003 at 16 bits. It is also called one LSB, for least significant bit, since it is the change produced by flipping the lowest bit of the sample. Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
 
 **dynamic range≈6.02b+1.76 dB**
 
@@ -97,11 +97,21 @@ The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 
 
 > Signal levels on this page are given in **dBFS**, decibels relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
 
-> **Figure 2 · live — A signal and its quantisation error**
+### Quantisation error as an added signal
+
+Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second signal added to the first: the stored value minus the true value, which is the orange trace in Figure 2. Its size is always within half a step, so bit depth alone does not determine how audible it is. Its *character* does, and the character depends on the signal.
+
+A loud or complex signal crosses many levels in an irregular sequence, so the error at each sample is effectively random. Random error is noise. It sits at a fixed level, about 6 dB lower for each additional bit, and is heard as faint hiss. This is the usual case, and it is what "bit depth sets the noise floor" refers to. A quiet or simple signal crosses the same one or two levels in the same way on every cycle, so the error repeats with the signal. Repeating error is distortion: tones at multiples of the signal's frequency that were not in the source, which hearing detects more readily than noise of the same power. Figure 2 shows this near −20 dBFS. A signal smaller than half a step rounds to zero at every sample and is removed entirely.
+
+Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the ceiling, and dynamic range is the distance between the loudest representable signal and the rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.
+
+Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time, keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the allowed values at each instant. [The sampling page](/sampling) shows that rounding time loses nothing when the rate is sufficient. Rounding amplitude always discards something, and dither, the subject of §4, changes what is discarded from distortion into noise.
+
+> **Figure 2 · audio + live — A signal and its quantisation error**
 >
-> A sine wave is rounded to the nearest of the 2bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape.
+> A sine wave is rounded to the nearest of the 2bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape. The buttons play the signal at the selected level and bit depth, with the dither checkbox applied. Playback gain is normalised so quiet settings remain audible; compare the character of the sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can behave as noise.
 >
-> At 0 dBFS with 4 bits the sine spans 8 steps and crosses all 16 levels. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. Section 4 describes this in detail.
+> At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband hiss, while the low-level error still collapses into distortion. Section 4 describes dither in detail.
 >
 > *(interactive figure — see the web page)*
 
@@ -121,31 +131,79 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 ---
 
+*§4*
+
+## Dither: adding noise to reduce distortion
+
+Dither is random noise added before quantisation to control the statistical properties of the rounding error. Section 3 described that error as a second signal whose character depends on the input: noise for a loud or complex signal, distortion for a quiet or simple one, silence below half a step. Dither makes the character independent of the input. With dither, the error is noise in every case, at a fixed level set by the bit depth.
+
+Figure 2 shows the undithered case. A quiet sine crosses the same few quantisation levels in each cycle, so the error repeats with the waveform and produces **harmonic distortion**: additional tones at multiples of the original frequency. Even at full scale, a steady sine's error is periodic, a dense set of small harmonics. Enabling dither in Figure 2 changes both cases: the added noise decides each rounding at random, the output flickers between neighbouring levels with probabilities that follow the input, and the error loses its relation to the waveform.
+
+The following example adds triangular noise spanning ±1 quantisation step *before* rounding:
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+	"math/rand"
+)
+
+func main() {
+	x := 0.3      // input sample, in the range -1..1
+	levels := 8.0 // quantiser step count: how many values the format can store
+
+	// undithered: rounding error can be correlated with the signal
+	out := math.Round(x*levels) / levels
+
+	// dithered: error becomes uncorrelated noise, and the signal survives below one step
+	d := (rand.Float64() + rand.Float64() - 1) / levels // triangular noise, plus or minus 1 LSB
+	outDithered := math.Round((x+d)*levels) / levels
+
+	fmt.Println(out, outDithered)
+}
+```
+
+Dither replaces signal-correlated distortion with broadband noise at a fixed level. It also allows information about signals *smaller than a single step* to remain in the output. Small changes in the input alter the probability of rounding to each neighbouring level, so the output statistics retain information about the signal. Under suitable listening conditions, a tone can remain audible below the noise floor. The cost is a noise floor about 4.8 dB above the undithered estimate in §3, for the triangular dither used here.
+
+> **Figure 3 · audio + live — A tone below one quantisation step**
+>
+> A single sine at the selected level, quantised to the selected bit depth, shown as a spectrum. Undithered, a steady sine's error is periodic at any level and appears as harmonic peaks. Dithered, the error is noise and appears as a flat floor. Begin playback at a low volume and increase it gradually.
+>
+> Lower the tone level below one step and compare the two versions. The undithered tone develops artefacts and eventually rounds to silence, the third regime of §3. With dither, its level decreases continuously into the noise floor and remains audible below it.
+>
+> *(interactive figure — see the web page)*
+
+> Dither also applies when reducing image precision. Quantising a gradient to a limited palette can produce visible bands. Adding noise before quantisation replaces these regular boundaries with a fine-grained pattern. Image formats such as GIF use dithering to represent intermediate colours with a limited palette.
+
+Rectangular one-LSB dither decorrelates the error's *mean*. Its variance remains signal-dependent, so the noise level can vary with the input. Adding two independent rectangular sources gives a **triangular** distribution spanning ±1 LSB (TPDF), which decorrelates both mean and variance. The example above uses two random values for this reason. TPDF dither raises noise power by 4.77 dB relative to the uniformly distributed undithered quantisation-error model.
+
+**Noise shaping** changes the distribution of quantisation noise across frequency. In audio, it can reduce noise where hearing is most sensitive, roughly 2–5 kHz, while increasing it at higher frequencies. The perceptual benefit depends on the filter and playback conditions. Noise shaping is used in 16-bit delivery and in delta-sigma converters.
+
+---
+
+---
+
 *To be continued*
 
 ## The rest of the primer
 
-This page is being published a part at a time. What is here covers sampled audio up to the point where quantisation error is understood. The sections below are written and will appear here as they are reviewed.
+This page is being published a part at a time. What is here covers sampled audio through dither. The sections below are written and will appear here as they are reviewed.
 
-> 1. **Dither** — adding noise on purpose so that quantisation error becomes noise rather than distortion, and why a signal quieter than one step survives it.
-> 
-> 2. **Companding** — non-uniform quantisation, and how µ-law fits a wider range into the same number of bits.
-> 
-> 3. **Reconstruction** — rebuilding a continuous signal from samples, and why the stair-step picture of digital audio is wrong.
-> 
-> 4. **Video sampling** — the same theory applied to space and time rather than time alone.
-> 
-> 5. **Pixel aspect ratio** — why pixels are not always square, and what that does to stored dimensions.
-> 
-> 6. **Interlacing** — fields, field order, and the timing that comes with them.
-> 
-> 7. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
-> 
-> 8. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
-> 
-> 9. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
+> **Still to come**
+>
+> 1. **Companding** — non-uniform quantisation, and how µ-law fits a wider range into the same number of bits.
+> 2. **Reconstruction** — rebuilding a continuous signal from samples, and why the stair-step picture of digital audio is wrong.
+> 3. **Video sampling** — the same theory applied to space and time rather than time alone.
+> 4. **Pixel aspect ratio** — why pixels are not always square, and what that does to stored dimensions.
+> 5. **Interlacing** — fields, field order, and the timing that comes with them.
+> 6. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
+> 7. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
+> 8. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
 
 In the meantime, [the sampling theorem page](../sampling/) is complete, and it covers the theory that the reconstruction section here depends on.
+
 
 An interactive companion to Xiph.Org's [A Digital Media Primer for Geeks](https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks) by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA). Figures run in the browser using generated test images, colourspace conversions, and synthesised audio passed through a quantiser.
 

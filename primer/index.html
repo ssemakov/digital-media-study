@@ -274,6 +274,7 @@ footer a{color:var(--ink-2)}
       <a href="#why">Why digital</a>
       <a href="#pcm">PCM</a>
       <a href="#depth">Bit depth</a>
+      <a href="#dither">Dither</a>
       <a href="#more">More to come</a>
     </div>
     <a class="iconbtn" href="https://github.com/ssemakov/digital-media-study" title="Source on GitHub" aria-label="Source on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
@@ -289,7 +290,7 @@ footer a{color:var(--ink-2)}
     <p class="kicker">A digital media primer, for people who write software</p>
     <h1>Digital audio and video represent signals as <em>arrays of samples</em>.</h1>
     <p class="lede">A media file stores sampled audio and video together with information needed to interpret and
-    play them. This first part describes PCM parameters, byte order, bit depth and quantisation error. Dither, companding, reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.</p>
+    play them. This first part describes PCM parameters, byte order, bit depth, quantisation error and dither. Companding, reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.</p>
 
     <div class="theorem">
       <div class="lab">Based on</div>
@@ -299,7 +300,7 @@ footer a{color:var(--ink-2)}
       formats.</p>
     </div>
 
-    <p>This part contains two interactive figures. Images are generated procedurally, audio is
+    <p>This part contains three interactive figures. Images are generated procedurally, audio is
     synthesised at runtime, and colour-space calculations run in the browser. Additional
     derivations appear in <strong>Go deeper</strong> panels, which can be read independently of the
     main text.</p>
@@ -479,9 +480,13 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     amplitude, increasing the bit depth places those levels closer together and reduces the error
     introduced by rounding.</p>
 
-    <p>Rounding a sample to the nearest level introduces an error bounded by half a step. Each
-    additional bit halves the step size. When the rounding error behaves as uniformly distributed
-    noise, this lowers the noise floor by about 6 dB per bit:</p>
+    <p>The <strong>quantisation step</strong> is the distance between two neighbouring levels. For a
+    range of −1 to +1 and <em>b</em> bits it is 2 ÷ 2<sup><em>b</em></sup>: 0.125 at 4 bits, about
+    0.00003 at 16 bits. It is also called one LSB, for least significant bit, since it is the change
+    produced by flipping the lowest bit of the sample. Rounding a sample to the nearest level
+    introduces an error bounded by half a step. Each additional bit halves the step size. When the
+    rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB
+    per bit:</p>
   </div>
 
   <div class="prose eqbox">
@@ -513,15 +518,46 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     </div>
   </div>
 
+  <div class="prose">
+    <h3>Quantisation error as an added signal</h3>
+    <p>Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were
+    a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second
+    signal added to the first: the stored value minus the true value, which is the orange trace in
+    Figure 2. Its size is always within half a step, so bit depth alone does not determine how
+    audible it is. Its <em>character</em> does, and the character depends on the signal.</p>
+    <p>A loud or complex signal crosses many levels in an irregular sequence, so the error at each
+    sample is effectively random. Random error is noise. It sits at a fixed level, about 6 dB lower
+    for each additional bit, and is heard as faint hiss. This is the usual case, and it is what "bit
+    depth sets the noise floor" refers to. A quiet or simple signal crosses the same one or two
+    levels in the same way on every cycle, so the error repeats with the signal. Repeating error is
+    distortion: tones at multiples of the signal's frequency that were not in the source, which
+    hearing detects more readily than noise of the same power. Figure 2 shows this near −20 dBFS. A
+    signal smaller than half a step rounds to zero at every sample and is removed entirely.</p>
+    <p>Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise
+    floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the
+    ceiling, and dynamic range is the distance between the loudest representable signal and the
+    rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.</p>
+    <p>Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time,
+    keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the
+    allowed values at each instant. <a href="/sampling">The sampling page</a> shows that rounding time
+    loses nothing when the rate is sufficient. Rounding amplitude always discards something, and
+    dither, the subject of §4, changes what is discarded from distortion into noise.</p>
+  </div>
+
   <figure id="fig-quant">
     <div class="head">
-      <div class="n">Figure 2 · live</div>
+      <div class="n">Figure 2 · audio + live</div>
       <h4>A signal and its quantisation error</h4>
       <p>A sine wave is rounded to the nearest of the 2<sup>bits</sup> levels. Top: the original and
       the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the
       signal gets quieter. Bottom: the rounding error, rounded minus original, measured in
       quantisation steps. Rounding is never off by more than half a step, so the error's size is
-      fixed and its <em>shape</em> is what changes. Lower the signal level and watch the shape.</p>
+      fixed and its <em>shape</em> is what changes. Lower the signal level and watch the shape. The
+      buttons play the signal at the selected level and bit depth, with the dither checkbox applied.
+      Playback gain is normalised so quiet settings remain audible; compare the character of the
+      sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is
+      periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can
+      behave as noise.</p>
     </div>
     <div class="canvasbox"><canvas id="c-quant" height="300" aria-label="A signal, its quantised version, and the quantisation error trace"></canvas></div>
     <div class="legend">
@@ -534,7 +570,15 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
         <input type="range" id="s-q-bits" min="1" max="10" step="1" value="4"></div>
       <div class="sl"><label for="s-q-amp">signal level<b><span id="v-q-amp">0.0</span> dBFS</b></label>
         <input type="range" id="s-q-amp" min="-60" max="0" step="0.5" value="0"></div>
+      <div style="flex:0 0 auto"><span class="fieldlab">signal</span>
+        <div class="seg" id="seg-q-sig">
+          <button data-v="sine" class="on">sine</button><button data-v="two">two tones</button>
+        </div></div>
       <label class="chk" style="flex:0 0 auto;padding-bottom:4px"><input type="checkbox" id="k-q-dither"> add dither</label>
+      <div style="flex:0 0 auto;padding-bottom:2px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="b-q-ref">▶ Original</button>
+        <button class="btn" id="b-q-q">▶ Rounded</button>
+      </div>
     </div>
     <div class="readout">
       <div class="cell"><div class="k">Levels used</div><div class="v" id="r-q-used">16</div></div>
@@ -542,7 +586,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <div class="cell"><div class="k">Error character</div><div class="v" id="r-q-char">noise</div></div>
     </div>
     <div class="verdict ok" id="r-q-verdict"><span class="ic">✓</span><span id="r-q-msg"></span></div>
-    <figcaption>At 0 dBFS with 4 bits the sine spans 8 steps and crosses all 16 levels. The error is a
+    <figcaption>At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a
     rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the
     regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the
     rounded output becomes a two- or three-level square wave, and the error becomes a periodic
@@ -551,7 +595,10 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     and the error is the negative of the signal. "Levels used" counts how many levels the rounded
     output lands on. With dither enabled, random noise is added before rounding, the output flickers
     between neighbouring levels in proportion to the input, and the error loses its lock to the
-    waveform. Section 4 describes this in detail.</figcaption>
+    waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a
+    change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband
+    hiss, while the low-level error still collapses into distortion. Section 4 describes dither in
+    detail.</figcaption>
   </figure>
 
   <div class="prose tw">
@@ -589,18 +636,145 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <hr class="rule">
 
+<section id="dither">
+  <div class="prose">
+    <p class="kicker">§4</p>
+    <h2>Dither: adding noise to reduce distortion</h2>
+    <p>Dither is random noise added before quantisation to control the statistical properties of the
+    rounding error. Section 3 described that error as a second signal whose character depends on the
+    input: noise for a loud or complex signal, distortion for a quiet or simple one, silence below
+    half a step. Dither makes the character independent of the input. With dither, the error is
+    noise in every case, at a fixed level set by the bit depth.</p>
+    <p>Figure 2 shows the undithered case. A quiet sine crosses the same few quantisation levels in
+    each cycle, so the error repeats with the waveform and produces <strong>harmonic
+    distortion</strong>: additional tones at multiples of the original frequency. Even at full
+    scale, a steady sine's error is periodic, a dense set of small harmonics. Enabling dither in
+    Figure 2 changes both cases: the added noise decides each rounding at random, the output
+    flickers between neighbouring levels with probabilities that follow the input, and the error
+    loses its relation to the waveform.</p>
+
+    <p>The following example adds triangular noise spanning ±1 quantisation step <em>before</em>
+    rounding:</p>
+  </div>
+
+  <div class="prose">
+<pre><code class="go"><span class="k">package</span> main
+
+<span class="k">import</span> (
+	<span class="s">"fmt"</span>
+	<span class="s">"math"</span>
+	<span class="s">"math/rand"</span>
+)
+
+<span class="k">func</span> main() {
+	x := <span class="n">0.3</span>      <span class="c">// input sample, in the range -1..1</span>
+	levels := <span class="n">8.0</span> <span class="c">// quantiser step count: how many values the format can store</span>
+
+	<span class="c">// undithered: rounding error can be correlated with the signal</span>
+	out := math.Round(x*levels) / levels
+
+	<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
+	d := (rand.Float64() + rand.Float64() - <span class="n">1</span>) / levels <span class="c">// triangular noise, plus or minus 1 LSB</span>
+	outDithered := math.Round((x+d)*levels) / levels
+
+	fmt.Println(out, outDithered)
+}
+</code><code class="js" hidden><span class="k">const</span> x = <span class="n">0.3</span>;      <span class="c">// input sample, in the range -1..1</span>
+<span class="k">const</span> levels = <span class="n">8.0</span>; <span class="c">// quantiser step count: how many values the format can store</span>
+
+<span class="c">// undithered: rounding error can be correlated with the signal</span>
+<span class="k">const</span> out = Math.round(x * levels) / levels;
+
+<span class="c">// dithered: error becomes uncorrelated noise, and the signal survives below one step</span>
+<span class="k">const</span> d = (Math.random() + Math.random() - <span class="n">1</span>) / levels; <span class="c">// triangular noise, plus or minus 1 LSB</span>
+<span class="k">const</span> outDithered = Math.round((x + d) * levels) / levels;
+
+console.log(out, outDithered);
+</code></pre>
+
+    <p>Dither replaces signal-correlated distortion with broadband noise at a fixed level. It also
+    allows information about signals <em>smaller than a single step</em> to remain in the output.
+    Small changes in the input alter the probability of rounding to each neighbouring level, so the
+    output statistics retain information about the signal. Under suitable listening conditions, a
+    tone can remain audible below the noise floor. The cost is a noise floor about 4.8 dB above the
+    undithered estimate in §3, for the triangular dither used here.</p>
+  </div>
+
+  <figure id="fig-dither">
+    <div class="head">
+      <div class="n">Figure 3 · audio + live</div>
+      <h4>A tone below one quantisation step</h4>
+      <p>A single sine at the selected level, quantised to the selected bit depth, shown as a
+      spectrum. Undithered, a steady sine's error is periodic at any level and appears as harmonic
+      peaks. Dithered, the error is noise and appears as a flat floor. Begin playback at a low
+      volume and increase it gradually.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-dither" height="280" aria-label="Spectrum of a quantised tone with and without dither"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>undithered — harmonic distortion</span>
+      <span style="color:var(--s3)"><i style="background:var(--s3)"></i>dithered — tone and broadband noise</span>
+      <span style="color:var(--s1)"><i class="dash" style="color:var(--s1)"></i>reference tone</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-d-bits">bit depth<b><span id="v-d-bits">6</span> bits</b></label>
+        <input type="range" id="s-d-bits" min="2" max="12" step="1" value="6"></div>
+      <div class="sl"><label for="s-d-amp">tone level<b><span id="v-d-amp">−34</span> dBFS</b></label>
+        <input type="range" id="s-d-amp" min="-70" max="-6" step="1" value="-34"></div>
+      <div style="flex:0 0 auto;padding-bottom:2px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="b-d-raw">▶ Undithered</button>
+        <button class="btn" id="b-d-dit">▶ Dithered</button>
+        <button class="btn" id="b-d-ref">▶ Reference</button>
+      </div>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Tone vs one step</div><div class="v" id="r-d-lsb">0.6 steps</div></div>
+      <div class="cell"><div class="k">Largest harmonic</div><div class="v" id="r-d-thd">−38 dB</div></div>
+      <div class="cell"><div class="k">Dithered floor</div><div class="v" id="r-d-floor">−62 dB</div></div>
+    </div>
+    <div class="verdict edge" id="r-d-verdict"><span class="ic">!</span><span id="r-d-msg"></span></div>
+    <figcaption>Lower the tone level below one step and compare the two versions. The undithered tone develops
+    artefacts and eventually rounds to silence, the third regime of §3. With dither, its level
+    decreases continuously into the noise floor and remains audible below it.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <div class="note good">
+      <div class="t">Dither in images</div>
+      <p style="margin:0">Dither also applies when reducing image precision. Quantising a gradient to a limited palette
+      can produce visible bands. Adding noise before quantisation replaces these regular boundaries
+      with a fine-grained pattern. Image formats such as GIF use dithering to represent intermediate
+      colours with a limited palette.</p>
+    </div>
+  </div>
+
+  <details class="deep">
+    <summary><span class="chip">Go deeper</span> Why triangular noise, and what noise shaping adds</summary>
+    <div class="body">
+      <p>Rectangular one-LSB dither decorrelates the error's <em>mean</em>. Its variance remains
+      signal-dependent, so the noise level can vary with the input. Adding two independent
+      rectangular sources gives a <strong>triangular</strong> distribution spanning ±1 LSB (TPDF),
+      which decorrelates both mean and variance. The example above uses two random values for this
+      reason. TPDF dither raises noise power by 4.77 dB relative to the uniformly distributed
+      undithered quantisation-error model.</p>
+      <p><strong>Noise shaping</strong> changes the distribution of quantisation noise across frequency.
+      In audio, it can reduce noise where hearing is most sensitive, roughly 2–5 kHz, while
+      increasing it at higher frequencies. The perceptual benefit depends on the filter and playback
+      conditions. Noise shaping is used in 16-bit delivery and in delta-sigma converters.</p>
+    </div>
+  </details>
+</section>
+
+<hr class="rule">
+
 <section id="more">
   <div class="prose">
     <p class="kicker">To be continued</p>
     <h2>The rest of the primer</h2>
-    <p>This page is being published a part at a time. What is here covers sampled audio up to the
-    point where quantisation error is understood. The sections below are written and will appear
-    here as they are reviewed.</p>
+    <p>This page is being published a part at a time. What is here covers sampled audio through
+    dither. The sections below are written and will appear here as they are reviewed.</p>
     <div class="note">
       <div class="t">Still to come</div>
       <ol style="margin:0;padding-left:20px">
-        <li><strong>Dither</strong> — adding noise on purpose so that quantisation error becomes
-        noise rather than distortion, and why a signal quieter than one step survives it.</li>
         <li><strong>Companding</strong> — non-uniform quantisation, and how &micro;-law fits a wider
         range into the same number of bits.</li>
         <li><strong>Reconstruction</strong> — rebuilding a continuous signal from samples, and why
@@ -1009,9 +1183,15 @@ function quantise(x, step, dith, rnd) {
 (function () {
   var P = new Plot("c-quant", { l: 42, r: 16, t: 16, b: 30 });
   if (!P.cv) return;
-  var nb = 4, ampDb = 0, dith = false;
+  var nb = 4, ampDb = 0, dith = false, kind = "sine";
 
-  function sig(t) { var A = fromDb(ampDb); return A * Math.sin(2 * PI * 1.6 * t); }
+  /* two inharmonic tones (ratio ≈ √2) never repeat, so their rounding error can decorrelate;
+     a single sine repeats every cycle and its error is always periodic */
+  function wave(t, f) {
+    return kind === "two" ? 0.55 * Math.sin(2 * PI * f * t) + 0.45 * Math.sin(2 * PI * f * 1.416 * t + 0.7)
+                          : Math.sin(2 * PI * f * t);
+  }
+  function sig(t) { return fromDb(ampDb) * wave(t, 1.6); }
 
   function draw() {
     var g = P.ctx;
@@ -1078,26 +1258,46 @@ function quantise(x, step, dith, rnd) {
     txt("r-q-used", String(P.usedLevels));
     txt("r-q-dr", fmt(6.02 * nb + 1.76, 1) + " dB");
     var correlated = inSteps < 4 && !dith;
-    txt("r-q-char", correlated ? "distortion" : "noise");
-    var kind, msg;
+    txt("r-q-char", correlated ? "distortion" : (dith || kind === "two") ? "noise" : "harmonics");
+    var verdictKind, msg;
     if (inSteps < 0.5 && !dith) {
-      kind = "bad";
+      verdictKind = "bad";
       msg = "The signal amplitude is below half a step, so every sample rounds to zero. Enabling dither allows the output statistics to retain information about the signal.";
     } else if (correlated) {
-      kind = "bad";
+      verdictKind = "bad";
       msg = "Approximately " + fmt(inSteps, 1) + " steps of signal amplitude. The error repeats with the waveform, producing harmonic distortion. Enabling “add dither” removes the signal-correlated pattern.";
     } else if (dith && inSteps < 4) {
-      kind = "ok";
+      verdictKind = "ok";
       msg = "With dither, the error trace resembles broadband noise. The signal spans " + fmt(inSteps, 1) + " quantisation steps. Information below one step is retained in the output statistics.";
+    } else if (kind === "two") {
+      verdictKind = "ok";
+      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The two tones never repeat, so the error decorrelates and plays as broadband hiss. This is the case the 6 dB-per-bit estimate describes.";
     } else {
-      kind = "ok";
-      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The signal crosses many levels, and the error resembles random noise. This is the approximation used by the 6 dB-per-bit estimate.";
+      verdictKind = "ok";
+      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The error crosses many levels, but a steady sine repeats every cycle, so the error is periodic: a set of harmonics heard as a change of timbre rather than hiss. Switch to two tones to hear the error as noise.";
     }
-    verdict("r-q-verdict", "r-q-msg", kind, msg);
+    verdict("r-q-verdict", "r-q-msg", verdictKind, msg);
   }
+  /* a 440 Hz tone at the selected level, rounded as the plot is; gain normalised so quiet
+     settings stay audible, which keeps the relative levels of tone, noise and harmonics */
+  function tone(rounded) {
+    var SR = 44100, dur = 2.5, N = Math.round(SR * dur), out = new Float32Array(N);
+    var step = 2 / Math.pow(2, nb), A = fromDb(ampDb), rnd = lcg(4242);
+    var boost = 0.3 / Math.max(A, 1e-6);
+    for (var i = 0; i < N; i++) {
+      var t = i / SR, env = Math.min(1, t / 0.03, (dur - t) / 0.05);
+      var x = A * wave(t, 440);
+      var y = rounded ? quantise(x, step, dith, rnd) : x;
+      out[i] = clamp(y * boost, -1, 1) * 0.5 * env;
+    }
+    return out;
+  }
+  on("b-q-ref", "click", function () { playBuffer(tone(false), 44100); });
+  on("b-q-q", "click", function () { playBuffer(tone(true), 44100); });
   on("s-q-bits", "input", function (e) { nb = +e.target.value; update(); });
   on("s-q-amp", "input", function (e) { ampDb = +e.target.value; update(); });
   on("k-q-dither", "change", function (e) { dith = e.target.checked; update(); });
+  segment("seg-q-sig", function (v) { kind = v; update(); });
   register(P, draw); update();
 })();
 
@@ -1201,7 +1401,7 @@ function quantise(x, step, dith, rnd) {
       msg = "About " + fmt(s.steps, 1) + " steps of signal amplitude. The orange trace shows harmonic distortion, with the largest harmonic at " + fmt(s.worst, 0) + " dB. These components occur at multiples of the source frequency.";
     } else {
       kind = "ok";
-      msg = "Signal amplitude: " + fmt(s.steps, 0) + " steps. At this level, undithered error resembles random noise. Lower the level to compare the effect of dither on signal-correlated distortion.";
+      msg = "Signal amplitude: " + fmt(s.steps, 0) + " steps. The undithered error is a dense set of small harmonics, each far below the tone, with the largest at " + fmt(s.worst, 0) + " dB. Dither replaces them with a flat floor at " + fmt(s.floor, 0) + " dB. Lower the level to see the harmonics grow as the tone crosses fewer levels.";
     }
     verdict("r-d-verdict", "r-d-msg", kind, msg);
   }
