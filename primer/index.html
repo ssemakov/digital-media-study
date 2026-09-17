@@ -489,9 +489,13 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     amplitude, increasing the bit depth places those levels closer together and reduces the error
     introduced by rounding.</p>
 
-    <p>Rounding a sample to the nearest level introduces an error bounded by half a step. Each
-    additional bit halves the step size. When the rounding error behaves as uniformly distributed
-    noise, this lowers the noise floor by about 6 dB per bit:</p>
+    <p>The <strong>quantisation step</strong> is the distance between two neighbouring levels. For a
+    range of −1 to +1 and <em>b</em> bits it is 2 ÷ 2<sup><em>b</em></sup>: 0.125 at 4 bits, about
+    0.00003 at 16 bits. It is also called one LSB, for least significant bit, since it is the change
+    produced by flipping the lowest bit of the sample. Rounding a sample to the nearest level
+    introduces an error bounded by half a step. Each additional bit halves the step size. When the
+    rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB
+    per bit:</p>
   </div>
 
   <div class="prose eqbox">
@@ -523,15 +527,46 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     </div>
   </div>
 
+  <div class="prose">
+    <h3>Quantisation error as an added signal</h3>
+    <p>Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were
+    a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second
+    signal added to the first: the stored value minus the true value, which is the orange trace in
+    Figure 2. Its size is always within half a step, so bit depth alone does not determine how
+    audible it is. Its <em>character</em> does, and the character depends on the signal.</p>
+    <p>A loud or complex signal crosses many levels in an irregular sequence, so the error at each
+    sample is effectively random. Random error is noise. It sits at a fixed level, about 6 dB lower
+    for each additional bit, and is heard as faint hiss. This is the usual case, and it is what "bit
+    depth sets the noise floor" refers to. A quiet or simple signal crosses the same one or two
+    levels in the same way on every cycle, so the error repeats with the signal. Repeating error is
+    distortion: tones at multiples of the signal's frequency that were not in the source, which
+    hearing detects more readily than noise of the same power. Figure 2 shows this near −20 dBFS. A
+    signal smaller than half a step rounds to zero at every sample and is removed entirely.</p>
+    <p>Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise
+    floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the
+    ceiling, and dynamic range is the distance between the loudest representable signal and the
+    rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.</p>
+    <p>Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time,
+    keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the
+    allowed values at each instant. <a href="/sampling">The sampling page</a> shows that rounding time
+    loses nothing when the rate is sufficient. Rounding amplitude always discards something, and
+    dither, the subject of §4, changes what is discarded from distortion into noise.</p>
+  </div>
+
   <figure id="fig-quant">
     <div class="head">
-      <div class="n">Figure 2 · live</div>
+      <div class="n">Figure 2 · audio + live</div>
       <h4>A signal and its quantisation error</h4>
       <p>A sine wave is rounded to the nearest of the 2<sup>bits</sup> levels. Top: the original and
       the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the
       signal gets quieter. Bottom: the rounding error, rounded minus original, measured in
       quantisation steps. Rounding is never off by more than half a step, so the error's size is
-      fixed and its <em>shape</em> is what changes. Lower the signal level and watch the shape.</p>
+      fixed and its <em>shape</em> is what changes. Lower the signal level and watch the shape. The
+      buttons play the signal at the selected level and bit depth, with the dither checkbox applied.
+      Playback gain is normalised so quiet settings remain audible; compare the character of the
+      sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is
+      periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can
+      behave as noise.</p>
     </div>
     <div class="canvasbox"><canvas id="c-quant" height="300" aria-label="A signal, its quantised version, and the quantisation error trace"></canvas></div>
     <div class="legend">
@@ -544,7 +579,15 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
         <input type="range" id="s-q-bits" min="1" max="10" step="1" value="4"></div>
       <div class="sl"><label for="s-q-amp">signal level<b><span id="v-q-amp">0.0</span> dBFS</b></label>
         <input type="range" id="s-q-amp" min="-60" max="0" step="0.5" value="0"></div>
+      <div style="flex:0 0 auto"><span class="fieldlab">signal</span>
+        <div class="seg" id="seg-q-sig">
+          <button data-v="sine" class="on">sine</button><button data-v="two">two tones</button>
+        </div></div>
       <label class="chk" style="flex:0 0 auto;padding-bottom:4px"><input type="checkbox" id="k-q-dither"> add dither</label>
+      <div style="flex:0 0 auto;padding-bottom:2px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="b-q-ref">▶ Original</button>
+        <button class="btn" id="b-q-q">▶ Rounded</button>
+      </div>
     </div>
     <div class="readout">
       <div class="cell"><div class="k">Levels used</div><div class="v" id="r-q-used">16</div></div>
@@ -552,7 +595,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <div class="cell"><div class="k">Error character</div><div class="v" id="r-q-char">noise</div></div>
     </div>
     <div class="verdict ok" id="r-q-verdict"><span class="ic">✓</span><span id="r-q-msg"></span></div>
-    <figcaption>At 0 dBFS with 4 bits the sine spans 8 steps and crosses all 16 levels. The error is a
+    <figcaption>At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a
     rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the
     regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the
     rounded output becomes a two- or three-level square wave, and the error becomes a periodic
@@ -561,7 +604,10 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     and the error is the negative of the signal. "Levels used" counts how many levels the rounded
     output lands on. With dither enabled, random noise is added before rounding, the output flickers
     between neighbouring levels in proportion to the input, and the error loses its lock to the
-    waveform. Section 4 describes this in detail.</figcaption>
+    waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a
+    change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband
+    hiss, while the low-level error still collapses into distortion. Section 4 describes dither in
+    detail.</figcaption>
   </figure>
 
   <div class="prose tw">
@@ -1709,9 +1755,15 @@ function quantise(x, step, dith, rnd) {
 (function () {
   var P = new Plot("c-quant", { l: 42, r: 16, t: 16, b: 30 });
   if (!P.cv) return;
-  var nb = 4, ampDb = 0, dith = false;
+  var nb = 4, ampDb = 0, dith = false, kind = "sine";
 
-  function sig(t) { var A = fromDb(ampDb); return A * Math.sin(2 * PI * 1.6 * t); }
+  /* two inharmonic tones (ratio ≈ √2) never repeat, so their rounding error can decorrelate;
+     a single sine repeats every cycle and its error is always periodic */
+  function wave(t, f) {
+    return kind === "two" ? 0.55 * Math.sin(2 * PI * f * t) + 0.45 * Math.sin(2 * PI * f * 1.416 * t + 0.7)
+                          : Math.sin(2 * PI * f * t);
+  }
+  function sig(t) { return fromDb(ampDb) * wave(t, 1.6); }
 
   function draw() {
     var g = P.ctx;
@@ -1778,26 +1830,46 @@ function quantise(x, step, dith, rnd) {
     txt("r-q-used", String(P.usedLevels));
     txt("r-q-dr", fmt(6.02 * nb + 1.76, 1) + " dB");
     var correlated = inSteps < 4 && !dith;
-    txt("r-q-char", correlated ? "distortion" : "noise");
-    var kind, msg;
+    txt("r-q-char", correlated ? "distortion" : (dith || kind === "two") ? "noise" : "harmonics");
+    var verdictKind, msg;
     if (inSteps < 0.5 && !dith) {
-      kind = "bad";
+      verdictKind = "bad";
       msg = "The signal amplitude is below half a step, so every sample rounds to zero. Enabling dither allows the output statistics to retain information about the signal.";
     } else if (correlated) {
-      kind = "bad";
+      verdictKind = "bad";
       msg = "Approximately " + fmt(inSteps, 1) + " steps of signal amplitude. The error repeats with the waveform, producing harmonic distortion. Enabling “add dither” removes the signal-correlated pattern.";
     } else if (dith && inSteps < 4) {
-      kind = "ok";
+      verdictKind = "ok";
       msg = "With dither, the error trace resembles broadband noise. The signal spans " + fmt(inSteps, 1) + " quantisation steps. Information below one step is retained in the output statistics.";
+    } else if (kind === "two") {
+      verdictKind = "ok";
+      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The two tones never repeat, so the error decorrelates and plays as broadband hiss. This is the case the 6 dB-per-bit estimate describes.";
     } else {
-      kind = "ok";
-      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The signal crosses many levels, and the error resembles random noise. This is the approximation used by the 6 dB-per-bit estimate.";
+      verdictKind = "ok";
+      msg = "Approximately " + fmt(inSteps, 0) + " steps of signal amplitude. The error crosses many levels, but a steady sine repeats every cycle, so the error is periodic: a set of harmonics heard as a change of timbre rather than hiss. Switch to two tones to hear the error as noise.";
     }
-    verdict("r-q-verdict", "r-q-msg", kind, msg);
+    verdict("r-q-verdict", "r-q-msg", verdictKind, msg);
   }
+  /* a 440 Hz tone at the selected level, rounded as the plot is; gain normalised so quiet
+     settings stay audible, which keeps the relative levels of tone, noise and harmonics */
+  function tone(rounded) {
+    var SR = 44100, dur = 2.5, N = Math.round(SR * dur), out = new Float32Array(N);
+    var step = 2 / Math.pow(2, nb), A = fromDb(ampDb), rnd = lcg(4242);
+    var boost = 0.3 / Math.max(A, 1e-6);
+    for (var i = 0; i < N; i++) {
+      var t = i / SR, env = Math.min(1, t / 0.03, (dur - t) / 0.05);
+      var x = A * wave(t, 440);
+      var y = rounded ? quantise(x, step, dith, rnd) : x;
+      out[i] = clamp(y * boost, -1, 1) * 0.5 * env;
+    }
+    return out;
+  }
+  on("b-q-ref", "click", function () { playBuffer(tone(false), 44100); });
+  on("b-q-q", "click", function () { playBuffer(tone(true), 44100); });
   on("s-q-bits", "input", function (e) { nb = +e.target.value; update(); });
   on("s-q-amp", "input", function (e) { ampDb = +e.target.value; update(); });
   on("k-q-dither", "change", function (e) { dith = e.target.checked; update(); });
+  segment("seg-q-sig", function (v) { kind = v; update(); });
   register(P, draw); update();
 })();
 

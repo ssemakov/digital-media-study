@@ -24,8 +24,6 @@ A major advantage of digital storage is **repeatable copying**. In an analogue c
 
 A digital transmission uses discrete signal levels. A receiver can recover the intended value when noise stays within the decision threshold, allowing each stage to regenerate the data. A file copied without errors remains bit-identical through successive copies. Conversion between analogue and digital signals introduces quantisation and hardware errors; the sample rate also limits bandwidth. [The companion page on sampling](/sampling) explains the conditions for reconstructing a signal from its samples.
 
-> **Data rates and hardware requirements**
->
 > Raw HD video can require roughly 700 megabits per second, about 500× the data rate of CD audio. Real-time video processing became practical later than audio processing because it required substantially more computing power, storage, and data-transfer capacity.
 
 ---
@@ -40,8 +38,6 @@ The name comes from 1930s telephony, where it described a way of sending a signa
 
 **Sample rate** is the number of measurements per second. Half the rate is the upper frequency boundary for reconstruction. **Sample format** specifies the bit depth and representation: signed or unsigned integer, or floating point. It determines the available levels and *dynamic range*. **Channel count** specifies the number of simultaneous streams. Interleaved stereo stores left and right samples in alternating order. Values wider than 8 bits also have a **byte order**. Standard WAV PCM is little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud noise.
 
-> **Byte order**
->
 > A 16-bit sample occupies two bytes, and a format must state which byte comes first. **Little-endian** stores the least significant byte first; **big-endian** stores the most significant byte first. The value 4660, or `0x1234`, is stored as the bytes `34 12` in little-endian order and `12 34` in big-endian order. x86 and most ARM systems are little-endian, as is WAV. Network protocols and AIFF are big-endian. The names come from *Gulliver's Travels*, where two factions dispute which end of an egg to open. Reading with the wrong order swaps the two bytes of every sample, so the low byte, which changes from one sample to the next, becomes the high byte. The waveform becomes a sequence of large jumps, heard as loud broadband noise. Single-byte formats have no byte order.
 
 Multiplying sample rate, bits per sample, and channel count gives the bitrate. Dividing by eight gives bytes per second:
@@ -77,8 +73,6 @@ func main() {
 | **48 kHz** | Professional video and general audio production. Its relationship to common frame rates simplifies alignment between audio and picture. |
 | **96 / 192 kHz** | Production formats. Higher rates allow wider transition bands for anti-aliasing and reconstruction filters and provide headroom for signal processing. |
 
-> **Sample rate and aliasing**
->
 > Frequencies above half the sample rate can *alias* into the representable band, producing tones at different frequencies. An anti-aliasing filter limits the input bandwidth before sampling. [The companion explainer on the sampling theorem](/sampling) covers this process in detail.
 
 ---
@@ -89,7 +83,7 @@ func main() {
 
 Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale amplitude, increasing the bit depth places those levels closer together and reduces the error introduced by rounding.
 
-Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
+The **quantisation step** is the distance between two neighbouring levels. For a range of −1 to +1 and *b* bits it is 2 ÷ 2*b*: 0.125 at 4 bits, about 0.00003 at 16 bits. It is also called one LSB, for least significant bit, since it is the change produced by flipping the lowest bit of the sample. Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
 
 **dynamic range≈6.02b+1.76 dB**
 
@@ -101,15 +95,23 @@ Rounding a sample to the nearest level introduces an error bounded by half a ste
 
 The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 dB for 24-bit audio. Recording and production commonly use 24-bit samples to accommodate low recording levels and repeated processing. The usable range of a recording also depends on microphone noise, converter performance, and the recording environment.
 
-> **dBFS**
->
 > Signal levels on this page are given in **dBFS**, decibels relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
 
-> **Figure 2 · live — A signal and its quantisation error**
+### Quantisation error as an added signal
+
+Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second signal added to the first: the stored value minus the true value, which is the orange trace in Figure 2. Its size is always within half a step, so bit depth alone does not determine how audible it is. Its *character* does, and the character depends on the signal.
+
+A loud or complex signal crosses many levels in an irregular sequence, so the error at each sample is effectively random. Random error is noise. It sits at a fixed level, about 6 dB lower for each additional bit, and is heard as faint hiss. This is the usual case, and it is what "bit depth sets the noise floor" refers to. A quiet or simple signal crosses the same one or two levels in the same way on every cycle, so the error repeats with the signal. Repeating error is distortion: tones at multiples of the signal's frequency that were not in the source, which hearing detects more readily than noise of the same power. Figure 2 shows this near −20 dBFS. A signal smaller than half a step rounds to zero at every sample and is removed entirely.
+
+Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the ceiling, and dynamic range is the distance between the loudest representable signal and the rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.
+
+Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time, keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the allowed values at each instant. [The sampling page](/sampling) shows that rounding time loses nothing when the rate is sufficient. Rounding amplitude always discards something, and dither, the subject of §4, changes what is discarded from distortion into noise.
+
+> **Figure 2 · audio + live — A signal and its quantisation error**
 >
-> A sine wave is rounded to the nearest of the 2^bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape.
+> A sine wave is rounded to the nearest of the 2bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape. The buttons play the signal at the selected level and bit depth, with the dither checkbox applied. Playback gain is normalised so quiet settings remain audible; compare the character of the sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can behave as noise.
 >
-> At 0 dBFS with 4 bits the sine spans 8 steps and crosses all 16 levels. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. Section 4 describes this in detail.
+> At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband hiss, while the low-level error still collapses into distortion. Section 4 describes dither in detail.
 >
 > *(interactive figure — see the web page)*
 
@@ -120,8 +122,6 @@ The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 
 | **16-bit signed** | ~96 dB | CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS values. |
 | **24-bit signed** | ~144 dB | Recording and production. Additional range for low-level signals and processing. |
 | **32-bit float** | very large | Mixing and mastering. ±1.0 corresponds to 0 dBFS. Floating-point storage can retain values beyond that level for later gain reduction. |
-
-**Go deeper: Where 6.02 and 1.76 come from**
 
 With b bits the step size is q=2/2b for a signal spanning −1 to +1. Assume the rounding error is uniformly distributed across ±q/2 as an approximation for signals that cross many levels. A uniform distribution of width q has variance q2/12, so the noise power is q2/12.
 
@@ -175,11 +175,7 @@ Dither reduces signal-correlated distortion and introduces broadband noise. It a
 >
 > *(interactive figure — see the web page)*
 
-> **Dither in images**
->
 > Dither also applies when reducing image precision. Quantising a gradient to a limited palette can produce visible bands. Adding noise before quantisation replaces these regular boundaries with a fine-grained pattern. Image formats such as GIF use dithering to represent intermediate colours with a limited palette.
-
-**Go deeper: Why triangular noise, and what noise shaping adds**
 
 Rectangular one-LSB dither decorrelates the error's *mean*. Its variance remains signal-dependent, so the noise level can vary with the input. Adding two independent rectangular sources gives a **triangular** distribution spanning ±1 LSB (TPDF), which decorrelates both mean and variance. The example above uses two random values for this reason. TPDF dither raises noise power by 4.77 dB relative to the uniformly distributed undithered quantisation-error model.
 
@@ -225,11 +221,7 @@ For a signal bandlimited to below half the sample rate, ideal reconstruction pro
 >
 > *(interactive figure — see the web page)*
 
-> **The hold stage in a converter**
->
 > A converter's hold stage can maintain each sample value until the next update, producing a staircase waveform internally. A reconstruction filter attenuates its high-frequency components. Oversampling moves these components farther above the audio band and simplifies filtering.
-
-**Go deeper: Bandlimited reconstruction**
 
 Given samples spaced T apart, the reconstruction is x(t)=∑nx(nT)sinc((t−nT)/T) with sinc(u)=sin(πu)/(πu). Under the sampling theorem's assumptions, this gives the unique signal consistent with every sample and bandlimited to below 1/2T. Other interpolation rules, including the staircase, introduce components above that bandwidth limit.
 
@@ -293,8 +285,6 @@ Successive fields are captured at **different moments**. Combining them into a f
 >
 > *(interactive figure — see the web page)*
 
-> **Interlaced and progressive notation**
->
 > **1080i** denotes 1080 lines with interlaced scanning. At 60 fields per second, each field contains 540 lines. **1080p** denotes 1080 lines with progressive scanning, where each update carries a complete frame. "480i60" denotes 480 lines at 60 interlaced fields per second, equivalent to 30 full frames' worth of lines per second. Interlaced material remains common in archives.
 
 ---
@@ -317,8 +307,6 @@ Gamma encoding also aligns with human brightness sensitivity. Vision distinguish
 >
 > *(interactive figure — see the web page)*
 
-> **Arithmetic in linear light**
->
 > Averaging gamma-encoded values can make scaling, blurring, and alpha-blending results too dark, especially around high-contrast detail. For these operations, decode the values to linear light, perform the arithmetic, and re-encode the result.
 
 ---
@@ -418,8 +406,6 @@ A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded str
 | **Chroma siting** | Formats with the same subsampling ratio can use different chroma positions. Conversions need the siting information. |
 | **Containers** | Containers organise streams with framing, identification, timing, and metadata. Codec information specifies how to decode them. |
 
-> **Perceptual allocation of precision**
->
 > *Perceptual coding allocates precision according to human sensitivity.* µ-law varies audio level spacing, gamma varies brightness spacing, and chroma subsampling reduces colour resolution. These techniques illustrate a principle also used in modern audio and video codecs.
 
 An interactive companion to Xiph.Org's [A Digital Media Primer for Geeks](https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks) by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA). Figures run in the browser using generated test images, colourspace conversions, and synthesised audio passed through a quantiser.
