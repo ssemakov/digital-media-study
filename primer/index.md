@@ -4,13 +4,13 @@
 
 # Digital audio and video represent signals as *arrays of samples*.
 
-A media file stores sampled audio and video together with information needed to interpret and play them. This page describes PCM, bit depth, dither, companding, signal reconstruction, pixel aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.
+A media file stores sampled audio and video together with information needed to interpret and play them. This page describes PCM, bit depth, companding, signal reconstruction, pixel aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.
 
 Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
 The primer introduces the concepts and engineering constraints behind common audio and video formats.
 
-The page contains twelve interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
+The page contains eleven interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
 
 ---
 
@@ -105,20 +105,20 @@ A loud or complex signal crosses many levels in an irregular sequence, so the er
 
 Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the ceiling, and dynamic range is the distance between the loudest representable signal and the rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.
 
-Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time, keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the allowed values at each instant. [The sampling page](/sampling) shows that rounding time loses nothing when the rate is sufficient. Rounding amplitude always discards something, and dither, the subject of §4, changes what is discarded from distortion into noise.
+Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time, keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the allowed values at each instant. [The sampling page](/sampling) shows that rounding time loses nothing when the rate is sufficient. Rounding amplitude always discards something.
 
 > **Figure 2 · audio + live — A signal and its quantisation error**
 >
 > A sine wave is rounded to the nearest of the 2bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape. The buttons play the signal at the selected level and bit depth, with the dither checkbox applied. Playback gain is normalised so quiet settings remain audible; compare the character of the sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can behave as noise.
 >
-> At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband hiss, while the low-level error still collapses into distortion. Section 4 describes dither in detail.
+> At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband hiss, while the low-level error still collapses into distortion.
 >
 > *(interactive figure — see the web page)*
 
 | Format | Range | Where it appears |
 |---|---|---|
 | **8-bit linear** | ~50 dB | Legacy audio and sound effects. Quantisation noise can be audible in quiet passages. |
-| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §5. |
+| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §4. |
 | **16-bit signed** | ~96 dB | CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS values. |
 | **24-bit signed** | ~144 dB | Recording and production. Additional range for low-level signals and processing. |
 | **32-bit float** | very large | Mixing and mastering. ±1.0 corresponds to 0 dBFS. Floating-point storage can retain values beyond that level for later gain reduction. |
@@ -133,58 +133,6 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 *§4*
 
-## Dither: adding noise to reduce distortion
-
-Dither is random noise added before quantisation to control the statistical properties of the rounding error. Section 3 described that error as a second signal whose character depends on the input: noise for a loud or complex signal, distortion for a quiet or simple one, silence below half a step. Dither makes the character independent of the input. With dither, the error is noise in every case, at a fixed level set by the bit depth.
-
-Figure 2 shows the undithered case. A quiet sine crosses the same few quantisation levels in each cycle, so the error repeats with the waveform and produces **harmonic distortion**: additional tones at multiples of the original frequency. Even at full scale, a steady sine's error is periodic, a dense set of small harmonics. Enabling dither in Figure 2 changes both cases: the added noise decides each rounding at random, the output flickers between neighbouring levels with probabilities that follow the input, and the error loses its relation to the waveform.
-
-The following example adds triangular noise spanning ±1 quantisation step *before* rounding:
-
-```go
-package main
-
-import (
-	"fmt"
-	"math"
-	"math/rand"
-)
-
-func main() {
-	x := 0.3      // input sample, in the range -1..1
-	levels := 8.0 // quantiser step count: how many values the format can store
-
-	// undithered: rounding error can be correlated with the signal
-	out := math.Round(x*levels) / levels
-
-	// dithered: error becomes uncorrelated noise, and the signal survives below one step
-	d := (rand.Float64() + rand.Float64() - 1) / levels // triangular noise, plus or minus 1 LSB
-	outDithered := math.Round((x+d)*levels) / levels
-
-	fmt.Println(out, outDithered)
-}
-```
-
-Dither replaces signal-correlated distortion with broadband noise at a fixed level. It also allows information about signals *smaller than a single step* to remain in the output. Small changes in the input alter the probability of rounding to each neighbouring level, so the output statistics retain information about the signal. Under suitable listening conditions, a tone can remain audible below the noise floor. The cost is a noise floor about 4.8 dB above the undithered estimate in §3, for the triangular dither used here.
-
-> **Figure 3 · audio + live — A tone below one quantisation step**
->
-> A single sine at the selected level, quantised to the selected bit depth, shown as a spectrum. Undithered, a steady sine's error is periodic at any level and appears as harmonic peaks. Dithered, the error is noise and appears as a flat floor. Begin playback at a low volume and increase it gradually.
->
-> Lower the tone level below one step and compare the two versions. The undithered tone develops artefacts and eventually rounds to silence, the third regime of §3. With dither, its level decreases continuously into the noise floor and remains audible below it.
->
-> *(interactive figure — see the web page)*
-
-> Dither also applies when reducing image precision. Quantising a gradient to a limited palette can produce visible bands. Adding noise before quantisation replaces these regular boundaries with a fine-grained pattern. Image formats such as GIF use dithering to represent intermediate colours with a limited palette.
-
-Rectangular one-LSB dither decorrelates the error's *mean*. Its variance remains signal-dependent, so the noise level can vary with the input. Adding two independent rectangular sources gives a **triangular** distribution spanning ±1 LSB (TPDF), which decorrelates both mean and variance. The example above uses two random values for this reason. TPDF dither raises noise power by 4.77 dB relative to the uniformly distributed undithered quantisation-error model.
-
-**Noise shaping** changes the distribution of quantisation noise across frequency. In audio, it can reduce noise where hearing is most sensitive, roughly 2–5 kHz, while increasing it at higher frequencies. The perceptual benefit depends on the filter and playback conditions. Noise shaping is used in 16-bit delivery and in delta-sigma converters.
-
----
-
-*§5*
-
 ## Companding and non-uniform quantisation
 
 Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying the spacing between quantisation levels.
@@ -193,7 +141,7 @@ Perceived loudness is approximately logarithmic. Equal amplitude ratios correspo
 
 **µ-law** (North America and Japan) and **A-law** (elsewhere) use approximately logarithmic spacing: fine steps near silence and coarse steps near full scale. Each sample still occupies one byte, with 256 possible values. The smallest steps provide low-level resolution comparable to roughly 13–14 bits of linear PCM.
 
-> **Figure 4 · live — Even spacing versus logarithmic spacing**
+> **Figure 3 · live — Even spacing versus logarithmic spacing**
 >
 > Left: the positions of quantisation levels. Right: the step size at each amplitude. Smaller steps reduce rounding error; the step size relative to the signal determines the signal-to-noise ratio.
 >
@@ -205,7 +153,7 @@ Companding changes the mapping between sample values and amplitudes while keepin
 
 ---
 
-*§6*
+*§5*
 
 ## Reconstructing a signal from samples
 
@@ -213,7 +161,7 @@ A sample records the signal's value at one instant. A plot can display samples a
 
 For a signal bandlimited to below half the sample rate, ideal reconstruction produces the unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue converter approximates this reconstruction using interpolation and filtering.
 
-> **Figure 5 · live — Three ways to draw the same samples**
+> **Figure 4 · live — Three ways to draw the same samples**
 >
 > The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited reconstruction.
 >
@@ -229,7 +177,7 @@ A staircase has discontinuities, whose spectra extend to arbitrarily high freque
 
 ---
 
-*§7*
+*§6*
 
 ## Video sampling in space and time
 
@@ -237,7 +185,7 @@ Audio is sampled along the time axis. Video is sampled along time and the two sp
 
 Video requires substantially higher data rates than audio. Raw CD audio is about 1.4 megabits per second. Raw 1080i video can exceed **700 megabits per second**, roughly 500 times as much. Storage and transmission requirements motivated many of the video representations described in the following sections.
 
-> **Figure 6 · calculator — Raw video data rate**
+> **Figure 5 · calculator — Raw video data rate**
 >
 > The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate.
 >
@@ -247,7 +195,7 @@ Video requires substantially higher data rates than audio. Raw CD audio is about
 
 ---
 
-*§8*
+*§7*
 
 ## Pixel aspect ratio
 
@@ -257,7 +205,7 @@ Analogue television scanned in *lines*. The standard fixed the vertical line cou
 
 For example, a 4:3 NTSC DVD can store **704×480** pixels with a pixel aspect ratio of **10:11**. Applying that ratio gives a displayed width of 640 at a height of 480. Displaying the stored grid with square pixels changes the image's proportions.
 
-> **Figure 7 · live — Stored shape versus displayed shape**
+> **Figure 6 · live — Stored shape versus displayed shape**
 >
 > Toggle pixel aspect correction to compare the stored grid with the intended display proportions.
 >
@@ -267,7 +215,7 @@ For example, a 4:3 NTSC DVD can store **704×480** pixels with a pixel aspect ra
 
 ---
 
-*§9*
+*§8*
 
 ## Interlacing and field timing
 
@@ -277,7 +225,7 @@ One pass carries the even-numbered scanlines and the next carries the odd-number
 
 Successive fields are captured at **different moments**. Combining them into a frame places alternating lines from those moments in the same image. Objects that move between fields appear at different positions on adjacent lines, producing **combing**. Deinterlacing estimates a complete image at a chosen time from the available fields.
 
-> **Figure 8 · live — Two moments in one frame**
+> **Figure 7 · live — Two moments in one frame**
 >
 > A shape moves from left to right and is captured in successive fields. Compare how the deinterlacing methods handle motion and vertical detail.
 >
@@ -289,7 +237,7 @@ Successive fields are captured at **different moments**. Combining them into a f
 
 ---
 
-*§10*
+*§9*
 
 ## Gamma encoding and brightness
 
@@ -299,7 +247,7 @@ Television systems applied the correction in the *camera*, reducing the correcti
 
 Gamma encoding also aligns with human brightness sensitivity. Vision distinguishes finer brightness differences in dark regions than in bright regions. A gamma curve allocates more stored levels to those dark regions, reducing visible quantisation at a given bit depth. This perceptual benefit remains useful with modern displays.
 
-> **Figure 9 · live — Linear and gamma encoding at the same bit depth**
+> **Figure 8 · live — Linear and gamma encoding at the same bit depth**
 >
 > The same 8-bit budget, allocated two ways. The difference appears at the dark end of each ramp.
 >
@@ -311,7 +259,7 @@ Gamma encoding also aligns with human brightness sensitivity. Vision distinguish
 
 ---
 
-*§11*
+*§10*
 
 ## Luma, chroma, and colour resolution
 
@@ -321,7 +269,7 @@ Human vision resolves finer detail in *brightness* than in *colour*. Video commo
 
 **Y′=0.299R′+0.587G′+0.114B′,Cb=1.772B′−Y′,Cr=1.402R′−Y′**
 
-- **R′,G′,B′** — gamma-encoded values from §10, indicated by the prime marks.
+- **R′,G′,B′** — gamma-encoded values from §9, indicated by the prime marks.
 
 - **Y′** — luma: a weighted combination of the gamma-encoded channels, with the largest weight on green.
 
@@ -329,7 +277,7 @@ Human vision resolves finer detail in *brightness* than in *colour*. Video commo
 
 Cb and Cr can be stored at *lower resolution* than Y′ with limited perceptual loss in many images. This is **chroma subsampling**. In 4:2:0, each chroma plane has half the width and half the height of the luma plane, reducing the total sample count by half relative to 4:4:4.
 
-> **Figure 10 · live — Comparing luma and chroma subsampling**
+> **Figure 9 · live — Comparing luma and chroma subsampling**
 >
 > A generated test image is converted to Y′CbCr, subsampled, and converted back to RGB. Compare the effects of subsampling "the colour" and "the brightness".
 >
@@ -343,7 +291,7 @@ Chroma siting specifies the position of each chroma sample relative to the luma 
 
 MPEG-1, JPEG, Theora, and WebM use chroma centred horizontally and vertically. MPEG-2 uses vertical centring with horizontal alignment to every other luma column. PAL-DV alternates the chroma channels between lines. These layouts share the 4:2:0 sample ratio.
 
-> **Figure 11 · live — Chroma siting layouts**
+> **Figure 10 · live — Chroma siting layouts**
 >
 > Large dots show luma samples; rings show chroma samples. Compare the 4:2:0 layouts, with 4:2:2 included as a reference.
 >
@@ -353,7 +301,7 @@ MPEG-1, JPEG, Theora, and WebM use chroma centred horizontally and vertically. M
 
 ---
 
-*§12*
+*§11*
 
 ## Pixel formats, fourccs, and containers
 
@@ -375,7 +323,7 @@ Playback requires information about stream boundaries, frame sizes, and timing. 
 
 A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded streams into a file. It provides chunk boundaries, stream identification, timing, and metadata such as chapters and subtitles. Container formats support particular sets of codecs, and files using the same container can carry different encoded streams. The container and codec together determine how a player reads and decodes the media.
 
-> **Figure 12 · live — Interleaving audio and video streams**
+> **Figure 11 · live — Interleaving audio and video streams**
 >
 > Two streams share one file. Adjust interleaving to see how chunk placement affects the player's buffer requirement.
 >
@@ -385,7 +333,7 @@ A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded str
 
 ---
 
-*§13*
+*§12*
 
 ## Summary
 
@@ -395,7 +343,6 @@ A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded str
 | **PCM** | Sample rate, sample format, channel count, and byte order specify how to read the samples. |
 | **Sample rate** | Half the sample rate is the upper frequency boundary. Common rates include 44.1 kHz for CD audio and 48 kHz for video. |
 | **Bit depth** | Each additional bit reduces the quantisation step size by half, lowering the noise floor by about 6 dB. |
-| **Dither** | Noise added before rounding reduces signal-correlated distortion and preserves low-level information statistically. |
 | **Companding** | Non-uniform levels give 8-bit samples finer resolution near silence. µ-law and A-law apply this to speech. |
 | **Reconstruction** | Bandlimited interpolation recovers the continuous signal from samples. A hold stage requires reconstruction filtering. |
 | **Video scale** | Raw HD video can require roughly 500× the data rate of CD audio, motivating reductions in storage and bandwidth. |
