@@ -32,7 +32,7 @@ A digital transmission uses discrete signal levels. A receiver can recover the i
 
 ## PCM parameters and byte order
 
-**Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
+kj**Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
 
 The name comes from 1930s telephony, where it described a way of sending a signal down a line rather than a way of storing it. Related methods carried the signal on a train of pulses by varying one property of each pulse: its height in pulse-amplitude modulation, its width in pulse-width modulation, its timing in pulse-position modulation. PCM instead converted each measurement to a binary *code* and sent that code as a group of on-or-off pulses. The signal *modulates* the pulse train, the pulses carry a *code*, hence the name. The transmission part is no longer relevant, and the term now refers to the representation itself: one integer per sample, uncompressed.
 
@@ -137,15 +137,21 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying the spacing between quantisation levels.
 
-Perceived loudness is approximately logarithmic. Equal amplitude ratios correspond to similar changes in perceived level: both 0.001 to 0.002 and 0.5 to 1.0 are doublings. Quantisation with finer steps near silence can therefore reduce audible error in quiet signals.
+Hearing responds roughly to proportional changes in amplitude. Increasing an amplitude from 0.001 to 0.002 adds only 0.001, while increasing it from 0.5 to 1.0 adds 0.5. Both changes, however, double the starting amplitude: each is a 100% increase. Both correspond to about +6 dB. This is the reason for describing levels on a logarithmic scale: equal ratios give equal changes in decibels. Doubling the amplitude does not mean doubling the perceived loudness.
 
-**µ-law** (North America and Japan) and **A-law** (elsewhere) use approximately logarithmic spacing: fine steps near silence and coarse steps near full scale. Each sample still occupies one byte, with 256 possible values. The smallest steps provide low-level resolution comparable to roughly 13–14 bits of linear PCM.
+The same distinction matters for rounding. Consider a quantiser whose allowed values are spaced 0.01 apart and include zero. A quiet sample of 0.002 rounds to 0, an error equal to 100% of its original value. A larger sample of 0.502 rounds to 0.50, an error of about 0.4%. The absolute error is 0.002 in both cases, but it is much larger relative to the quiet sample.
+
+With evenly spaced levels, quiet signals have fewer nearby values to round to. A signal whose peak amplitude stays below half a step rounds entirely to zero when each sample is rounded to the nearest level. Finer steps near zero reduce this loss and the rounding error in quiet signals.
+
+Companding allocates the available values unevenly: levels are closer together near silence and farther apart at larger amplitudes. With the same total number of values, this provides finer precision for quiet signals at the cost of coarser precision for loud ones.
+
+**µ-law** (North America and Japan) and **A-law** (elsewhere) use approximately logarithmic spacing: fine steps near silence and coarse steps near full scale. Each sample still occupies one byte, with 256 possible values. Their smallest steps provide finer low-level resolution than 8-bit linear PCM.
 
 > **Figure 3 · live — Even spacing versus logarithmic spacing**
 >
-> Left: the positions of quantisation levels. Right: the step size at each amplitude. Smaller steps reduce rounding error; the step size relative to the signal determines the signal-to-noise ratio.
+> Compare linear, µ-law, and A-law coding with the same number of values. The "level spacing" view maps evenly spaced codes to amplitudes; ticks show the resulting levels. The "quality vs level" view estimates the signal-to-noise ratio from the local step size. Only positive amplitudes are shown; the negative half is symmetric.
 >
-> The "quality vs level" view compares relative step size. Linear coding has finer resolution for loud signals, while µ-law has finer resolution for quiet signals. "Equivalent bits" compares µ-law's *smallest* step with a linear quantiser's step. For the curve used here, the difference is about 5.5 bits, giving 8-bit µ-law low-level resolution comparable to 13–14-bit linear PCM.
+> Linear coding has finer resolution for loud signals; both companding curves allocate finer steps to quiet signals. A-law uses equally spaced steps in a small region around zero, then increases their spacing logarithmically. µ-law allocates still finer steps near zero. "Equivalent bits" compares each curve's near-zero step with a linear quantiser's step: at 8 bits, about 13.5 bits for µ-law and 12 bits for A-law. The range readouts use the same near-zero estimate; they do not describe precision at every amplitude. The figure uses [ideal companding curves](https://www.mathworks.com/help/comm/ref/compand.html) with µ = 255 and A = 87.6.
 >
 > *(interactive figure — see the web page)*
 

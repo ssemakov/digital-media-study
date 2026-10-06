@@ -648,28 +648,45 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     <strong>companding</strong> formats to represent a wider range of speech levels by varying the
     spacing between quantisation levels.</p>
 
-    <p>Perceived loudness is approximately logarithmic. Equal amplitude ratios correspond to similar
-    changes in perceived level: both 0.001 to 0.002 and 0.5 to 1.0 are doublings. Quantisation with
-    finer steps near silence can therefore reduce audible error in quiet signals.</p>
+    <p>Hearing responds roughly to proportional changes in amplitude. Increasing an amplitude from
+    0.001 to 0.002 adds only 0.001, while increasing it from 0.5 to 1.0 adds 0.5. Both changes,
+    however, double the starting amplitude: each is a 100% increase. Both correspond to about
+    +6 dB. This is the reason for describing levels on a logarithmic scale: equal ratios give equal
+    changes in decibels. Doubling the amplitude does not mean doubling the perceived loudness.</p>
+
+    <p>The same distinction matters for rounding. Consider a quantiser whose allowed values are
+    spaced 0.01 apart and include zero. A quiet sample of 0.002 rounds to 0, an error equal to 100%
+    of its original value. A larger sample of 0.502 rounds to 0.50, an error of about 0.4%. The
+    absolute error is 0.002 in both cases, but it is much larger relative to the quiet sample.</p>
+
+    <p>With evenly spaced levels, quiet signals have fewer nearby values to round to. A signal whose
+    peak amplitude stays below half a step rounds entirely to zero when each sample is rounded to
+    the nearest level. Finer steps near zero reduce this loss and the rounding error in quiet signals.</p>
+
+    <p>Companding allocates the available values unevenly: levels are closer together near silence
+    and farther apart at larger amplitudes. With the same total number of values, this provides
+    finer precision for quiet signals at the cost of coarser precision for loud ones.</p>
 
     <p><strong>µ-law</strong> (North America and Japan) and <strong>A-law</strong> (elsewhere) use
     approximately logarithmic spacing: fine steps near silence and coarse steps near full scale.
-    Each sample still occupies one byte, with 256 possible values. The smallest steps provide
-    low-level resolution comparable to roughly 13–14 bits of linear PCM.</p>
+    Each sample still occupies one byte, with 256 possible values. Their smallest steps provide
+    finer low-level resolution than 8-bit linear PCM.</p>
   </div>
 
   <figure id="fig-mulaw">
     <div class="head">
       <div class="n">Figure 3 · live</div>
       <h4>Even spacing versus logarithmic spacing</h4>
-      <p>Left: the positions of quantisation levels. Right: the step size at each amplitude. Smaller
-      steps reduce rounding error; the step size relative to the signal determines the
-      signal-to-noise ratio.</p>
+      <p>Compare linear, µ-law, and A-law coding with the same number of values. The "level spacing"
+      view maps evenly spaced codes to amplitudes; ticks show the resulting levels. The "quality vs
+      level" view estimates the signal-to-noise ratio from the local step size. Only positive
+      amplitudes are shown; the negative half is symmetric.</p>
     </div>
-    <div class="canvasbox"><canvas id="c-mulaw" height="270" aria-label="Comparison of linear and mu-law quantisation level spacing"></canvas></div>
+    <div class="canvasbox"><canvas id="c-mulaw" height="270" aria-label="Comparison of linear, mu-law, and A-law quantisation level spacing and estimated signal-to-noise ratio"></canvas></div>
     <div class="legend">
       <span style="color:var(--s2)"><i style="background:var(--s2)"></i>linear — evenly spaced</span>
       <span style="color:var(--s3)"><i style="background:var(--s3)"></i>µ-law — logarithmic</span>
+      <span style="color:var(--s1)"><i class="dash"></i>A-law — linear near zero, then logarithmic</span>
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-m-bits">bits per sample<b><span id="v-m-bits">6</span></b></label>
@@ -681,13 +698,18 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <div class="cell"><div class="k">Levels</div><div class="v" id="r-m-lev">64</div></div>
       <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">Linear range</div><div class="v" id="r-m-lin">37.9 dB</div></div>
       <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">µ-law range</div><div class="v" id="r-m-mu">70 dB</div></div>
-      <div class="cell"><div class="k">Equivalent bits</div><div class="v" id="r-m-eq">11.3</div></div>
+      <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">A-law range</div><div class="v" id="r-m-a">62 dB</div></div>
+      <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">µ-law equivalent bits</div><div class="v" id="r-m-eq">11.5</div></div>
+      <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">A-law equivalent bits</div><div class="v" id="r-m-a-eq">10.0</div></div>
     </div>
-    <figcaption>The "quality vs level" view compares relative step size. Linear coding has finer resolution for
-    loud signals, while µ-law has finer resolution for quiet signals. "Equivalent bits" compares
-    µ-law's <em>smallest</em> step with a linear quantiser's step. For the curve used here, the
-    difference is about 5.5 bits, giving 8-bit µ-law low-level resolution comparable to 13–14-bit
-    linear PCM.</figcaption>
+    <figcaption>Linear coding has finer resolution for loud signals; both companding curves allocate
+    finer steps to quiet signals. A-law uses equally spaced steps in a small region around zero,
+    then increases their spacing logarithmically. µ-law allocates still finer steps near zero.
+    "Equivalent bits" compares each curve's near-zero step with a linear quantiser's step: at
+    8 bits, about 13.5 bits for µ-law and 12 bits for A-law. The range readouts use the same
+    near-zero estimate; they do not describe precision at every amplitude. The figure uses
+    <a href="https://www.mathworks.com/help/comm/ref/compand.html">ideal companding curves</a>
+    with µ = 255 and A = 87.6.</figcaption>
   </figure>
 
   <div class="prose">
@@ -1750,15 +1772,22 @@ function quantise(x, step, dith, rnd) {
 (function () {
   var P = new Plot("c-mulaw", { l: 48, r: 30, t: 18, b: 34 });
   if (!P.cv) return;
-  var nb = 6, view = "levels", MU = 255;
+  var nb = 6, view = "levels", MU = 255, ALAW = 87.6;
+  var aScale = 1 + Math.log(ALAW);
 
   function muInv(y) { return (Math.pow(1 + MU, y) - 1) / MU; }          /* code -> amplitude */
+  function aInv(y) {
+    return y < 1 / aScale ? y * aScale / ALAW : Math.exp(y * aScale - 1) / ALAW;
+  }
   function levels() { return Math.pow(2, nb); }
   function linStep() { return 1 / (levels() / 2); }
   function muStep(A) { return Math.log(1 + MU) * (1 + MU * A) / (MU * (levels() / 2)); }
+  function aStep(A) { return aScale * Math.max(1 / ALAW, A) / (levels() / 2); }
   function snrLin(A) { return db(A / (linStep() / Math.sqrt(12))); }
   function snrMu(A) { return db(A / (muStep(A) / Math.sqrt(12))); }
+  function snrA(A) { return db(A / (aStep(A) / Math.sqrt(12))); }
   function extraBits() { return Math.log2(MU / Math.log(1 + MU)); }   /* ≈ 5.52 */
+  function aExtraBits() { return Math.log2(ALAW / aScale); }        /* ≈ 4.00 */
 
   function draw() {
     var g = P.ctx;
@@ -1769,7 +1798,8 @@ function quantise(x, step, dith, rnd) {
       P.clipPlot();
       P.curve(function (u) { return u; }, C.s2, 2.2);
       P.curve(function (u) { return muInv(u); }, C.s3, 2.2);
-      /* level ticks on the two sides */
+      P.curve(function (u) { return aInv(u); }, C.s1, 2.2, [6, 4]);
+      /* Linear ticks at left; separate µ-law and A-law columns at right. */
       var L = levels() / 2, i, x0 = P.X(0), x1 = P.X(1);
       for (i = 0; i <= L; i++) {
         var u = i / L;
@@ -1777,18 +1807,22 @@ function quantise(x, step, dith, rnd) {
         g.beginPath(); g.moveTo(x0 + 2, P.Y(u)); g.lineTo(x0 + 14, P.Y(u)); g.stroke();
         g.strokeStyle = rgba(C.s3, 0.75);
         g.beginPath(); g.moveTo(x1 - 14, P.Y(muInv(u))); g.lineTo(x1 - 2, P.Y(muInv(u))); g.stroke();
+	g.strokeStyle = rgba(C.s1, 0.75);
+	g.beginPath(); g.moveTo(x1 - 30, P.Y(aInv(u))); g.lineTo(x1 - 18, P.Y(aInv(u))); g.stroke();
       }
       P.unclip();
       P.axisX([0, 0.5, 1], function (v) { return v === 0 ? "0" : v === 1 ? "max" : "" ; }, "code value");
       P.axisY([0, 0.5, 1], function (v) { return fmt(v, 1); }, "amplitude");
       P.tag("linear", 0.62, 0.62, C.s2, "left");
       P.tag("µ-law", 0.42, muInv(0.42), C.s3, "left", -12);
+      P.tag("A-law", 0.73, aInv(0.73), C.s1, "left", -16);
     } else {
       P.dom(-70, 0, 0, 60);
       P.gridY([15, 30, 45, 60]); P.gridX([-60, -40, -20]);
       P.clipPlot();
       P.curve(function (d) { return snrLin(fromDb(d)); }, C.s2, 2.2);
       P.curve(function (d) { return snrMu(fromDb(d)); }, C.s3, 2.2);
+      P.curve(function (d) { return snrA(fromDb(d)); }, C.s1, 2.2, [6, 4]);
       g.strokeStyle = rgba(C.muted, 0.8); g.lineWidth = 1; g.setLineDash([4, 4]);
       g.beginPath(); g.moveTo(P.m.l, P.Y(20)); g.lineTo(P.W - P.m.r, P.Y(20)); g.stroke(); g.setLineDash([]);
       P.unclip();
@@ -1796,6 +1830,7 @@ function quantise(x, step, dith, rnd) {
       P.axisY([0, 20, 40, 60], function (v) { return v + " dB"; }, "quality");
       P.tag("linear", -14, snrLin(fromDb(-14)), C.s2, "right", -11);
       P.tag("µ-law", -52, snrMu(fromDb(-52)), C.s3, "left", -11);
+      P.tag("A-law", -26, snrA(fromDb(-26)), C.s1, "left", 14);
       P.tag("usable floor", -69, 20, C.muted, "left", -11);
     }
   }
@@ -1803,10 +1838,12 @@ function quantise(x, step, dith, rnd) {
   function update() {
     txt("v-m-bits", String(nb));
     txt("r-m-lev", String(levels()));
-    var eq = nb + extraBits();
+    var eq = nb + extraBits(), aEq = nb + aExtraBits();
     txt("r-m-lin", fmt(6.02 * nb + 1.76, 0) + " dB");
     txt("r-m-mu", fmt(6.02 * eq + 1.76, 0) + " dB");
+    txt("r-m-a", fmt(6.02 * aEq + 1.76, 0) + " dB");
     txt("r-m-eq", fmt(eq, 1));
+    txt("r-m-a-eq", fmt(aEq, 1));
     draw();
   }
   on("s-m-bits", "input", function (e) { nb = +e.target.value; update(); });
