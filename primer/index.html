@@ -197,6 +197,16 @@ input[type=range]:focus-visible{outline:2px solid var(--s1);outline-offset:4px;b
 .btn.on{background:var(--s1);border-color:var(--s1);color:#fff}
 .btn.pri{background:var(--s1);border-color:var(--s1);color:#fff;font-weight:600}
 .btn.pri:hover{filter:brightness(1.1)}
+#fig-myth .listen-buttons{display:flex;flex-wrap:wrap;gap:8px}
+#fig-myth .btn:disabled{opacity:.45;cursor:default}
+#fig-myth .audio-info{flex:1 1 220px;font-size:12.5px;color:var(--muted)}
+#fig-myth .audio-info p{margin:0}
+#fig-myth .audio-info b{color:var(--ink);font-family:var(--mono)}
+@media(max-width:540px){
+  #fig-myth .view-control{width:100%}
+  #seg-myth{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #seg-myth button:nth-child(-n+2){border-bottom:1px solid var(--border)}
+}
 .seg{display:inline-flex;gap:0;border:1px solid var(--border-strong);border-radius:9px;overflow:hidden}
 .seg button{background:var(--surface);border:0;border-right:1px solid var(--border);color:var(--ink-2);
   padding:7px 12px;font-size:12.5px;font-family:inherit;cursor:pointer}
@@ -727,8 +737,9 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     <p class="kicker">§5</p>
     <h2>Reconstructing a signal from samples</h2>
     <p>A sample records the signal's value at one instant. A plot can display samples as points,
-    connect them with lines, or hold each value until the next sample. These are different
-    interpolation rules applied to the same data.</p>
+    connect them with lines, or hold each value until the next sample. Holding each value produces
+    the staircase shown in Figure 4 below. These are different interpolation rules applied to the
+    same data.</p>
 
     <p>For a signal bandlimited to below half the sample rate, ideal reconstruction produces the
     unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue
@@ -737,29 +748,49 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
   <figure id="fig-myth">
     <div class="head">
-      <div class="n">Figure 4 · live</div>
+      <div class="n">Figure 4 · audio + live</div>
       <h4>Three ways to draw the same samples</h4>
       <p>The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited
-      reconstruction.</p>
+      reconstruction. Listen to each using a 440 Hz source tone. The samples-per-cycle slider sets
+      the sampling rate for both the plot and the audio.</p>
     </div>
     <div class="canvasbox"><canvas id="c-myth" height="270" aria-label="Samples drawn as a staircase, as straight lines, and as the true bandlimited reconstruction"></canvas></div>
     <div class="legend">
       <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>the samples</span>
-      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>staircase (a drawing convention)</span>
+      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>staircase (zero-order hold)</span>
+      <span style="color:var(--s4)"><i style="background:var(--s4)"></i>straight lines (linear interpolation)</span>
       <span style="color:var(--s1)"><i style="background:var(--s1)"></i>bandlimited reconstruction</span>
     </div>
     <div class="ctl">
-      <div style="flex:0 0 auto"><span class="fieldlab">show</span>
+      <div class="view-control" style="flex:0 1 auto;min-width:0"><span class="fieldlab">show</span>
         <div class="seg" id="seg-myth">
           <button data-v="stair" class="on">staircase</button><button data-v="lines">straight lines</button><button data-v="true">reconstruction</button><button data-v="all">all three</button>
         </div></div>
       <div class="sl"><label for="s-y-fs">samples per cycle<b><span id="v-y-fs">3.0</span></b></label>
         <input type="range" id="s-y-fs" min="2.1" max="12" step="0.1" value="3"></div>
     </div>
+    <div class="ctl">
+      <div><span class="fieldlab">listen · 3 seconds</span>
+	<div class="listen-buttons">
+	  <button class="btn" id="b-y-stair" type="button" aria-pressed="false">▶ Staircase</button>
+	  <button class="btn" id="b-y-lines" type="button" aria-pressed="false">▶ Straight lines</button>
+	  <button class="btn" id="b-y-true" type="button" aria-pressed="false">▶ Reconstruction</button>
+	  <button class="btn" id="b-y-stop" type="button" disabled>■ Stop</button>
+	</div>
+      </div>
+      <div class="audio-info">
+	<p>Source: <b>440 Hz</b> · sample rate: <b><span id="v-y-rate">1,320</span> Hz</b></p>
+	<p id="r-y-audio" role="status" aria-live="polite">Choose a reconstruction to hear it.</p>
+      </div>
+    </div>
     <div class="verdict ok" id="r-y-verdict"><span class="ic">✓</span><span id="r-y-msg"></span></div>
     <figcaption>Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves
     the sine wave's frequency and amplitude. The staircase and straight-line plots introduce
-    additional high-frequency components through their discontinuities or changes in slope.</figcaption>
+    additional high-frequency components through their discontinuities or changes in slope.
+    At 3 samples per cycle the source is sampled at 1,320 Hz. Each play button selects its curve;
+    in "all three" view it plays that curve alone. Changing the rate during playback restarts the
+    sound at the new setting. All three use the same playback gain, so differences in level remain
+    audible. Playback retains only frequencies below the audio output's limit.</figcaption>
   </figure>
 
   <div class="prose">
@@ -1553,19 +1584,32 @@ function fftMag(re, im) {
 }
 var AC = null;
 function audioCtx() {
-  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
-  if (AC.state === "suspended") AC.resume();
+  if (!AC || AC.state === "closed") AC = new (window.AudioContext || window.webkitAudioContext)();
   return AC;
 }
-var playingNode = null;
+var playingNode = null, playingGain = null;
+function stopPlayback() {
+  if (!playingNode) return;
+  var node = playingNode, gain = playingGain, now = AC.currentTime;
+  playingNode = playingGain = null;
+  gain.gain.cancelScheduledValues(now);
+  gain.gain.setTargetAtTime(0, now, 0.005);
+  try { node.stop(now + 0.03); } catch (e) {}
+}
 function playBuffer(data, sr) {
   var ctx = audioCtx();
-  if (playingNode) { try { playingNode.stop(); } catch (e) {} playingNode = null; }
+  stopPlayback();
   var buf = ctx.createBuffer(1, data.length, sr);
   buf.getChannelData(0).set(data);
-  var n = ctx.createBufferSource(); n.buffer = buf; n.connect(ctx.destination);
-  n.onended = function () { if (playingNode === n) playingNode = null; };
-  playingNode = n; n.start();
+  var n = ctx.createBufferSource(), gain = ctx.createGain();
+  n.buffer = buf; n.connect(gain); gain.connect(ctx.destination);
+  n.onended = function () {
+    n.disconnect(); gain.disconnect();
+    if (playingNode === n) playingNode = playingGain = null;
+  };
+  playingNode = n; playingGain = gain; n.start();
+  if (ctx.state === "suspended") ctx.resume().catch(function () { if (playingNode === n) stopPlayback(); });
+  return n;
 }
 function quantise(x, step, dith, rnd) {
   var v = x;
@@ -1857,18 +1901,15 @@ function quantise(x, step, dith, rnd) {
 (function () {
   var P = new Plot("c-myth", { l: 40, r: 34, t: 18, b: 32 });
   if (!P.cv) return;
-  var show = "stair", spc = 3;
+  var show = "stair", spc = 3, TONE = 440;
+  var audioKind = null, audioNode = null, audioToken = 0, restartTimer = null;
+  var NAMES = { stair: "staircase", lines: "straight lines", true: "reconstruction" };
 
   function x(t) { return Math.sin(2 * PI * t + 0.6); }
   function samples() {
     var T = 1 / spc, out = [];
-    for (var n = -3; n * T <= 3.2; n++) out.push([n * T, x(n * T)]);
+    for (var n = -1; n <= Math.ceil(3 * spc) + 1; n++) out.push([n * T, x(n * T)]);
     return out;
-  }
-  function recon(t) {
-    var T = 1 / spc, S = samples(), s = 0;
-    for (var i = 0; i < S.length; i++) s += S[i][1] * sinc((t - S[i][0]) / T);
-    return s;
   }
 
   function draw() {
@@ -1887,12 +1928,13 @@ function quantise(x, step, dith, rnd) {
       g.stroke();
     }
     if (show === "lines" || show === "all") {
-      g.strokeStyle = show === "all" ? rgba(C.s4, 0.9) : C.muted;
+      g.strokeStyle = show === "all" ? rgba(C.s4, 0.9) : C.s4;
       g.lineWidth = 2; g.beginPath();
       for (i = 0; i < S.length; i++) { var px = P.X(S[i][0]), py = P.Y(S[i][1]); if (i === 0) g.moveTo(px, py); else g.lineTo(px, py); }
       g.stroke();
     }
-    if (show === "true" || show === "all") P.curve(recon, C.s1, 2.6);
+    // Every offered rate exceeds two samples/cycle: the ideal sinc sum is exactly this sine.
+    if (show === "true" || show === "all") P.curve(x, C.s1, 2.6);
     P.dots(S, C.s3, 4.4);
     P.unclip();
     P.axisX([0, 1, 2, 3], function (v) { return v + " cycle" + (v === 1 ? "" : "s"); }, "");
@@ -1906,6 +1948,7 @@ function quantise(x, step, dith, rnd) {
 
   function update() {
     txt("v-y-fs", fmt(spc, 1));
+    txt("v-y-rate", Math.round(TONE * spc).toLocaleString("en-US"));
     var kind = "ok", msg;
     if (show === "stair") msg = "Zero-order hold keeps each sample value until the next sample. The resulting discontinuities introduce high-frequency components. A converter using a hold stage filters these components during reconstruction.";
     else if (show === "lines") msg = "Linear interpolation connects adjacent samples with straight lines. Changes in slope at the sample points introduce additional high-frequency components.";
@@ -1915,8 +1958,97 @@ function quantise(x, step, dith, rnd) {
     verdict("r-y-verdict", "r-y-msg", kind, msg);
     draw();
   }
-  on("s-y-fs", "input", function (e) { spc = +e.target.value; update(); });
-  segment("seg-myth", function (v) { show = v; update(); });
+
+  /* Synthesise the audible part of each continuous reconstruction. Sampling a sine creates
+     signed-frequency copies at 440 + k*fs. A causal hold weights them by sinc(f/fs) with a
+     half-sample delay; linear interpolation weights them by sinc²(f/fs), without that delay.
+     See https://www.dsprelated.com/freebooks/pasp/Linear_Interpolation_Frequency_Response.html
+     Omit copies above the output Nyquist limit so they cannot alias back into the audio. */
+  function sound(kind, sr) {
+    var fs = TONE * spc, count = Math.round(sr * 3), out = new Float32Array(count);
+    var limit = sr * 0.48;
+    var first = kind === "true" ? 0 : Math.ceil((-limit - TONE) / fs);
+    var last = kind === "true" ? 0 : Math.floor((limit - TONE) / fs);
+    for (var k = first; k <= last; k++) {
+      var f = TONE + k * fs, u = f / fs, w = sinc(u);
+      var amp = kind === "true" ? 1 : kind === "stair" ? w : w * w;
+      var phase = 0.6 - (kind === "stair" ? PI * u : 0);
+      var s = Math.sin(phase), c = Math.cos(phase);
+      var ds = Math.sin(2 * PI * f / sr), dc = Math.cos(2 * PI * f / sr);
+      // Oscillator recurrence avoids a trigonometric call for every output sample.
+      for (var i = 0; i < count; i++) {
+	out[i] += amp * s;
+	var next = s * dc + c * ds;
+	c = c * dc - s * ds; s = next;
+      }
+    }
+    for (var j = 0; j < count; j++) {
+      var envelope = Math.min(1, j / (sr * 0.02), (count - 1 - j) / (sr * 0.03));
+      out[j] *= 0.18 * envelope; // shared gain, with fades at the start and end
+    }
+    return out;
+  }
+
+  function audioUI(message) {
+    Object.keys(NAMES).forEach(function (kind) {
+      var b = $("b-y-" + kind), active = audioKind === kind;
+      b.classList.toggle("on", active);
+      b.setAttribute("aria-pressed", String(active));
+    });
+    $("b-y-stop").disabled = !audioKind;
+    txt("r-y-audio", message);
+  }
+  function stopTone(message) {
+    audioToken++; clearTimeout(restartTimer);
+    if (audioNode && playingNode === audioNode) stopPlayback();
+    audioNode = null; audioKind = null;
+    audioUI(message || "Stopped.");
+  }
+  async function playTone(kind) {
+    stopTone();
+    var token = audioToken;
+    audioKind = kind;
+    if (show !== "all") {
+      show = kind;
+      $("seg-myth").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === show); });
+      update();
+    }
+    audioUI("Preparing " + NAMES[kind] + "…");
+    try {
+      var ctx = audioCtx();
+      await ctx.resume();
+      if (token !== audioToken) return;
+      var node = playBuffer(sound(kind, ctx.sampleRate), ctx.sampleRate);
+      audioNode = node;
+      audioUI("Playing " + NAMES[kind] + " · " + Math.round(TONE * spc).toLocaleString("en-US") + " samples/s.");
+      node.addEventListener("ended", function () {
+	if (audioNode !== node) return;
+	audioNode = null; audioKind = null;
+	audioUI("Choose a reconstruction to hear it again.");
+      });
+    } catch (e) {
+      if (token === audioToken) stopTone("Audio could not start. Press a play button to try again.");
+    }
+  }
+  on("s-y-fs", "input", function (e) {
+    spc = +e.target.value; update();
+    if (audioKind) {
+      var kind = audioKind;
+      stopTone(); audioKind = kind;
+      audioUI("Updating sample rate…");
+      restartTimer = setTimeout(function () { playTone(kind); }, 100);
+    }
+  });
+  segment("seg-myth", function (v) {
+    show = v; update();
+    if (audioKind && v !== "all") playTone(v);
+  });
+  Object.keys(NAMES).forEach(function (kind) { on("b-y-" + kind, "click", function () { playTone(kind); }); });
+  on("b-y-stop", "click", function () { stopTone(); });
+  // Another figure's playback cancels a pending restart as well as the current clip.
+  ["b-q-ref", "b-q-q"].forEach(function (id) { on(id, "click", function () { stopTone(); }); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) stopTone(); });
+  window.addEventListener("pagehide", function () { stopTone(); });
   register(P, draw); update();
 })();
 

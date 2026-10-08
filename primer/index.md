@@ -163,15 +163,15 @@ Companding changes the mapping between sample values and amplitudes while keepin
 
 ## Reconstructing a signal from samples
 
-A sample records the signal's value at one instant. A plot can display samples as points, connect them with lines, or hold each value until the next sample. These are different interpolation rules applied to the same data.
+A sample records the signal's value at one instant. A plot can display samples as points, connect them with lines, or hold each value until the next sample. Holding each value produces the staircase shown in Figure 4 below. These are different interpolation rules applied to the same data.
 
 For a signal bandlimited to below half the sample rate, ideal reconstruction produces the unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue converter approximates this reconstruction using interpolation and filtering.
 
-> **Figure 4 · live — Three ways to draw the same samples**
+> **Figure 4 · audio + live — Three ways to draw the same samples**
 >
-> The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited reconstruction.
+> The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited reconstruction. Listen to each using a 440 Hz source tone. The samples-per-cycle slider sets the sampling rate for both the plot and the audio.
 >
-> Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves the sine wave's frequency and amplitude. The staircase and straight-line plots introduce additional high-frequency components through their discontinuities or changes in slope.
+> Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves the sine wave's frequency and amplitude. The staircase and straight-line plots introduce additional high-frequency components through their discontinuities or changes in slope. At 3 samples per cycle the source is sampled at 1,320 Hz. Each play button selects its curve; in "all three" view it plays that curve alone. Changing the rate during playback restarts the sound at the new setting. All three use the same playback gain, so differences in level remain audible. Playback retains only frequencies below the audio output's limit.
 >
 > *(interactive figure — see the web page)*
 
