@@ -42,6 +42,14 @@ The name comes from 1930s telephony, where it described a way of sending a signa
 
 **Sample rate** is the number of measurements per second. Half the rate is the upper frequency boundary for reconstruction. **Sample format** specifies the bit depth and representation: signed or unsigned integer, or floating point. It determines the available levels and *dynamic range*. **Channel count** specifies the number of simultaneous streams. Interleaved stereo stores left and right samples in alternating order. Values wider than 8 bits also have a **byte order**. Standard WAV PCM is little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud noise.
 
+> **From voltage to PCM: range and input gain**
+>
+> An analogue-to-digital converter (ADC) measures a changing electrical voltage. A microphone converts sound pressure into voltage, and a preamp amplifies that signal before conversion. The converter's circuitry and voltage reference set its input range; the corresponding PCM amplitudes are commonly normalised to approximately −1 to +1.
+>
+> For example, the PCM1808 ADC accepts a 3 V peak-to-peak signal: ±1.5 V around its centre voltage. A signal voltage of +0.75 V relative to that centre therefore maps to about +0.5. Bit depth determines how finely this voltage range is divided into codes.
+>
+> The recording interface's input-gain control changes the amplification before the ADC. Set it so the loudest expected peaks fit within the range, with spare room for louder moments. Peaks around −12 dBFS are a useful starting point. Too much gain overloads the input; reducing the recorded numbers later cannot restore clipped peaks. A PCM sample alone does not specify the original sound pressure: that also depends on the microphone's sensitivity and the recording gain.
+
 The next section examines the [sample format](#depth) in more detail: how bit depth sets the available values, and how choosing one of those values introduces quantisation error. [Companding](#mulaw) then changes the spacing of those values.
 
 > A 16-bit sample occupies two bytes, and a format must state which byte comes first. **Little-endian** stores the least significant byte first; **big-endian** stores the most significant byte first. The value 4660, or `0x1234`, is stored as the bytes `34 12` in little-endian order and `12 34` in big-endian order. x86 and most ARM systems are little-endian, as is WAV. Network protocols and AIFF are big-endian. The names come from *Gulliver's Travels*, where two factions dispute which end of an egg to open. Reading with the wrong order swaps the two bytes of every sample, so the low byte, which changes from one sample to the next, becomes the high byte. The waveform becomes a sequence of large jumps, heard as loud broadband noise. Single-byte formats have no byte order.
@@ -262,11 +270,11 @@ Audio is sampled along the time axis. Video is sampled along time and the two sp
 
 Video requires substantially higher data rates than audio. Raw CD audio is about 1.4 megabits per second. Raw 1080i video can exceed **700 megabits per second**, roughly 500 times as much. Storage and transmission requirements motivated many of the video representations described in the following sections.
 
-> **Figure 5 · calculator — Raw video data rate**
+> **Figure 5 · calculator + live — Raw video data rate**
 >
-> The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate.
+> The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate. The squares compare one minute of that video with one minute of CD audio, using one shared area scale.
 >
-> At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. Section 2.5 shows how reducing colour resolution affects the image.
+> The green square represents one minute of CD audio; the orange square represents one minute of the selected raw video. An area 100 times larger has sides 10 times longer. The dashed 1080p reference keeps the comparison visible as you change settings. SD, 1080p and 4K presets at 8-bit 4:2:0 share a fixed scale; higher data rates zoom all three squares out together, with the scale shown above. Grid cells group audio-sized squares when individual cells would be too small to see. At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. [Section 2.5](#chroma) shows how reducing colour resolution affects the image.
 >
 > *(interactive figure — see the web page)*
 

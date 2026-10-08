@@ -211,6 +211,22 @@ input[type=range]:focus-visible{outline:2px solid var(--s1);outline-offset:4px;b
 #fig-myth .audio-info b{color:var(--ink);font-family:var(--mono)}
 #fig-mulaw .format-note{margin:0;padding:12px 18px;font-size:13.5px;line-height:1.55;
   border-top:1px solid var(--border);color:var(--ink-2)}
+#fig-rate .size-comparison{padding:18px;border-top:1px solid var(--border)}
+#fig-rate .size-comparison h5{margin:0 0 16px;font-size:15px;font-weight:640}
+#fig-rate .size-audio{margin-bottom:16px;font-size:13.5px}
+#fig-rate .size-audio b{color:var(--s3)}
+#fig-rate .size-audio span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+#fig-rate .size-video-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;
+  margin-bottom:10px;font-size:13.5px}
+#fig-rate .size-video-heading b{color:var(--s2)}
+#r-v-area-count{color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+#fig-rate .size-overview{width:100%;max-width:640px;margin:0 auto}
+#v-size-grid{display:block;width:100%;overflow:visible}
+#v-size-grid text{font-family:var(--sans);font-size:12px;fill:var(--ink-2)}
+#fig-rate .size-scale{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:12px;color:var(--muted)}
+#fig-rate .size-reference:before{content:"";display:inline-block;width:22px;border-top:1px dashed var(--muted);margin:0 7px 3px 0}
+#r-v-area-scale{font-family:var(--mono);color:var(--ink-2)}
+#r-v-area-note{margin:10px 0 0;font-size:12.5px;color:var(--muted);line-height:1.55}
 @media(max-width:540px){
   #fig-myth .view-control{width:100%}
   #seg-myth{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -402,6 +418,24 @@ footer a{color:var(--ink-2)}
     order. Values wider than 8 bits also have a <strong>byte order</strong>. Standard WAV PCM is
     little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud
     noise.</p>
+
+    <div class="note">
+      <div class="t">From voltage to PCM: range and input gain</div>
+      <p>An analogue-to-digital converter (ADC) measures a changing electrical voltage. A microphone
+      converts sound pressure into voltage, and a preamp amplifies that signal before conversion.
+      The converter's circuitry and voltage reference set its input range; the corresponding PCM
+      amplitudes are commonly normalised to approximately −1 to +1.</p>
+      <p>For example, the PCM1808 ADC accepts a
+      3 V peak-to-peak signal: ±1.5 V around its centre voltage. A signal voltage of +0.75 V relative
+      to that centre therefore maps to about +0.5. Bit depth determines how finely this voltage
+      range is divided into codes.</p>
+      <p>The recording interface's input-gain control changes the amplification
+      before the ADC. Set it so the loudest expected peaks fit within the range, with spare room
+      for louder moments. Peaks around −12 dBFS are a useful starting point.
+      Too much gain overloads the input; reducing the recorded numbers later
+      cannot restore clipped peaks. A PCM sample alone does not specify the original sound pressure:
+      that also depends on the microphone's sensitivity and the recording gain.</p>
+    </div>
 
     <p>The next section examines the <a href="#depth">sample format</a> in more detail: how bit
     depth sets the available values, and how choosing one of those values introduces quantisation
@@ -1022,15 +1056,16 @@ console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
 
   <figure id="fig-rate">
     <div class="head">
-      <div class="n">Figure 5 · calculator</div>
+      <div class="n">Figure 5 · calculator + live</div>
       <h4>Raw video data rate</h4>
       <p>The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the
-      uncompressed data rate.</p>
+      uncompressed data rate. The squares compare one minute of that video with one minute of
+      CD audio, using one shared area scale.</p>
     </div>
     <div class="ctl" style="border-top:0">
       <div style="flex:0 0 auto"><span class="fieldlab">format</span>
         <div class="seg" id="seg-fmt">
-          <button data-v="sd" class="on">SD 480i</button><button data-v="hd">1080p</button><button data-v="uhd">4K</button><button data-v="custom">custom</button>
+	  <button data-v="sd">SD 480i</button><button data-v="hd" class="on">1080p</button><button data-v="uhd">4K</button><button data-v="custom">custom</button>
         </div></div>
       <div style="flex:1 1 130px"><span class="fieldlab">width</span><input type="number" id="n-v-w" value="1920" min="16" step="16"></div>
       <div style="flex:1 1 130px"><span class="fieldlab">height</span><input type="number" id="n-v-h" value="1080" min="16" step="16"></div>
@@ -1045,8 +1080,37 @@ console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
       <div class="cell"><div class="k">One minute</div><div class="v" id="r-v-min">5.6 GB</div></div>
       <div class="cell"><div class="k">vs CD audio</div><div class="v" id="r-v-x">529×</div></div>
     </div>
+    <div class="size-comparison">
+      <h5>One minute, compared by area</h5>
+      <div class="size-audio"><b>CD audio · one square = 10.584 MB</b>
+	<span>44,100 samples/s × 16 bits × 2 channels × 60 seconds</span></div>
+      <div class="size-video-heading"><b>Raw video · <span id="r-v-area-size">5.60 GB</span></b>
+	<span id="r-v-area-count">529.0× the audio area</span></div>
+      <div class="size-overview" id="v-size-overview">
+	<svg id="v-size-grid" width="100%" height="140" role="img" aria-labelledby="v-size-title v-size-desc" focusable="false">
+	  <title id="v-size-title">Audio and video data sizes as proportional square areas</title>
+	  <desc id="v-size-desc">The green square is one minute of CD audio; orange is one minute of the selected raw video. The dashed square marks 1080p video for comparison.</desc>
+	  <defs><pattern id="v-size-pattern" patternUnits="userSpaceOnUse"><path id="v-size-gridline" fill="none" stroke="var(--s2)" stroke-width="0.65"/></pattern></defs>
+	  <rect id="v-size-video" fill="var(--s2)" fill-opacity="0.24" stroke="var(--s2)"/>
+	  <rect id="v-size-cells" fill="url(#v-size-pattern)"/>
+	  <rect id="v-size-reference" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"/>
+	  <rect id="v-size-audio" fill="var(--s3)"/>
+	  <text id="v-size-audio-label" text-anchor="middle">Audio</text>
+	  <text id="v-size-video-label" text-anchor="middle">Video</text>
+	</svg>
+      </div>
+      <div class="size-scale"><span class="size-reference">1080p reference · 30 fps, 8-bit 4:2:0 · 5.60 GB</span>
+	<span id="r-v-area-scale">Zoom: 100%</span></div>
+      <p id="r-v-area-note" role="status" aria-live="polite">Both squares use the same scale. Their areas, rather than their side lengths, represent data size.</p>
+    </div>
     <div class="verdict bad" id="r-v-verdict"><span class="ic">!</span><span id="r-v-msg"></span></div>
-    <figcaption>At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. <a href="#chroma">Section 2.5</a>
+    <figcaption>The green square represents one minute of CD audio; the orange square represents
+    one minute of the selected raw video. An area 100 times larger has sides 10 times longer.
+    The dashed 1080p reference keeps the comparison visible as you change settings. SD, 1080p and
+    4K presets at 8-bit 4:2:0 share a fixed scale; higher data rates zoom all three squares out together, with
+    the scale shown above. Grid cells group audio-sized squares when individual cells would be too
+    small to see. At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to
+    4:4:4. <a href="#chroma">Section 2.5</a>
     shows how reducing colour resolution affects the image.</figcaption>
   </figure>
 </section>
@@ -2358,23 +2422,92 @@ function quantise(x, step, dith, rnd) {
 })();
 
 /* ================================================================
-   FIGURE 5 — raw video bitrate
+   FIGURE 5 — raw video bitrate and equal-area comparison
    ================================================================ */
 (function () {
   if (!$("n-v-w")) return;
-  var css = "420";
+  var css = "420", ratio = 0;
+  var AUDIO_BYTES_PER_SECOND = 44100 * 2 * 2; // signed 16-bit stereo PCM
+  // Fit the default 4K / 60 fps / 8-bit / 4:2:0 preset so the audio unit is visibly square.
+  // Higher data rates zoom all areas together instead of reserving that space in advance.
+  var BASE_RATIO = 3840 * 2160 * 60 * 1.5 / AUDIO_BYTES_PER_SECOND;
+  var overview = $("v-size-overview"), svg = $("v-size-grid");
   var PRESETS = { sd: [720, 480, 30], hd: [1920, 1080, 30], uhd: [3840, 2160, 60] };
   function factor() { return css === "444" ? 3 : css === "422" ? 2 : 1.5; }
+  function square(id, x, y, side) {
+    var el = $(id);
+    el.setAttribute("x", x); el.setAttribute("y", y);
+    el.setAttribute("width", side); el.setAttribute("height", side);
+  }
+  function positionText(id, x, y) {
+    $(id).setAttribute("x", x); $(id).setAttribute("y", y);
+  }
+  function drawSquares() {
+    var width = overview.clientWidth;
+    if (!width) return;
+    var valid = Number.isFinite(ratio) && ratio > 0;
+    svg.hidden = !valid;
+    svg.style.display = valid ? "block" : "none";
+    if (!valid) {
+      txt("r-v-area-scale", "Zoom: —");
+      txt("r-v-area-note", "Enter smaller dimensions or a lower frame rate to calculate the comparison.");
+      return;
+    }
+    var referenceRatio = 1920 * 1080 * 30 * 1.5 / AUDIO_BYTES_PER_SECOND;
+    var maxSide = Math.min(320, Math.max(24, width - 96));
+    var fitRatio = Math.max(BASE_RATIO, ratio);
+    var unit = maxSide / Math.sqrt(fitRatio), zoom = Math.sqrt(BASE_RATIO / fitRatio);
+    var videoSide = Math.sqrt(ratio) * unit, referenceSide = Math.sqrt(referenceRatio) * unit;
+    var plotSide = Math.max(videoSide, referenceSide, unit), baseline = plotSide + 24;
+    var x = (width - plotSide - 80) / 2 + 80;
+    svg.setAttribute("height", baseline + 36);
+    svg.setAttribute("viewBox", "0 0 " + width + " " + (baseline + 36));
+    square("v-size-video", x, baseline - videoSide, videoSide);
+    square("v-size-cells", x, baseline - videoSide, videoSide);
+    square("v-size-reference", x, baseline - referenceSide, referenceSide);
+    square("v-size-audio", x - 64, baseline - unit, unit);
+    positionText("v-size-audio-label", x - 64 + unit / 2, baseline + 21);
+    positionText("v-size-video-label", x + Math.max(20, videoSide) / 2, baseline + 21);
+    // Grid lines are only a guide: the filled area always represents the full, uncapped ratio.
+    // Group cells by powers of 10 per side when single audio units become too small to resolve.
+    var groupSide = unit >= 3 ? 1 : Math.pow(10, Math.ceil(Math.log10(12 / unit)));
+    var group = groupSide * groupSide, pitch = unit * groupSide;
+    var pattern = $("v-size-pattern");
+    pattern.setAttribute("x", x); pattern.setAttribute("y", baseline - videoSide);
+    pattern.setAttribute("width", pitch); pattern.setAttribute("height", pitch);
+    $("v-size-gridline").setAttribute("d", "M " + pitch + " 0 H 0 V " + pitch);
+    var percent = zoom * 100;
+    txt("r-v-area-scale", zoom === 1 ? "Zoom: 100% · base scale" : "Zoom: " + (percent < 0.1 ? percent.toExponential(1) : fmt(percent, 1)) + "% · zoomed out");
+    var note = "Both squares use the same scale; area represents data size.";
+    if (group === 1) note += " Each grid cell equals one audio square.";
+    else note += " Each grid cell represents " + (group >= 1e6 ? group.toExponential(0) : group.toLocaleString("en-US")) + " audio squares.";
+    note += " Partial edge cells count proportionally.";
+    if (zoom < 1) note += " All squares, including the dashed 1080p reference, have been reduced together to fit.";
+    if (unit < 1) note += " The audio square is now smaller than one screen pixel; use the numerical ratio above.";
+    txt("r-v-area-note", note);
+    txt("v-size-desc", "Green: one minute of CD audio, 10.584 MB. Orange: " + $("r-v-area-count").textContent + ". Dashed outline: one minute of 1080p, 30 fps, 8-bit 4:2:0 video. " + note);
+  }
   function update() {
     var w = Math.max(16, +$("n-v-w").value || 16), h = Math.max(16, +$("n-v-h").value || 16);
     var f = Math.max(1, +$("n-v-f").value || 1), b = clamp(+$("n-v-b").value || 8, 6, 16);
     var perFrame = w * h * factor() * (b / 8);
-    var bps = perFrame * f * 8;
+    var bps = perFrame * f * 8, perMinute = perFrame * f * 60;
+    if (!Number.isFinite(perMinute)) {
+      ratio = null; drawSquares();
+      ["r-v-fr", "r-v-br", "r-v-min", "r-v-x", "r-v-area-size", "r-v-area-count"].forEach(function (id) { txt(id, "—"); });
+      txt("r-v-area-note", "Enter smaller dimensions or a lower frame rate to calculate the comparison.");
+      verdict("r-v-verdict", "r-v-msg", "edge", "These values are too large to calculate. Reduce the dimensions or frame rate.");
+      return;
+    }
     txt("r-v-fr", bytes(perFrame));
     txt("r-v-br", bits(bps));
-    txt("r-v-min", bytes(perFrame * f * 60));
-    var x = bps / 1411200;
-    txt("r-v-x", (x >= 100 ? Math.round(x) : fmt(x, 1)) + "×");
+    txt("r-v-min", bytes(perMinute));
+    ratio = perMinute / (AUDIO_BYTES_PER_SECOND * 60);
+    txt("r-v-x", (ratio >= 100 ? Math.round(ratio) : fmt(ratio, 1)) + "×");
+    txt("r-v-area-size", bytes(perMinute));
+    var decimals = ratio < 0.1 ? 4 : ratio < 1 ? 3 : 1;
+    txt("r-v-area-count", ratio.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + "× the audio area");
+    drawSquares();
     var hours = 1e12 / (perFrame * f) / 3600;
     verdict("r-v-verdict", "r-v-msg", bps > 2e8 ? "bad" : bps > 3e7 ? "edge" : "ok",
       "At " + bits(bps) + " uncompressed, a terabyte holds " + fmt(hours, 1) + " hours. A gigabit network link " +
@@ -2386,7 +2519,14 @@ function quantise(x, step, dith, rnd) {
     update();
   });
   segment("seg-css", function (v) { css = v; update(); });
-  ["n-v-w", "n-v-h", "n-v-f", "n-v-b"].forEach(function (id) { on(id, "input", update); });
+  ["n-v-w", "n-v-h", "n-v-f", "n-v-b"].forEach(function (id) {
+    on(id, "input", function () {
+      $("seg-fmt").querySelectorAll("button").forEach(function (btn) { btn.classList.toggle("on", btn.dataset.v === "custom"); });
+      update();
+    });
+  });
+  if (window.ResizeObserver) new ResizeObserver(drawSquares).observe(overview);
+  else window.addEventListener("resize", drawSquares);
   update();
 })();
 
