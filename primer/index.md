@@ -4,7 +4,7 @@
 
 # Digital audio and video represent signals as *arrays of samples*.
 
-A media file stores sampled audio and video together with information needed to interpret and play them. This page describes PCM, bit depth, companding, signal reconstruction, pixel aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.
+A media file stores sampled audio and video together with information needed to interpret and play them. Part I: Audio covers PCM, bit depth, companding, and signal reconstruction. Part II: Video covers sampling in space and time, pixel aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.
 
 Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
@@ -14,9 +14,13 @@ The page contains eleven interactive figures. Images are generated procedurally,
 
 ---
 
-*§1*
+## Part I · Audio
 
-## Digital signals and repeatable copying
+Sound is sampled in time. The following sections describe how those samples are stored, how their precision affects the signal, and how a continuous waveform is reconstructed.
+
+*§1.1*
+
+### Digital signals and repeatable copying
 
 Digital communication predates recorded analogue audio. By the 1860s, telegraph systems were carrying multiplexed digital signals across continents. These systems represented messages using discrete states.
 
@@ -28,9 +32,9 @@ A digital transmission uses discrete signal levels. A receiver can recover the i
 
 ---
 
-*§2*
+*§1.2*
 
-## PCM parameters and byte order
+### PCM parameters and byte order
 
 kj**Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
 
@@ -64,7 +68,7 @@ func main() {
 >
 > *(interactive figure — see the web page)*
 
-### Common sample rates
+#### Common sample rates
 
 | Rate | Use and background |
 |---|---|
@@ -77,9 +81,9 @@ func main() {
 
 ---
 
-*§3*
+*§1.3*
 
-## Bit depth and quantisation error
+### Bit depth and quantisation error
 
 Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale amplitude, increasing the bit depth places those levels closer together and reduces the error introduced by rounding.
 
@@ -97,7 +101,7 @@ The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 
 
 > Signal levels on this page are given in **dBFS**, decibels relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
 
-### Quantisation error as an added signal
+#### Quantisation error as an added signal
 
 Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second signal added to the first: the stored value minus the true value, which is the orange trace in Figure 2. Its size is always within half a step, so bit depth alone does not determine how audible it is. Its *character* does, and the character depends on the signal.
 
@@ -118,7 +122,7 @@ Sampling and quantisation are two separate roundings of one waveform. Sampling r
 | Format | Range | Where it appears |
 |---|---|---|
 | **8-bit linear** | ~50 dB | Legacy audio and sound effects. Quantisation noise can be audible in quiet passages. |
-| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §4. |
+| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §1.4. |
 | **16-bit signed** | ~96 dB | CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS values. |
 | **24-bit signed** | ~144 dB | Recording and production. Additional range for low-level signals and processing. |
 | **32-bit float** | very large | Mixing and mastering. ±1.0 corresponds to 0 dBFS. Floating-point storage can retain values beyond that level for later gain reduction. |
@@ -131,9 +135,9 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 ---
 
-*§4*
+*§1.4*
 
-## Companding and non-uniform quantisation
+### Companding and non-uniform quantisation
 
 Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying the spacing between quantisation levels.
 
@@ -159,9 +163,9 @@ Companding changes the mapping between sample values and amplitudes while keepin
 
 ---
 
-*§5*
+*§1.5*
 
-## Reconstructing a signal from samples
+### Reconstructing a signal from samples
 
 A sample records the signal's value at one instant. A plot can display samples as points, connect them with lines, or hold each value until the next sample. Holding each value produces the staircase shown in Figure 4 below. These are different interpolation rules applied to the same data.
 
@@ -183,9 +187,13 @@ A staircase has discontinuities, whose spectra extend to arbitrarily high freque
 
 ---
 
-*§6*
+## Part II · Video
 
-## Video sampling in space and time
+Video adds two spatial dimensions to sampling in time. The following sections describe pixels and frames, brightness and colour, and the formats used to store them.
+
+*§2.1*
+
+### Video sampling in space and time
 
 Audio is sampled along the time axis. Video is sampled along time and the two spatial axes of the picture. The sampling theorem applies to each axis. Insufficient horizontal sampling can turn fine vertical stripes into moiré; insufficient temporal sampling can make a spinning wheel appear to rotate backwards.
 
@@ -195,15 +203,15 @@ Video requires substantially higher data rates than audio. Raw CD audio is about
 >
 > The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate.
 >
-> At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. Section 11 shows how reducing colour resolution affects the image.
+> At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. Section 2.5 shows how reducing colour resolution affects the image.
 >
 > *(interactive figure — see the web page)*
 
 ---
 
-*§7*
+*§2.2*
 
-## Pixel aspect ratio
+### Pixel aspect ratio
 
 An image's displayed shape depends on its pixel dimensions and its **pixel aspect ratio**. Computer graphics commonly use square pixels. Several broadcast and disc-video formats use rectangular pixels.
 
@@ -221,9 +229,9 @@ For example, a 4:3 NTSC DVD can store **704×480** pixels with a pixel aspect ra
 
 ---
 
-*§8*
+*§2.3*
 
-## Interlacing and field timing
+### Interlacing and field timing
 
 Early television systems used interlacing to balance refresh rate and transmission bandwidth. Dividing the picture into alternating sets of scanlines allowed more frequent updates within the available bandwidth.
 
@@ -243,9 +251,9 @@ Successive fields are captured at **different moments**. Combining them into a f
 
 ---
 
-*§9*
+*§2.4*
 
-## Gamma encoding and brightness
+### Gamma encoding and brightness
 
 A cathode ray tube has a nonlinear brightness response, approximately proportional to the input voltage raised to the power of **2.5**. An encoding curve compensates for this response to produce the intended brightness.
 
@@ -265,9 +273,9 @@ Gamma encoding also aligns with human brightness sensitivity. Vision distinguish
 
 ---
 
-*§10*
+*§2.5*
 
-## Luma, chroma, and colour resolution
+### Luma, chroma, and colour resolution
 
 Human vision uses three types of cone receptors. Displays combine red, green, and blue primaries in different proportions to reproduce colours within their gamut. RGB describes the contribution of each primary.
 
@@ -291,7 +299,7 @@ Cb and Cr can be stored at *lower resolution* than Y′ with limited perceptual 
 >
 > *(interactive figure — see the web page)*
 
-### Chroma sample positions
+#### Chroma sample positions
 
 Chroma siting specifies the position of each chroma sample relative to the luma grid. For 4:2:0, a chroma sample may be centred within a 2×2 luma block or aligned horizontally with a luma column, depending on the format.
 
@@ -307,9 +315,9 @@ MPEG-1, JPEG, Theora, and WebM use chroma centred horizontally and vertically. M
 
 ---
 
-*§11*
+*§2.6*
 
-## Pixel formats, fourccs, and containers
+### Pixel formats, fourccs, and containers
 
 A pixel format specifies how samples are arranged in memory. **Packed** formats interleave channel values, such as Y, Cb, Y, Cr. **Planar** formats store each channel in a separate contiguous block, allowing the planes to be processed independently.
 
@@ -323,7 +331,7 @@ A **fourcc** is a four-character identifier for a format, such as `YV12`, `NV12`
 | **UYVY / YUY2** | packed | 4:2:2 interleaved. Common in capture hardware and older editing pipelines. |
 | **P010** | semi-planar | NV12-style layout with 10-bit samples. Common in HDR video pipelines. |
 
-### Containers and stream metadata
+#### Containers and stream metadata
 
 Playback requires information about stream boundaries, frame sizes, and timing. Compressed frames can vary in size, and audio and video streams need timestamps to stay synchronised.
 
@@ -338,8 +346,6 @@ A **container**, such as MP4, Matroska, Ogg, AVI, or WebM, organises encoded str
 > *(interactive figure — see the web page)*
 
 ---
-
-*§12*
 
 ## Summary
 

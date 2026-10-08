@@ -73,6 +73,12 @@ h1,h2,h3,h4{line-height:1.22;letter-spacing:-0.018em;margin:0}
 h2{font-size:29px;font-weight:650;margin:0 0 6px}
 h3{font-size:20px;font-weight:640;margin:34px 0 8px}
 h4{font-size:15px;font-weight:640;margin:20px 0 4px;letter-spacing:0}
+.part{padding:0;scroll-margin-top:0}
+.part-head{padding-top:56px}
+.part-head h2{font-size:clamp(30px,4vw,40px);margin-bottom:12px}
+.part-head + section{padding-top:30px}
+.topic-title{font-size:29px;font-weight:650;margin:0 0 6px}
+.subheading{font-size:20px;font-weight:640;margin:34px 0 8px;letter-spacing:-.018em}
 p{margin:0 0 16px;color:var(--ink-2)}
 strong{color:var(--ink);font-weight:620}
 a{color:var(--s1);text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--s1) 35%, transparent)}
@@ -281,12 +287,14 @@ footer a{color:var(--ink-2)}
   <div class="bar">
     <a class="brand" href="/" title="All explainers">&larr; Digital media <span>· interactive</span></a>
     <div id="navlinks">
+      <a href="#part-audio">I · Audio</a>
       <a href="#why">Why digital</a>
       <a href="#pcm">PCM</a>
       <a href="#depth">Bit depth</a>
       <a href="#mulaw">Companding</a>
       <a href="#myth">Reconstruction</a>
-      <a href="#video">Video</a>
+      <a href="#part-video">II · Video</a>
+      <a href="#video">Sampling</a>
       <a href="#pixels">Pixels</a>
       <a href="#interlace">Interlacing</a>
       <a href="#gamma">Gamma</a>
@@ -307,7 +315,8 @@ footer a{color:var(--ink-2)}
     <p class="kicker">A digital media primer, for people who write software</p>
     <h1>Digital audio and video represent signals as <em>arrays of samples</em>.</h1>
     <p class="lede">A media file stores sampled audio and video together with information needed to interpret and
-    play them. This page describes PCM, bit depth, companding, signal reconstruction, pixel
+    play them. <a href="#part-audio">Part I: Audio</a> covers PCM, bit depth, companding, and signal
+    reconstruction. <a href="#part-video">Part II: Video</a> covers sampling in space and time, pixel
     aspect ratio, interlacing, gamma, colour representation, pixel formats, and containers.</p>
 
     <div class="theorem">
@@ -327,10 +336,17 @@ footer a{color:var(--ink-2)}
 
 <hr class="rule">
 
+<section id="part-audio" class="part" aria-labelledby="audio-title">
+  <header class="prose part-head">
+    <h2 id="audio-title">Part I · Audio</h2>
+    <p>Sound is sampled in time. The following sections describe how those samples are stored,
+    how their precision affects the signal, and how a continuous waveform is reconstructed.</p>
+  </header>
+
 <section id="why">
   <div class="prose">
-    <p class="kicker">§1</p>
-    <h2>Digital signals and repeatable copying</h2>
+    <p class="kicker">§1.1</p>
+    <h3 class="topic-title">Digital signals and repeatable copying</h3>
     <p>Digital communication predates recorded analogue audio. By the 1860s, telegraph systems were
     carrying multiplexed digital signals across continents. These systems represented messages
     using discrete states.</p>
@@ -360,8 +376,8 @@ footer a{color:var(--ink-2)}
 
 <section id="pcm">
   <div class="prose">
-    <p class="kicker">§2</p>
-    <h2>PCM parameters and byte order</h2>
+    <p class="kicker">§1.2</p>
+    <h3 class="topic-title">PCM parameters and byte order</h3>
     <p><strong>Pulse Code Modulation</strong> (PCM) represents a signal as measurements taken at fixed
     intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and
     byte order.</p>
@@ -458,7 +474,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </figure>
 
   <div class="prose">
-    <h3>Common sample rates</h3>
+    <h4 class="subheading">Common sample rates</h4>
   </div>
 
   <div class="prose tw">
@@ -492,8 +508,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="depth">
   <div class="prose">
-    <p class="kicker">§3</p>
-    <h2>Bit depth and quantisation error</h2>
+    <p class="kicker">§1.3</p>
+    <h3 class="topic-title">Bit depth and quantisation error</h3>
     <p>Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale
     amplitude, increasing the bit depth places those levels closer together and reduces the error
     introduced by rounding.</p>
@@ -537,7 +553,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </div>
 
   <div class="prose">
-    <h3>Quantisation error as an added signal</h3>
+    <h4 class="subheading">Quantisation error as an added signal</h4>
     <p>Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were
     a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second
     signal added to the first: the stored value minus the true value, which is the orange trace in
@@ -622,7 +638,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <thead><tr><th style="width:150px">Format</th><th>Range</th><th>Where it appears</th></tr></thead>
       <tbody>
         <tr><td><b>8-bit linear</b></td><td>~50 dB</td><td>Legacy audio and sound effects. Quantisation noise can be audible in quiet passages.</td></tr>
-        <tr><td><b>8-bit µ-law / A-law</b></td><td>~14 bits' worth</td><td>Telephony. Non-uniform levels provide finer resolution for quiet signals — see §4.</td></tr>
+	<tr><td><b>8-bit µ-law / A-law</b></td><td>~14 bits' worth</td><td>Telephony. Non-uniform levels provide finer resolution for quiet signals — see <a href="#mulaw">§1.4</a>.</td></tr>
         <tr><td><b>16-bit signed</b></td><td>~96 dB</td><td>CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS
         values.</td></tr>
         <tr><td><b>24-bit signed</b></td><td>~144 dB</td><td>Recording and production. Additional range for low-level signals and processing.</td></tr>
@@ -652,8 +668,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="mulaw">
   <div class="prose">
-    <p class="kicker">§4</p>
-    <h2>Companding and non-uniform quantisation</h2>
+    <p class="kicker">§1.4</p>
+    <h3 class="topic-title">Companding and non-uniform quantisation</h3>
     <p>Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit
     <strong>companding</strong> formats to represent a wider range of speech levels by varying the
     spacing between quantisation levels.</p>
@@ -734,8 +750,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="myth">
   <div class="prose">
-    <p class="kicker">§5</p>
-    <h2>Reconstructing a signal from samples</h2>
+    <p class="kicker">§1.5</p>
+    <h3 class="topic-title">Reconstructing a signal from samples</h3>
     <p>A sample records the signal's value at one instant. A plot can display samples as points,
     connect them with lines, or hold each value until the next sample. Holding each value produces
     the staircase shown in Figure 4 below. These are different interpolation rules applied to the
@@ -816,12 +832,21 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </details>
 </section>
 
+</section>
+
 <hr class="rule">
+
+<section id="part-video" class="part" aria-labelledby="video-title">
+  <header class="prose part-head">
+    <h2 id="video-title">Part II · Video</h2>
+    <p>Video adds two spatial dimensions to sampling in time. The following sections describe
+    pixels and frames, brightness and colour, and the formats used to store them.</p>
+  </header>
 
 <section id="video">
   <div class="prose">
-    <p class="kicker">§6</p>
-    <h2>Video sampling in space and time</h2>
+    <p class="kicker">§2.1</p>
+    <h3 class="topic-title">Video sampling in space and time</h3>
     <p>Audio is sampled along the time axis. Video is sampled along time and the two spatial axes of
     the picture. The sampling theorem applies to each axis. Insufficient horizontal sampling can
     turn fine vertical stripes into moiré; insufficient temporal sampling can make a spinning wheel
@@ -859,8 +884,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <div class="cell"><div class="k">vs CD audio</div><div class="v" id="r-v-x">529×</div></div>
     </div>
     <div class="verdict bad" id="r-v-verdict"><span class="ic">!</span><span id="r-v-msg"></span></div>
-    <figcaption>At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. Section
-    11 shows how reducing colour resolution affects the image.</figcaption>
+    <figcaption>At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. <a href="#chroma">Section 2.5</a>
+    shows how reducing colour resolution affects the image.</figcaption>
   </figure>
 </section>
 
@@ -868,8 +893,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="pixels">
   <div class="prose">
-    <p class="kicker">§7</p>
-    <h2>Pixel aspect ratio</h2>
+    <p class="kicker">§2.2</p>
+    <h3 class="topic-title">Pixel aspect ratio</h3>
     <p>An image's displayed shape depends on its pixel dimensions and its <strong>pixel aspect
     ratio</strong>. Computer graphics commonly use square pixels. Several broadcast and disc-video
     formats use rectangular pixels.</p>
@@ -925,8 +950,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="interlace">
   <div class="prose">
-    <p class="kicker">§8</p>
-    <h2>Interlacing and field timing</h2>
+    <p class="kicker">§2.3</p>
+    <h3 class="topic-title">Interlacing and field timing</h3>
     <p>Early television systems used interlacing to balance refresh rate and transmission bandwidth.
     Dividing the picture into alternating sets of scanlines allowed more frequent updates within
     the available bandwidth.</p>
@@ -993,8 +1018,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="gamma">
   <div class="prose">
-    <p class="kicker">§9</p>
-    <h2>Gamma encoding and brightness</h2>
+    <p class="kicker">§2.4</p>
+    <h3 class="topic-title">Gamma encoding and brightness</h3>
     <p>A cathode ray tube has a nonlinear brightness response, approximately proportional to the input
     voltage raised to the power of <strong>2.5</strong>. An encoding curve compensates for this
     response to produce the intended brightness.</p>
@@ -1065,8 +1090,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="chroma">
   <div class="prose">
-    <p class="kicker">§10</p>
-    <h2>Luma, chroma, and colour resolution</h2>
+    <p class="kicker">§2.5</p>
+    <h3 class="topic-title">Luma, chroma, and colour resolution</h3>
     <p>Human vision uses three types of cone receptors. Displays combine red, green, and blue
     primaries in different proportions to reproduce colours within their gamut. RGB describes the
     contribution of each primary.</p>
@@ -1136,7 +1161,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </figure>
 
   <div class="prose">
-    <h3>Chroma sample positions</h3>
+    <h4 class="subheading">Chroma sample positions</h4>
     <p>Chroma siting specifies the position of each chroma sample relative to the luma grid. For
     4:2:0, a chroma sample may be centred within a 2×2 luma block or aligned horizontally with a
     luma column, depending on the format.</p>
@@ -1174,8 +1199,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="formats">
   <div class="prose">
-    <p class="kicker">§11</p>
-    <h2>Pixel formats, fourccs, and containers</h2>
+    <p class="kicker">§2.6</p>
+    <h3 class="topic-title">Pixel formats, fourccs, and containers</h3>
     <p>A pixel format specifies how samples are arranged in memory. <strong>Packed</strong> formats
     interleave channel values, such as Y, Cb, Y, Cr. <strong>Planar</strong> formats store each
     channel in a separate contiguous block, allowing the planes to be processed independently.</p>
@@ -1202,7 +1227,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </div>
 
   <div class="prose">
-    <h3>Containers and stream metadata</h3>
+    <h4 class="subheading">Containers and stream metadata</h4>
     <p>Playback requires information about stream boundaries, frame sizes, and timing. Compressed
     frames can vary in size, and audio and video streams need timestamps to stay synchronised.</p>
 
@@ -1244,11 +1269,12 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </figure>
 </section>
 
+</section>
+
 <hr class="rule">
 
 <section id="recap">
   <div class="prose">
-    <p class="kicker">§12</p>
     <h2>Summary</h2>
   </div>
 
