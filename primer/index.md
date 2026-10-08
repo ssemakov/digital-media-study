@@ -4,19 +4,23 @@
 
 # Digital audio and video represent signals as *arrays of samples*.
 
-A media file stores sampled audio and video together with information needed to interpret and play them. This first part describes PCM parameters, byte order, bit depth, quantisation error and companding. Reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.
+A media file stores sampled audio and video together with information needed to interpret and play them. Part I: Audio covers PCM, bit depth, companding, and signal reconstruction. Part II: Video so far covers sampling in space and time; pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers are listed at the end and will follow.
 
 Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
 The primer introduces the concepts and engineering constraints behind common audio and video formats.
 
-This part contains three interactive figures. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
+This part contains five numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
 
 ---
 
-*§1*
+## Part I · Audio
 
-## Digital signals and repeatable copying
+Sound is sampled in time. The following sections describe how those samples are stored, how their precision affects the signal, and how a continuous waveform is reconstructed.
+
+*§1.1*
+
+### Digital signals and repeatable copying
 
 Digital communication predates recorded analogue audio. By the 1860s, telegraph systems were carrying multiplexed digital signals across continents. These systems represented messages using discrete states.
 
@@ -28,15 +32,25 @@ A digital transmission uses discrete signal levels. A receiver can recover the i
 
 ---
 
-*§2*
+*§1.2*
 
-## PCM parameters and byte order
+### PCM parameters and byte order
 
 kj**Pulse Code Modulation** (PCM) represents a signal as measurements taken at fixed intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and byte order.
 
-The name comes from 1930s telephony, where it described a way of sending a signal down a line rather than a way of storing it. Related methods carried the signal on a train of pulses by varying one property of each pulse: its height in pulse-amplitude modulation, its width in pulse-width modulation, its timing in pulse-position modulation. PCM instead converted each measurement to a binary *code* and sent that code as a group of on-or-off pulses. The signal *modulates* the pulse train, the pulses carry a *code*, hence the name. The transmission part is no longer relevant, and the term now refers to the representation itself: one integer per sample, uncompressed.
+The name comes from 1930s telephony, where it described a way of sending a signal down a line rather than a way of storing it. Related methods carried the signal on a train of pulses by varying one property of each pulse: its height in pulse-amplitude modulation, its width in pulse-width modulation, its timing in pulse-position modulation. PCM instead converted each measurement to a binary *code* and sent that code as a group of on-or-off pulses. The signal *modulates* the pulse train, the pulses carry a *code*, hence the name. The transmission part is no longer relevant, and the term now refers to the representation itself: one encoded number per sample.
 
 **Sample rate** is the number of measurements per second. Half the rate is the upper frequency boundary for reconstruction. **Sample format** specifies the bit depth and representation: signed or unsigned integer, or floating point. It determines the available levels and *dynamic range*. **Channel count** specifies the number of simultaneous streams. Interleaved stereo stores left and right samples in alternating order. Values wider than 8 bits also have a **byte order**. Standard WAV PCM is little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud noise.
+
+> **From voltage to PCM: range and input gain**
+>
+> An analogue-to-digital converter (ADC) measures a changing electrical voltage. A microphone converts sound pressure into voltage, and a preamp amplifies that signal before conversion. The converter's circuitry and voltage reference set its input range; the corresponding PCM amplitudes are commonly normalised to approximately −1 to +1.
+>
+> For example, the PCM1808 ADC accepts a 3 V peak-to-peak signal: ±1.5 V around its centre voltage. A signal voltage of +0.75 V relative to that centre therefore maps to about +0.5. Bit depth determines how finely this voltage range is divided into codes.
+>
+> The recording interface's input-gain control changes the amplification before the ADC. Set it so the loudest expected peaks fit within the range, with spare room for louder moments. Peaks around −12 dBFS are a useful starting point. Too much gain overloads the input; reducing the recorded numbers later cannot restore clipped peaks. A PCM sample alone does not specify the original sound pressure: that also depends on the microphone's sensitivity and the recording gain.
+
+The next section examines the [sample format](#depth) in more detail: how bit depth sets the available values, and how choosing one of those values introduces quantisation error. [Companding](#mulaw) then changes the spacing of those values.
 
 > A 16-bit sample occupies two bytes, and a format must state which byte comes first. **Little-endian** stores the least significant byte first; **big-endian** stores the most significant byte first. The value 4660, or `0x1234`, is stored as the bytes `34 12` in little-endian order and `12 34` in big-endian order. x86 and most ARM systems are little-endian, as is WAV. Network protocols and AIFF are big-endian. The names come from *Gulliver's Travels*, where two factions dispute which end of an egg to open. Reading with the wrong order swaps the two bytes of every sample, so the low byte, which changes from one sample to the next, becomes the high byte. The waveform becomes a sequence of large jumps, heard as loud broadband noise. Single-byte formats have no byte order.
 
@@ -64,7 +78,7 @@ func main() {
 >
 > *(interactive figure — see the web page)*
 
-### Common sample rates
+#### Common sample rates
 
 | Rate | Use and background |
 |---|---|
@@ -77,11 +91,15 @@ func main() {
 
 ---
 
-*§3*
+*§1.3*
 
-## Bit depth and quantisation error
+### PCM sample format: bit depth and quantisation
 
-Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale amplitude, increasing the bit depth places those levels closer together and reduces the error introduced by rounding.
+The **sample format** introduced in [§1.2](#pcm) specifies how each PCM measurement is encoded as a number. In **linear integer PCM**, a sample with *b* bits has `2^b` possible values, representing evenly spaced amplitude levels. **Quantisation** is choosing which of those levels to store; here we round to the nearest one. Bit depth sets the number of choices.
+
+For example, signed 16-bit PCM stores each sample as a two-byte integer from −32,768 to 32,767. Dividing that integer by 32,768 gives its amplitude on the plot's normalised scale. An input amplitude of 0.1 becomes `round(0.1 × 32768) = 3277`. Reading the stored sample back gives `3277 / 32768 ≈ 0.1000061`. The difference from 0.1 is the quantisation error.
+
+Changing the PCM format from 16-bit to 24-bit integer places the levels closer together at the same full-scale amplitude, reducing that rounding error. It does not change the number of samples per second. The evenly spaced levels below describe linear integer PCM; companded and floating-point formats distribute their values differently.
 
 The **quantisation step** is the distance between two neighbouring levels. For a range of −1 to +1 and *b* bits it is 2 ÷ 2*b*: 0.125 at 4 bits, about 0.00003 at 16 bits. It is also called one LSB, for least significant bit, since it is the change produced by flipping the lowest bit of the sample. Rounding a sample to the nearest level introduces an error bounded by half a step. Each additional bit halves the step size. When the rounding error behaves as uniformly distributed noise, this lowers the noise floor by about 6 dB per bit:
 
@@ -95,9 +113,9 @@ The **quantisation step** is the distance between two neighbouring levels. For a
 
 The approximate range is 50 dB for 8-bit audio, 96 dB for 16-bit audio, and 144 dB for 24-bit audio. Recording and production commonly use 24-bit samples to accommodate low recording levels and repeated processing. The usable range of a recording also depends on microphone noise, converter performance, and the recording environment.
 
-> Signal levels on this page are given in **dBFS**, decibels relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
+> Signal levels on this page are given in **dBFS**, decibels relative to full scale. For integer PCM, full scale is the limit of the representable amplitude range, approximately ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values: the level is 20·log10(amplitude ÷ full scale), so −6 dBFS is half the amplitude, −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near −96 dBFS, and a tone at −90 dBFS is about 6 dB above it.
 
-### Quantisation error as an added signal
+#### Quantisation error as an added signal
 
 Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second signal added to the first: the stored value minus the true value, which is the orange trace in Figure 2. Its size is always within half a step, so bit depth alone does not determine how audible it is. Its *character* does, and the character depends on the signal.
 
@@ -105,20 +123,77 @@ A loud or complex signal crosses many levels in an irregular sequence, so the er
 
 Bit depth changes only the step size. Finer steps reduce the maximum error and lower the noise floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the ceiling, and dynamic range is the distance between the loudest representable signal and the rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.
 
-Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time, keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the allowed values at each instant. [The sampling page](/sampling) shows that rounding time loses nothing when the rate is sufficient. Rounding amplitude always discards something.
+PCM's sample rate and sample format control different parts of this process. Sampling takes measurements at the instants set by the sample rate. Quantisation maps their amplitudes to values allowed by the sample format. [The sampling page](/sampling) explains why sufficiently frequent samples preserve a bandlimited signal. Quantisation introduces an amplitude error whenever a measurement falls between the available levels.
 
 > **Figure 2 · audio + live — A signal and its quantisation error**
 >
-> A sine wave is rounded to the nearest of the 2bits levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape. The buttons play the signal at the selected level and bit depth, with the dither checkbox applied. Playback gain is normalised so quiet settings remain audible; compare the character of the sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can behave as noise.
+> The signal is encoded as linear integer PCM by rounding to the nearest of its 2^bits amplitude levels. Top: the original and the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the signal gets quieter. Bottom: the rounding error, rounded minus original, measured in quantisation steps. Rounding is never off by more than half a step, so the error's size is fixed and its *shape* is what changes. Lower the signal level and watch the shape. The buttons play the signal at the selected level and bit depth, with the dither checkbox applied. Playback gain is normalised so quiet settings remain audible; compare the character of the sound rather than its loudness. A steady sine repeats every cycle, so its rounding error is periodic at any level. The two-tone signal, 440 and 623 Hz, never repeats, so its error can behave as noise.
 >
 > At 0 dBFS with 4 bits the sine spans 8 steps and crosses every level. The error is a rapid sequence of small ramps, one per level crossing, and resembles random noise. This is the regime the 6 dB-per-bit estimate describes. Near −20 dBFS the sine spans less than one step, the rounded output becomes a two- or three-level square wave, and the error becomes a periodic waveform locked to the signal. That error is distortion: harmonics of the signal that were not in the source. Below about −24 dBFS the amplitude is under half a step, every sample rounds to zero, and the error is the negative of the signal. "Levels used" counts how many levels the rounded output lands on. With dither enabled, random noise is added before rounding, the output flickers between neighbouring levels in proportion to the input, and the error loses its lock to the waveform. With the single sine, the full-scale error is a dense set of harmonics and is heard as a change of timbre. With the two tones, the full-scale error decorrelates and plays as broadband hiss, while the low-level error still collapses into distortion.
 >
 > *(interactive figure — see the web page)*
 
-| Format | Range | Where it appears |
+#### Clipping at full scale
+
+Quantisation rounds values within the available range. **Clipping** happens when a value exceeds that range and is limited to the largest or smallest available code. Signed 16-bit PCM runs from −32,768 to 32,767; signed 24-bit PCM runs from −8,388,608 to 8,388,607. Divide by 32,768 or 8,388,608 respectively and both cover the same normalised range, from −1 to just below +1. **24-bit PCM has finer steps, but the same full-scale ceiling.**
+
+Suppose a waveform peaks at 0.75. Doubling its gain asks the PCM encoder to store peaks of 1.5. A clipping encoder stores the maximum code instead, flattening the peaks. The waveform now contains harmonics that were absent from the input, heard as a harsher or buzzing tone. This is overload distortion, not the small rounding error between neighbouring levels.
+
+Reducing the level *after* clipping makes the damaged waveform quieter; it cannot restore the missing peaks. Leave headroom below full scale when recording, and reduce gain before conversion to an integer format if processing has pushed values beyond its range.
+
+> **Clipping · audio + live — More bits do not prevent overload**
+>
+> A 440 Hz sine starts with a peak amplitude of 0.75. Increase its gain to push the blue waveform past full scale; orange shows the samples after conversion to integer PCM. Compare 16 and 24 bits: both flatten at the same level.
+>
+> At ×1, neither format clips and the two versions sound alike. At ×2, listen for the added harmonics, then switch to 24 bits: more precision does not repair an overloaded signal. Both versions receive the same playback attenuation *after* processing, so the comparison is audible without overloading the output. Each clip lasts three seconds; changing a setting stops playback so you can replay the new setting.
+>
+> *(interactive demonstration — see the web page)*
+
+#### 32-bit floating-point PCM
+
+PCM can also store each sample as a four-byte [IEEE 754 floating-point number](https://www.mathworks.com/help/fixedpoint/ug/floating-point-numbers.html). Its bits are divided into **1 sign bit, 8 exponent bits, and 23 fraction bits**. For normal values, an implicit leading 1 gives 24 bits of significant precision. The exponent moves the scale up or down, rather like the power of ten in scientific notation. The spacing between representable values grows with magnitude, unlike the fixed steps of integer PCM.
+
+In floating-point audio, ±1 still marks the nominal full-scale level, but it is not the storage limit. A value of 1.5 is valid and can later be reduced to 0.75 without having clipped. This extra headroom is useful during mixing and processing. It is not 32 bits of integer precision, and arithmetic still rounds to the available floating-point values.
+
+The example follows the same sample through two paths. Keeping the boosted value as a float preserves the peak. Converting it to 16-bit PCM first clips it, so halving the gain afterwards returns about 0.5 instead of 0.75. It also prints the float's three bit fields: for 1.5, the sign is 0, the stored exponent is 127, and the fraction encodes 0.5. Subtracting the exponent bias of 127 gives `+(1 + 0.5) × 2⁰ = 1.5`.
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+// Round and clamp a finite normalised value before converting to PCM16.
+func pcm16(x float32) int16 {
+	q := math.Round(float64(x) * 32768)
+	q = math.Max(-32768, math.Min(32767, q))
+	return int16(q)
+}
+
+func main() {
+	sample := float32(0.75)
+	boosted := sample * 2                  // 1.5 fits in float32
+	restored := boosted / 2                // 0.75: peak preserved
+	clipped := pcm16(boosted)              // 32767: peak lost
+	afterClip := float32(clipped) / 32768 / 2
+
+	fmt.Printf("Float path: %.6f -> %.6f\n", boosted, restored)
+	fmt.Printf("PCM16 first, then gain down: %.6f\n", afterClip)
+
+	word := math.Float32bits(boosted) // inspect the IEEE 754 representation
+	fmt.Printf("sign exponent fraction: %01b %08b %023b\n",
+		word>>31, (word>>23)&255, word&0x7fffff)
+}
+```
+
+This protects values only while they remain in a floating-point processing path. Reduce gain before exporting to integer PCM or sending the signal to an output with a fixed full-scale limit. A microphone, preamp, or analogue-to-digital converter can still overload; writing its already-clipped samples into a float file cannot restore them.
+
+| PCM sample format | Range | Where it appears |
 |---|---|---|
 | **8-bit linear** | ~50 dB | Legacy audio and sound effects. Quantisation noise can be audible in quiet passages. |
-| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §4. |
+| **8-bit µ-law / A-law** | ~14 bits' worth | Telephony. Non-uniform levels provide finer resolution for quiet signals — see §1.4. |
 | **16-bit signed** | ~96 dB | CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS values. |
 | **24-bit signed** | ~144 dB | Recording and production. Additional range for low-level signals and processing. |
 | **32-bit float** | very large | Mixing and mastering. ±1.0 corresponds to 0 dBFS. Floating-point storage can retain values beyond that level for later gain reduction. |
@@ -131,11 +206,11 @@ This estimate assumes uniformly distributed error that is uncorrelated with the 
 
 ---
 
-*§4*
+*§1.4*
 
-## Companding and non-uniform quantisation
+### Companding and non-uniform quantisation
 
-Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying the spacing between quantisation levels.
+PCM's sample format also determines how its stored codes map to amplitudes. Linear 8-bit PCM uses evenly spaced levels and provides about 50 dB of range. Telephony uses 8-bit **companding** formats to represent a wider range of speech levels by varying that spacing. Each sample still occupies one byte; the meaning of its code changes.
 
 Hearing responds roughly to proportional changes in amplitude. Increasing an amplitude from 0.001 to 0.002 adds only 0.001, while increasing it from 0.5 to 1.0 adds 0.5. Both changes, however, double the starting amplitude: each is a 100% increase. Both correspond to about +6 dB. This is the reason for describing levels on a logarithmic scale: equal ratios give equal changes in decibels. Doubling the amplitude does not mean doubling the perceived loudness.
 
@@ -149,9 +224,9 @@ Companding allocates the available values unevenly: levels are closer together n
 
 > **Figure 3 · live — Even spacing versus logarithmic spacing**
 >
-> Compare linear, µ-law, and A-law coding with the same number of values. The "level spacing" view maps evenly spaced codes to amplitudes; ticks show the resulting levels. The "quality vs level" view estimates the signal-to-noise ratio from the local step size. Only positive amplitudes are shown; the negative half is symmetric.
+> Compare linear, µ-law, and A-law coding with the same number of values. The "level spacing" view maps evenly spaced codes to amplitudes; ticks show the resulting levels. The "quality vs level" view estimates the signal-to-noise ratio from the local step size. Only positive amplitudes are shown; the negative half is symmetric. Use the 16-bit preset to compare a common modern linear PCM format with the low-bit-depth examples.
 >
-> Linear coding has finer resolution for loud signals; both companding curves allocate finer steps to quiet signals. A-law uses equally spaced steps in a small region around zero, then increases their spacing logarithmically. µ-law allocates still finer steps near zero. "Equivalent bits" compares each curve's near-zero step with a linear quantiser's step: at 8 bits, about 13.5 bits for µ-law and 12 bits for A-law. The range readouts use the same near-zero estimate; they do not describe precision at every amplitude. The figure uses [ideal companding curves](https://www.mathworks.com/help/comm/ref/compand.html) with µ = 255 and A = 87.6.
+> Linear coding has finer resolution for loud signals; both companding curves allocate finer steps to quiet signals. A-law uses equally spaced steps in a small region around zero, then increases their spacing logarithmically. µ-law allocates still finer steps near zero. "Equivalent bits" compares each curve's near-zero step with a linear quantiser's step: at 8 bits, about 13.5 bits for µ-law and 12 bits for A-law. The range readouts use the same near-zero estimate; they do not describe precision at every amplitude. The figure uses [ideal companding curves](https://www.mathworks.com/help/comm/ref/compand.html) with µ = 255 and A = 87.6. Modern linear PCM commonly uses 16 or 24 bits; the 16-bit setting has 65,536 levels and uses two bytes per sample. Telephone µ-law and A-law use 8-bit samples; their curves at other bit depths are illustrative. At high bit depths, many level ticks share the same screen pixel and merge into bands.
 >
 > *(interactive figure — see the web page)*
 
@@ -159,23 +234,68 @@ Companding changes the mapping between sample values and amplitudes while keepin
 
 ---
 
+*§1.5*
+
+### Reconstructing a signal from samples
+
+A sample records the signal's value at one instant. A plot can display samples as points, connect them with lines, or hold each value until the next sample. Holding each value produces the staircase shown in Figure 4 below. These are different interpolation rules applied to the same data.
+
+For a signal bandlimited to below half the sample rate, ideal reconstruction produces the unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue converter approximates this reconstruction using interpolation and filtering.
+
+> **Figure 4 · audio + live — Three ways to draw the same samples**
+>
+> The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited reconstruction. Listen to each using a 440 Hz source tone. The samples-per-cycle slider sets the sampling rate for both the plot and the audio.
+>
+> Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves the sine wave's frequency and amplitude. The staircase and straight-line plots introduce additional high-frequency components through their discontinuities or changes in slope. At 3 samples per cycle the source is sampled at 1,320 Hz. Each play button selects its curve; in "all three" view it plays that curve alone. Changing the rate during playback restarts the sound at the new setting. All three use the same playback gain, so differences in level remain audible. Playback retains only frequencies below the audio output's limit.
+>
+> *(interactive figure — see the web page)*
+
+> A converter's hold stage can maintain each sample value until the next update, producing a staircase waveform internally. A reconstruction filter attenuates its high-frequency components. Oversampling moves these components farther above the audio band and simplifies filtering.
+
+Given samples spaced T apart, the reconstruction is x(t)=∑nx(nT)sinc((t−nT)/T) with sinc(u)=sin(πu)/(πu). Under the sampling theorem's assumptions, this gives the unique signal consistent with every sample and bandlimited to below 1/2T. Other interpolation rules, including the staircase, introduce components above that bandwidth limit.
+
+A staircase has discontinuities, whose spectra extend to arbitrarily high frequencies. Low-pass filtering suppresses these components as part of reconstruction.
+
+---
+
+## Part II · Video
+
+Video adds two spatial dimensions to sampling in time. The section below describes how video is sampled in space and time. The remaining sections follow.
+
+*§2.1*
+
+### Video sampling in space and time
+
+Audio is sampled along the time axis. Video is sampled along time and the two spatial axes of the picture. The sampling theorem applies to each axis. Insufficient horizontal sampling can turn fine vertical stripes into moiré; insufficient temporal sampling can make a spinning wheel appear to rotate backwards.
+
+Video requires substantially higher data rates than audio. Raw CD audio is about 1.4 megabits per second. Raw 1080i video can exceed **700 megabits per second**, roughly 500 times as much. Storage and transmission requirements motivated many of the video representations described in the following sections.
+
+> **Figure 5 · calculator + live — Raw video data rate**
+>
+> The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the uncompressed data rate. The squares compare one minute of that video with one minute of CD audio, using one shared area scale.
+>
+> The green square represents one minute of CD audio; the orange square represents one minute of the selected raw video. An area 100 times larger has sides 10 times longer. The dashed 1080p reference keeps the comparison visible as you change settings. SD, 1080p and 4K presets at 8-bit 4:2:0 share a fixed scale; higher data rates zoom all three squares out together, with the scale shown above. Grid cells group audio-sized squares when individual cells would be too small to see. At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to 4:4:4. A later section shows how reducing colour resolution affects the image.
+>
+> *(interactive figure — see the web page)*
+
+---
+
 *To be continued*
 
-## The rest of the primer
+## The rest of Part II
 
-This page is being published a part at a time. What is here covers sampled audio through companding. The sections below are written and will appear here as they are reviewed.
+This page is being published a part at a time. Part I is complete, and Part II so far covers sampling in space and time. The sections below are written and will appear here as they are reviewed.
 
 > **Still to come**
 >
-> 1. **Reconstruction** — rebuilding a continuous signal from samples, and why the stair-step picture of digital audio is wrong.
-> 2. **Video sampling** — the same theory applied to space and time rather than time alone.
-> 3. **Pixel aspect ratio** — why pixels are not always square, and what that does to stored dimensions.
-> 4. **Interlacing** — fields, field order, and the timing that comes with them.
-> 5. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
-> 6. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
-> 7. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
+> 1. **Pixel aspect ratio** — why pixels are not always square, and what that does to stored dimensions.
+> 2. **Interlacing** — fields, field order, and the timing that comes with them.
+> 3. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
+> 4. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
+> 5. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
+> 6. **Summary** — the whole primer in one table.
 
-In the meantime, [the sampling theorem page](../sampling/) is complete, and it covers the theory that the reconstruction section here depends on.
+In the meantime, [the sampling theorem page](../sampling/) is complete, and it covers the theory that Part I depends on.
 
 
 An interactive companion to Xiph.Org's [A Digital Media Primer for Geeks](https://wiki.xiph.org/Videos/A_Digital_Media_Primer_For_Geeks) by Christopher "Monty" Montgomery (Xiph.Org and Red Hat, 2010; wiki text CC-BY-SA). Figures run in the browser using generated test images, colourspace conversions, and synthesised audio passed through a quantiser.

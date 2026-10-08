@@ -73,6 +73,12 @@ h1,h2,h3,h4{line-height:1.22;letter-spacing:-0.018em;margin:0}
 h2{font-size:29px;font-weight:650;margin:0 0 6px}
 h3{font-size:20px;font-weight:640;margin:34px 0 8px}
 h4{font-size:15px;font-weight:640;margin:20px 0 4px;letter-spacing:0}
+.part{padding:0;scroll-margin-top:0}
+.part-head{padding-top:56px}
+.part-head h2{font-size:clamp(30px,4vw,40px);margin-bottom:12px}
+.part-head + section{padding-top:30px}
+.topic-title{font-size:29px;font-weight:650;margin:0 0 6px}
+.subheading{font-size:20px;font-weight:640;margin:34px 0 8px;letter-spacing:-.018em}
 p{margin:0 0 16px;color:var(--ink-2)}
 strong{color:var(--ink);font-weight:620}
 a{color:var(--s1);text-decoration:none;border-bottom:1px solid color-mix(in srgb, var(--s1) 35%, transparent)}
@@ -197,6 +203,35 @@ input[type=range]:focus-visible{outline:2px solid var(--s1);outline-offset:4px;b
 .btn.on{background:var(--s1);border-color:var(--s1);color:#fff}
 .btn.pri{background:var(--s1);border-color:var(--s1);color:#fff;font-weight:600}
 .btn.pri:hover{filter:brightness(1.1)}
+#fig-myth .listen-buttons,#fig-clip .listen-buttons{display:flex;flex-wrap:wrap;gap:8px}
+#fig-myth .btn:disabled,#fig-clip .btn:disabled{opacity:.45;cursor:default}
+#fig-clip .audio-status{flex:1 1 220px;margin:0;font-size:12.5px;color:var(--muted)}
+#fig-myth .audio-info{flex:1 1 220px;font-size:12.5px;color:var(--muted)}
+#fig-myth .audio-info p{margin:0}
+#fig-myth .audio-info b{color:var(--ink);font-family:var(--mono)}
+#fig-mulaw .format-note{margin:0;padding:12px 18px;font-size:13.5px;line-height:1.55;
+  border-top:1px solid var(--border);color:var(--ink-2)}
+#fig-rate .size-comparison{padding:18px;border-top:1px solid var(--border)}
+#fig-rate .size-comparison h5{margin:0 0 16px;font-size:15px;font-weight:640}
+#fig-rate .size-audio{margin-bottom:16px;font-size:13.5px}
+#fig-rate .size-audio b{color:var(--s3)}
+#fig-rate .size-audio span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+#fig-rate .size-video-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;
+  margin-bottom:10px;font-size:13.5px}
+#fig-rate .size-video-heading b{color:var(--s2)}
+#r-v-area-count{color:var(--ink-2);font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+#fig-rate .size-overview{width:100%;max-width:640px;margin:0 auto}
+#v-size-grid{display:block;width:100%;overflow:visible}
+#v-size-grid text{font-family:var(--sans);font-size:12px;fill:var(--ink-2)}
+#fig-rate .size-scale{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:12px;color:var(--muted)}
+#fig-rate .size-reference:before{content:"";display:inline-block;width:22px;border-top:1px dashed var(--muted);margin:0 7px 3px 0}
+#r-v-area-scale{font-family:var(--mono);color:var(--ink-2)}
+#r-v-area-note{margin:10px 0 0;font-size:12.5px;color:var(--muted);line-height:1.55}
+@media(max-width:540px){
+  #fig-myth .view-control{width:100%}
+  #seg-myth{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #seg-myth button:nth-child(-n+2){border-bottom:1px solid var(--border)}
+}
 .seg{display:inline-flex;gap:0;border:1px solid var(--border-strong);border-radius:9px;overflow:hidden}
 .seg button{background:var(--surface);border:0;border-right:1px solid var(--border);color:var(--ink-2);
   padding:7px 12px;font-size:12.5px;font-family:inherit;cursor:pointer}
@@ -271,10 +306,14 @@ footer a{color:var(--ink-2)}
   <div class="bar">
     <a class="brand" href="/" title="All explainers">&larr; Digital media <span>· interactive</span></a>
     <div id="navlinks">
+      <a href="#part-audio">I · Audio</a>
       <a href="#why">Why digital</a>
       <a href="#pcm">PCM</a>
       <a href="#depth">Bit depth</a>
       <a href="#mulaw">Companding</a>
+      <a href="#myth">Reconstruction</a>
+      <a href="#part-video">II · Video</a>
+      <a href="#video">Sampling</a>
       <a href="#more">More to come</a>
     </div>
     <a class="iconbtn" href="https://github.com/ssemakov/digital-media-study" title="Source on GitHub" aria-label="Source on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
@@ -290,7 +329,10 @@ footer a{color:var(--ink-2)}
     <p class="kicker">A digital media primer, for people who write software</p>
     <h1>Digital audio and video represent signals as <em>arrays of samples</em>.</h1>
     <p class="lede">A media file stores sampled audio and video together with information needed to interpret and
-    play them. This first part describes PCM parameters, byte order, bit depth, quantisation error and companding. Reconstruction and the whole video half — pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers — are listed at the end and will follow.</p>
+    play them. <a href="#part-audio">Part I: Audio</a> covers PCM, bit depth, companding, and signal
+    reconstruction. <a href="#part-video">Part II: Video</a> so far covers sampling in space
+    and time; pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and
+    containers are listed at the end and will follow.</p>
 
     <div class="theorem">
       <div class="lab">Based on</div>
@@ -300,7 +342,7 @@ footer a{color:var(--ink-2)}
       formats.</p>
     </div>
 
-    <p>This part contains three interactive figures. Images are generated procedurally, audio is
+    <p>This part contains five numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is
     synthesised at runtime, and colour-space calculations run in the browser. Additional
     derivations appear in <strong>Go deeper</strong> panels, which can be read independently of the
     main text.</p>
@@ -309,10 +351,17 @@ footer a{color:var(--ink-2)}
 
 <hr class="rule">
 
+<section id="part-audio" class="part" aria-labelledby="audio-title">
+  <header class="prose part-head">
+    <h2 id="audio-title">Part I · Audio</h2>
+    <p>Sound is sampled in time. The following sections describe how those samples are stored,
+    how their precision affects the signal, and how a continuous waveform is reconstructed.</p>
+  </header>
+
 <section id="why">
   <div class="prose">
-    <p class="kicker">§1</p>
-    <h2>Digital signals and repeatable copying</h2>
+    <p class="kicker">§1.1</p>
+    <h3 class="topic-title">Digital signals and repeatable copying</h3>
     <p>Digital communication predates recorded analogue audio. By the 1860s, telegraph systems were
     carrying multiplexed digital signals across continents. These systems represented messages
     using discrete states.</p>
@@ -342,8 +391,8 @@ footer a{color:var(--ink-2)}
 
 <section id="pcm">
   <div class="prose">
-    <p class="kicker">§2</p>
-    <h2>PCM parameters and byte order</h2>
+    <p class="kicker">§1.2</p>
+    <h3 class="topic-title">PCM parameters and byte order</h3>
     <p><strong>Pulse Code Modulation</strong> (PCM) represents a signal as measurements taken at fixed
     intervals. Reading a PCM stream requires its sample rate, sample format, channel count, and
     byte order.</p>
@@ -355,7 +404,7 @@ footer a{color:var(--ink-2)}
     measurement to a binary <em>code</em> and sent that code as a group of on-or-off pulses. The
     signal <em>modulates</em> the pulse train, the pulses carry a <em>code</em>, hence the name. The
     transmission part is no longer relevant, and the term now refers to the representation itself:
-    one integer per sample, uncompressed.</p>
+    one encoded number per sample.</p>
 
     <p><strong>Sample rate</strong> is the number of measurements per second. Half the rate is the
     upper frequency boundary for reconstruction. <strong>Sample format</strong> specifies the bit
@@ -365,6 +414,28 @@ footer a{color:var(--ink-2)}
     order. Values wider than 8 bits also have a <strong>byte order</strong>. Standard WAV PCM is
     little-endian; AIFF PCM is big-endian. Reading samples in the wrong byte order can produce loud
     noise.</p>
+
+    <div class="note">
+      <div class="t">From voltage to PCM: range and input gain</div>
+      <p>An analogue-to-digital converter (ADC) measures a changing electrical voltage. A microphone
+      converts sound pressure into voltage, and a preamp amplifies that signal before conversion.
+      The converter's circuitry and voltage reference set its input range; the corresponding PCM
+      amplitudes are commonly normalised to approximately −1 to +1.</p>
+      <p>For example, the PCM1808 ADC accepts a
+      3 V peak-to-peak signal: ±1.5 V around its centre voltage. A signal voltage of +0.75 V relative
+      to that centre therefore maps to about +0.5. Bit depth determines how finely this voltage
+      range is divided into codes.</p>
+      <p>The recording interface's input-gain control changes the amplification
+      before the ADC. Set it so the loudest expected peaks fit within the range, with spare room
+      for louder moments. Peaks around −12 dBFS are a useful starting point.
+      Too much gain overloads the input; reducing the recorded numbers later
+      cannot restore clipped peaks. A PCM sample alone does not specify the original sound pressure:
+      that also depends on the microphone's sensitivity and the recording gain.</p>
+    </div>
+
+    <p>The next section examines the <a href="#depth">sample format</a> in more detail: how bit
+    depth sets the available values, and how choosing one of those values introduces quantisation
+    error. <a href="#mulaw">Companding</a> then changes the spacing of those values.</p>
 
     <div class="note">
       <div class="t">Byte order</div>
@@ -440,7 +511,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </figure>
 
   <div class="prose">
-    <h3>Common sample rates</h3>
+    <h4 class="subheading">Common sample rates</h4>
   </div>
 
   <div class="prose tw">
@@ -474,11 +545,24 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="depth">
   <div class="prose">
-    <p class="kicker">§3</p>
-    <h2>Bit depth and quantisation error</h2>
-    <p>Bit depth specifies how many levels an integer sample can represent. At a fixed full-scale
-    amplitude, increasing the bit depth places those levels closer together and reduces the error
-    introduced by rounding.</p>
+    <p class="kicker">§1.3</p>
+    <h3 class="topic-title">PCM sample format: bit depth and quantisation</h3>
+    <p>The <strong>sample format</strong> introduced in <a href="#pcm">§1.2</a> specifies how each
+    PCM measurement is encoded as a number. In <strong>linear integer PCM</strong>, a sample with
+    <em>b</em> bits has 2<sup><em>b</em></sup> possible values, representing evenly spaced amplitude
+    levels. <strong>Quantisation</strong> is choosing which of those levels to store; here we round
+    to the nearest one. Bit depth sets the number of choices.</p>
+
+    <p>For example, signed 16-bit PCM stores each sample as a two-byte integer from −32,768 to
+    32,767. Dividing that integer by 32,768 gives its amplitude on the plot's normalised scale.
+    An input amplitude of 0.1 becomes <code>round(0.1 × 32768) = 3277</code>. Reading the stored
+    sample back gives <code>3277 / 32768 ≈ 0.1000061</code>. The difference from 0.1 is the
+    quantisation error.</p>
+
+    <p>Changing the PCM format from 16-bit to 24-bit integer places the levels closer together at
+    the same full-scale amplitude, reducing that rounding error. It does not change the number of
+    samples per second. The evenly spaced levels below describe linear integer PCM; companded
+    and floating-point formats distribute their values differently.</p>
 
     <p>The <strong>quantisation step</strong> is the distance between two neighbouring levels. For a
     range of −1 to +1 and <em>b</em> bits it is 2 ÷ 2<sup><em>b</em></sup>: 0.125 at 4 bits, about
@@ -509,8 +593,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     <div class="note">
       <div class="t">dBFS</div>
       <p style="margin:0">Signal levels on this page are given in <strong>dBFS</strong>, decibels
-      relative to full scale. Full scale is the largest value the sample format can hold, ±1.0 in the
-      figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values:
+      relative to full scale. For integer PCM, full scale is the limit of the representable amplitude range,
+      approximately ±1.0 in the figures, and a signal whose peaks reach it is at 0 dBFS. Quieter signals have negative values:
       the level is 20·log<sub>10</sub>(amplitude ÷ full scale), so −6 dBFS is half the amplitude,
       −20 dBFS one tenth, and −60 dBFS one thousandth. The unit makes levels and bit depth directly
       comparable. Each bit adds about 6 dB, so the quantisation noise of a 16-bit format sits near
@@ -519,7 +603,7 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
   </div>
 
   <div class="prose">
-    <h3>Quantisation error as an added signal</h3>
+    <h4 class="subheading">Quantisation error as an added signal</h4>
     <p>Bit depth is sometimes described as the precision of each sample, as if a 24-bit recording were
     a sharper copy of a 16-bit one. A more useful description treats the rounding error as a second
     signal added to the first: the stored value minus the true value, which is the orange trace in
@@ -537,17 +621,19 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     floor, while full scale stays where it is. Bit depth therefore sets the floor rather than the
     ceiling, and dynamic range is the distance between the loudest representable signal and the
     rounding noise beneath it. Low bit depths are exposed by quiet passages rather than loud ones.</p>
-    <p>Sampling and quantisation are two separate roundings of one waveform. Sampling rounds time,
-    keeping the value only at fixed instants. Quantisation rounds amplitude, keeping only one of the
-    allowed values at each instant. <a href="/sampling">The sampling page</a> shows that rounding time
-    loses nothing when the rate is sufficient. Rounding amplitude always discards something.</p>
+    <p>PCM's sample rate and sample format control different parts of this process. Sampling takes
+    measurements at the instants set by the sample rate. Quantisation maps their amplitudes to
+    values allowed by the sample format. <a href="/sampling">The sampling page</a> explains why
+    sufficiently frequent samples preserve a bandlimited signal. Quantisation introduces an
+    amplitude error whenever a measurement falls between the available levels.</p>
   </div>
 
   <figure id="fig-quant">
     <div class="head">
       <div class="n">Figure 2 · audio + live</div>
       <h4>A signal and its quantisation error</h4>
-      <p>A sine wave is rounded to the nearest of the 2<sup>bits</sup> levels. Top: the original and
+      <p>The signal is encoded as linear integer PCM by rounding to the nearest of its
+      2<sup>bits</sup> amplitude levels. Top: the original and
       the rounded version, with the levels drawn as dashed lines; the vertical axis zooms in as the
       signal gets quieter. Bottom: the rounding error, rounded minus original, measured in
       quantisation steps. Rounding is never off by more than half a step, so the error's size is
@@ -599,12 +685,144 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     hiss, while the low-level error still collapses into distortion.</figcaption>
   </figure>
 
+  <div class="prose">
+    <h4 class="subheading" id="clipping">Clipping at full scale</h4>
+    <p>Quantisation rounds values within the available range. <strong>Clipping</strong> happens when
+    a value exceeds that range and is limited to the largest or smallest available code. Signed
+    16-bit PCM runs from −32,768 to 32,767; signed 24-bit PCM runs from −8,388,608 to 8,388,607.
+    Divide by 32,768 or 8,388,608 respectively and both cover the same normalised range, from −1
+    to just below +1. <strong>24-bit PCM has finer steps, but the same full-scale ceiling.</strong></p>
+    <p>Suppose a waveform peaks at 0.75. Doubling its gain asks the PCM encoder to store peaks of
+    1.5. A clipping encoder stores the maximum code instead, flattening the peaks. The waveform
+    now contains harmonics that were absent from the input, heard as a harsher or buzzing tone.
+    This is overload distortion, not the small rounding error between neighbouring levels.</p>
+    <p>Reducing the level <em>after</em> clipping makes the damaged waveform quieter; it cannot
+    restore the missing peaks. Leave headroom below full scale when recording, and reduce gain
+    before conversion to an integer format if processing has pushed values beyond its range.</p>
+  </div>
+
+  <figure id="fig-clip">
+    <div class="head">
+      <div class="n">Clipping · audio + live</div>
+      <h4>More bits do not prevent overload</h4>
+      <p>A 440 Hz sine starts with a peak amplitude of 0.75. Increase its gain to push the blue
+      waveform past full scale; orange shows the samples after conversion to integer PCM.
+      Compare 16 and 24 bits: both flatten at the same level.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-clip" height="260" aria-label="A sine before and after clipping at the integer PCM limits"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>before conversion</span>
+      <span style="color:var(--s2)"><i style="background:var(--s2)"></i>after integer PCM conversion</span>
+      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>full-scale limits (±1)</span>
+    </div>
+    <div class="ctl">
+      <div class="sl"><label for="s-c-gain">gain<b>×<span id="v-c-gain">2.0</span></b></label>
+	<input type="range" id="s-c-gain" min="1" max="4" step="0.1" value="2"></div>
+      <div><span class="fieldlab">integer PCM format</span>
+	<div class="seg" id="seg-clip-bits"><button data-v="16" class="on" aria-pressed="true">16-bit</button><button data-v="24" aria-pressed="false">24-bit</button></div></div>
+    </div>
+    <div class="ctl">
+      <div class="listen-buttons">
+	<button class="btn" id="b-c-original" type="button" aria-pressed="false">▶ Original</button>
+	<button class="btn" id="b-c-clipped" type="button" aria-pressed="false">▶ Clipped</button>
+	<button class="btn" id="b-c-stop" type="button" disabled>■ Stop</button>
+      </div>
+      <p class="audio-status" id="r-c-audio" role="status" aria-live="polite">Choose a version to hear it.</p>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Peak before conversion</div><div class="v" id="r-c-peak">1.50</div></div>
+      <div class="cell"><div class="k">Samples outside the range</div><div class="v" id="r-c-over">—</div></div>
+      <div class="cell"><div class="k">PCM integer limits</div><div class="v" id="r-c-limits">−32,768 to 32,767</div></div>
+    </div>
+    <figcaption>At ×1, neither format clips and the two versions sound alike. At ×2, listen for
+    the added harmonics, then switch to 24 bits: more precision does not repair an overloaded
+    signal. Both versions receive the same playback attenuation <em>after</em> processing, so the
+    comparison is audible without overloading the output. Each clip lasts three seconds; changing
+    a setting stops playback so you can replay the new setting.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <h4 class="subheading" id="float-pcm">32-bit floating-point PCM</h4>
+    <p>PCM can also store each sample as a four-byte
+    <a href="https://www.mathworks.com/help/fixedpoint/ug/floating-point-numbers.html">IEEE 754 floating-point number</a>. Its bits are
+    divided into <strong>1 sign bit, 8 exponent bits, and 23 fraction bits</strong>. For normal
+    values, an implicit leading 1 gives 24 bits of significant precision. The exponent moves the
+    scale up or down, rather like the power of ten in scientific notation. The spacing between
+    representable values grows with magnitude, unlike the fixed steps of integer PCM.</p>
+    <p>In floating-point audio, ±1 still marks the nominal full-scale level, but it is not the
+    storage limit. A value of 1.5 is valid and can later be reduced to 0.75 without having clipped.
+    This extra headroom is useful during mixing and processing. It is not 32 bits of integer
+    precision, and arithmetic still rounds to the available floating-point values.</p>
+    <p>The example follows the same sample through two paths. Keeping the boosted value as a
+    float preserves the peak. Converting it to 16-bit PCM first clips it, so halving the gain
+    afterwards returns about 0.5 instead of 0.75. It also prints the float's three bit fields:
+    for 1.5, the sign is 0, the stored exponent is 127, and the fraction encodes 0.5. Subtracting
+    the exponent bias of 127 gives <code>+(1 + 0.5) × 2⁰ = 1.5</code>.</p>
+<pre><code class="go"><span class="k">package</span> main
+
+<span class="k">import</span> (
+	<span class="s">&quot;fmt&quot;</span>
+	<span class="s">&quot;math&quot;</span>
+)
+
+<span class="c">// Round and clamp a finite normalised value before converting to PCM16.</span>
+<span class="k">func</span> pcm16(x <span class="k">float32</span>) <span class="k">int16</span> {
+	q := math.Round(float64(x) * <span class="n">32768</span>)
+	q = math.Max(-<span class="n">32768</span>, math.Min(<span class="n">32767</span>, q))
+	<span class="k">return</span> <span class="k">int16</span>(q)
+}
+
+<span class="k">func</span> main() {
+	sample := <span class="k">float32</span>(<span class="n">0.75</span>)
+	boosted := sample * <span class="n">2</span>                  <span class="c">// 1.5 fits in float32</span>
+	restored := boosted / <span class="n">2</span>                <span class="c">// 0.75: peak preserved</span>
+	clipped := pcm16(boosted)              <span class="c">// 32767: peak lost</span>
+	afterClip := <span class="k">float32</span>(clipped) / <span class="n">32768</span> / <span class="n">2</span>
+
+	fmt.Printf(<span class="s">&quot;Float path: %.6f -&gt; %.6f\n&quot;</span>, boosted, restored)
+	fmt.Printf(<span class="s">&quot;PCM16 first, then gain down: %.6f\n&quot;</span>, afterClip)
+
+	word := math.Float32bits(boosted) <span class="c">// inspect the IEEE 754 representation</span>
+	fmt.Printf(<span class="s">&quot;sign exponent fraction: %01b %08b %023b\n&quot;</span>,
+		word&gt;&gt;<span class="n">31</span>, (word&gt;&gt;<span class="n">23</span>)&amp;<span class="n">255</span>, word&amp;<span class="n">0x7fffff</span>)
+}
+</code><code class="js" hidden><span class="c">// JavaScript numbers are float64; fround models float32 storage.</span>
+<span class="k">const</span> f32 = Math.fround;
+
+<span class="c">// Round and clamp a finite normalised value before converting to PCM16.</span>
+<span class="k">function</span> pcm16(x) {
+  <span class="k">const</span> q = Math.sign(x) * Math.round(Math.abs(x) * <span class="n">32768</span>);
+  <span class="k">return</span> Math.max(-<span class="n">32768</span>, Math.min(<span class="n">32767</span>, q));
+}
+
+<span class="k">const</span> sample = f32(<span class="n">0.75</span>);
+<span class="k">const</span> boosted = f32(sample * <span class="n">2</span>);         <span class="c">// 1.5 fits in float32</span>
+<span class="k">const</span> restored = f32(boosted / <span class="n">2</span>);       <span class="c">// 0.75: peak preserved</span>
+<span class="k">const</span> clipped = pcm16(boosted);         <span class="c">// 32767: peak lost</span>
+<span class="k">const</span> afterClip = f32(f32(clipped / <span class="n">32768</span>) / <span class="n">2</span>);
+
+console.log(<span class="s">`Float path: ${boosted.toFixed(6)} -&gt; ${restored.toFixed(6)}`</span>);
+console.log(<span class="s">`PCM16 first, then gain down: ${afterClip.toFixed(6)}`</span>);
+
+<span class="k">const</span> view = new DataView(new ArrayBuffer(<span class="n">4</span>));
+view.setFloat32(<span class="n">0</span>, boosted);             <span class="c">// inspect the IEEE 754 representation</span>
+<span class="k">const</span> word = view.getUint32(<span class="n">0</span>);
+<span class="k">const</span> bits = (value, width) =&gt; value.toString(<span class="n">2</span>).padStart(width, <span class="s">&quot;0&quot;</span>);
+console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
+  bits(word &gt;&gt;&gt; <span class="n">31</span>, <span class="n">1</span>), bits((word &gt;&gt;&gt; <span class="n">23</span>) &amp; <span class="n">255</span>, <span class="n">8</span>), bits(word &amp; <span class="n">0x7fffff</span>, <span class="n">23</span>));
+</code></pre>
+    <p>This protects values only while they remain in a floating-point processing path. Reduce
+    gain before exporting to integer PCM or sending the signal to an output with a fixed
+    full-scale limit. A microphone, preamp, or analogue-to-digital converter can still overload;
+    writing its already-clipped samples into a float file cannot restore them.</p>
+  </div>
+
   <div class="prose tw">
     <table>
-      <thead><tr><th style="width:150px">Format</th><th>Range</th><th>Where it appears</th></tr></thead>
+      <thead><tr><th style="width:150px">PCM sample format</th><th>Range</th><th>Where it appears</th></tr></thead>
       <tbody>
         <tr><td><b>8-bit linear</b></td><td>~50 dB</td><td>Legacy audio and sound effects. Quantisation noise can be audible in quiet passages.</td></tr>
-        <tr><td><b>8-bit µ-law / A-law</b></td><td>~14 bits' worth</td><td>Telephony. Non-uniform levels provide finer resolution for quiet signals — see §4.</td></tr>
+	<tr><td><b>8-bit µ-law / A-law</b></td><td>~14 bits' worth</td><td>Telephony. Non-uniform levels provide finer resolution for quiet signals — see <a href="#mulaw">§1.4</a>.</td></tr>
         <tr><td><b>16-bit signed</b></td><td>~96 dB</td><td>CD audio and common delivery formats. Full scale is 0 dBFS; lower levels have negative dBFS
         values.</td></tr>
         <tr><td><b>24-bit signed</b></td><td>~144 dB</td><td>Recording and production. Additional range for low-level signals and processing.</td></tr>
@@ -634,11 +852,12 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <section id="mulaw">
   <div class="prose">
-    <p class="kicker">§4</p>
-    <h2>Companding and non-uniform quantisation</h2>
-    <p>Linear 8-bit audio provides about 50 dB of range. Telephony uses 8-bit
-    <strong>companding</strong> formats to represent a wider range of speech levels by varying the
-    spacing between quantisation levels.</p>
+    <p class="kicker">§1.4</p>
+    <h3 class="topic-title">Companding and non-uniform quantisation</h3>
+    <p>PCM's sample format also determines how its stored codes map to amplitudes. Linear 8-bit
+    PCM uses evenly spaced levels and provides about 50 dB of range. Telephony uses 8-bit
+    <strong>companding</strong> formats to represent a wider range of speech levels by varying that
+    spacing. Each sample still occupies one byte; the meaning of its code changes.</p>
 
     <p>Hearing responds roughly to proportional changes in amplitude. Increasing an amplitude from
     0.001 to 0.002 adds only 0.001, while increasing it from 0.5 to 1.0 adds 0.5. Both changes,
@@ -672,7 +891,8 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
       <p>Compare linear, µ-law, and A-law coding with the same number of values. The "level spacing"
       view maps evenly spaced codes to amplitudes; ticks show the resulting levels. The "quality vs
       level" view estimates the signal-to-noise ratio from the local step size. Only positive
-      amplitudes are shown; the negative half is symmetric.</p>
+      amplitudes are shown; the negative half is symmetric. Use the 16-bit preset to compare a
+      common modern linear PCM format with the low-bit-depth examples.</p>
     </div>
     <div class="canvasbox"><canvas id="c-mulaw" height="270" aria-label="Comparison of linear, mu-law, and A-law quantisation level spacing and estimated signal-to-noise ratio"></canvas></div>
     <div class="legend">
@@ -682,10 +902,13 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     </div>
     <div class="ctl">
       <div class="sl"><label for="s-m-bits">bits per sample<b><span id="v-m-bits">6</span></b></label>
-        <input type="range" id="s-m-bits" min="3" max="10" step="1" value="6"></div>
+	<input type="range" id="s-m-bits" min="3" max="16" step="1" value="6"></div>
+      <div style="flex:0 0 auto"><span class="fieldlab">common modern PCM format</span>
+	<button class="btn" id="b-m-pcm" type="button" aria-pressed="false">16-bit linear PCM</button></div>
       <div style="flex:0 0 auto"><span class="fieldlab">view</span>
         <div class="seg" id="seg-mu"><button data-v="levels" class="on">level spacing</button><button data-v="snr">quality vs level</button></div></div>
     </div>
+    <p class="format-note" id="r-m-format" role="status" aria-live="polite">6-bit illustration. Modern linear PCM commonly uses 16 or 24 bits per sample.</p>
     <div class="readout">
       <div class="cell"><div class="k">Levels</div><div class="v" id="r-m-lev">64</div></div>
       <div class="cell"><div class="k" style="text-transform:none;letter-spacing:.04em">Linear range</div><div class="v" id="r-m-lin">37.9 dB</div></div>
@@ -701,7 +924,10 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
     8 bits, about 13.5 bits for µ-law and 12 bits for A-law. The range readouts use the same
     near-zero estimate; they do not describe precision at every amplitude. The figure uses
     <a href="https://www.mathworks.com/help/comm/ref/compand.html">ideal companding curves</a>
-    with µ = 255 and A = 87.6.</figcaption>
+    with µ = 255 and A = 87.6. Modern linear PCM commonly uses 16 or 24 bits; the 16-bit setting
+    has 65,536 levels and uses two bytes per sample. Telephone µ-law and A-law use 8-bit samples;
+    their curves at other bit depths are illustrative. At high bit depths, many level ticks share
+    the same screen pixel and merge into bands.</figcaption>
   </figure>
 
   <div class="prose">
@@ -714,33 +940,205 @@ console.log(bytesPerSecond, <span class="s">"B/s"</span>); <span class="c">// 17
 
 <hr class="rule">
 
+<section id="myth">
+  <div class="prose">
+    <p class="kicker">§1.5</p>
+    <h3 class="topic-title">Reconstructing a signal from samples</h3>
+    <p>A sample records the signal's value at one instant. A plot can display samples as points,
+    connect them with lines, or hold each value until the next sample. Holding each value produces
+    the staircase shown in Figure 4 below. These are different interpolation rules applied to the
+    same data.</p>
+
+    <p>For a signal bandlimited to below half the sample rate, ideal reconstruction produces the
+    unique smooth curve consistent with the samples and that bandwidth limit. A digital-to-analogue
+    converter approximates this reconstruction using interpolation and filtering.</p>
+  </div>
+
+  <figure id="fig-myth">
+    <div class="head">
+      <div class="n">Figure 4 · audio + live</div>
+      <h4>Three ways to draw the same samples</h4>
+      <p>The same samples are shown with zero-order hold, linear interpolation, and ideal bandlimited
+      reconstruction. Listen to each using a 440 Hz source tone. The samples-per-cycle slider sets
+      the sampling rate for both the plot and the audio.</p>
+    </div>
+    <div class="canvasbox"><canvas id="c-myth" height="270" aria-label="Samples drawn as a staircase, as straight lines, and as the true bandlimited reconstruction"></canvas></div>
+    <div class="legend">
+      <span style="color:var(--s3)"><i class="dot" style="background:var(--s3)"></i>the samples</span>
+      <span style="color:var(--muted)"><i style="background:var(--muted)"></i>staircase (zero-order hold)</span>
+      <span style="color:var(--s4)"><i style="background:var(--s4)"></i>straight lines (linear interpolation)</span>
+      <span style="color:var(--s1)"><i style="background:var(--s1)"></i>bandlimited reconstruction</span>
+    </div>
+    <div class="ctl">
+      <div class="view-control" style="flex:0 1 auto;min-width:0"><span class="fieldlab">show</span>
+        <div class="seg" id="seg-myth">
+          <button data-v="stair" class="on">staircase</button><button data-v="lines">straight lines</button><button data-v="true">reconstruction</button><button data-v="all">all three</button>
+        </div></div>
+      <div class="sl"><label for="s-y-fs">samples per cycle<b><span id="v-y-fs">3.0</span></b></label>
+        <input type="range" id="s-y-fs" min="2.1" max="12" step="0.1" value="3"></div>
+    </div>
+    <div class="ctl">
+      <div><span class="fieldlab">listen · 3 seconds</span>
+	<div class="listen-buttons">
+	  <button class="btn" id="b-y-stair" type="button" aria-pressed="false">▶ Staircase</button>
+	  <button class="btn" id="b-y-lines" type="button" aria-pressed="false">▶ Straight lines</button>
+	  <button class="btn" id="b-y-true" type="button" aria-pressed="false">▶ Reconstruction</button>
+	  <button class="btn" id="b-y-stop" type="button" disabled>■ Stop</button>
+	</div>
+      </div>
+      <div class="audio-info">
+	<p>Source: <b>440 Hz</b> · sample rate: <b><span id="v-y-rate">1,320</span> Hz</b></p>
+	<p id="r-y-audio" role="status" aria-live="polite">Choose a reconstruction to hear it.</p>
+      </div>
+    </div>
+    <div class="verdict ok" id="r-y-verdict"><span class="ic">✓</span><span id="r-y-msg"></span></div>
+    <figcaption>Lower the rate to just above two samples per cycle. Ideal bandlimited reconstruction preserves
+    the sine wave's frequency and amplitude. The staircase and straight-line plots introduce
+    additional high-frequency components through their discontinuities or changes in slope.
+    At 3 samples per cycle the source is sampled at 1,320 Hz. Each play button selects its curve;
+    in "all three" view it plays that curve alone. Changing the rate during playback restarts the
+    sound at the new setting. All three use the same playback gain, so differences in level remain
+    audible. Playback retains only frequencies below the audio output's limit.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <div class="note warn">
+      <div class="t">The hold stage in a converter</div>
+      <p style="margin:0">A converter's hold stage can maintain each sample value until the next update, producing a
+      staircase waveform internally. A reconstruction filter attenuates its high-frequency
+      components. Oversampling moves these components farther above the audio band and simplifies
+      filtering.</p>
+    </div>
+  </div>
+
+  <details class="deep">
+    <summary><span class="chip">Go deeper</span> Bandlimited reconstruction</summary>
+    <div class="body">
+      <p>Given samples spaced <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span> apart, the reconstruction is
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.0017em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="delimsizing size1">(</span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.2em;vertical-align:-0.35em;"></span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mclose">)</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mord"><span class="delimsizing size1">)</span></span></span></span></span> with
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">sinc</span></span><span class="mopen">(</span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">sin</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord mathnormal">u</span><span class="mclose">)</span><span class="mord">/</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mord mathnormal">u</span><span class="mclose">)</span></span></span></span>. Under the sampling theorem's assumptions, this gives the unique signal consistent with every sample and bandlimited to below
+      <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1/2</span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span>. Other interpolation rules, including the staircase, introduce components above that bandwidth limit.</p>
+      <p>A staircase has discontinuities, whose spectra extend to arbitrarily high frequencies. Low-pass
+      filtering suppresses these components as part of reconstruction.</p>
+    </div>
+  </details>
+</section>
+
+</section>
+
+<hr class="rule">
+
+<section id="part-video" class="part" aria-labelledby="video-title">
+  <header class="prose part-head">
+    <h2 id="video-title">Part II · Video</h2>
+    <p>Video adds two spatial dimensions to sampling in time. The section below describes how video is sampled in space and time. The remaining sections
+        follow.</p>
+  </header>
+
+<section id="video">
+  <div class="prose">
+    <p class="kicker">§2.1</p>
+    <h3 class="topic-title">Video sampling in space and time</h3>
+    <p>Audio is sampled along the time axis. Video is sampled along time and the two spatial axes of
+    the picture. The sampling theorem applies to each axis. Insufficient horizontal sampling can
+    turn fine vertical stripes into moiré; insufficient temporal sampling can make a spinning wheel
+    appear to rotate backwards.</p>
+
+    <p>Video requires substantially higher data rates than audio. Raw CD audio is about 1.4 megabits
+    per second. Raw 1080i video can exceed <strong>700 megabits per second</strong>, roughly 500
+    times as much. Storage and transmission requirements motivated many of the video
+    representations described in the following sections.</p>
+  </div>
+
+  <figure id="fig-rate">
+    <div class="head">
+      <div class="n">Figure 5 · calculator + live</div>
+      <h4>Raw video data rate</h4>
+      <p>The calculator multiplies width, height, frame rate, and stored bits per pixel to obtain the
+      uncompressed data rate. The squares compare one minute of that video with one minute of
+      CD audio, using one shared area scale.</p>
+    </div>
+    <div class="ctl" style="border-top:0">
+      <div style="flex:0 0 auto"><span class="fieldlab">format</span>
+        <div class="seg" id="seg-fmt">
+	  <button data-v="sd">SD 480i</button><button data-v="hd" class="on">1080p</button><button data-v="uhd">4K</button><button data-v="custom">custom</button>
+        </div></div>
+      <div style="flex:1 1 130px"><span class="fieldlab">width</span><input type="number" id="n-v-w" value="1920" min="16" step="16"></div>
+      <div style="flex:1 1 130px"><span class="fieldlab">height</span><input type="number" id="n-v-h" value="1080" min="16" step="16"></div>
+      <div style="flex:1 1 110px"><span class="fieldlab">fps</span><input type="number" id="n-v-f" value="30" min="1" step="1"></div>
+      <div style="flex:1 1 110px"><span class="fieldlab">bits/channel</span><input type="number" id="n-v-b" value="8" min="6" max="16" step="2"></div>
+      <div style="flex:0 0 auto"><span class="fieldlab">chroma</span>
+        <div class="seg" id="seg-css"><button data-v="444">4:4:4</button><button data-v="422">4:2:2</button><button data-v="420" class="on">4:2:0</button></div></div>
+    </div>
+    <div class="readout" style="padding-top:14px">
+      <div class="cell"><div class="k">Bytes per frame</div><div class="v" id="r-v-fr">3.11 MB</div></div>
+      <div class="cell"><div class="k">Raw bitrate</div><div class="v" id="r-v-br">746 Mb/s</div></div>
+      <div class="cell"><div class="k">One minute</div><div class="v" id="r-v-min">5.6 GB</div></div>
+      <div class="cell"><div class="k">vs CD audio</div><div class="v" id="r-v-x">529×</div></div>
+    </div>
+    <div class="size-comparison">
+      <h5>One minute, compared by area</h5>
+      <div class="size-audio"><b>CD audio · one square = 10.584 MB</b>
+	<span>44,100 samples/s × 16 bits × 2 channels × 60 seconds</span></div>
+      <div class="size-video-heading"><b>Raw video · <span id="r-v-area-size">5.60 GB</span></b>
+	<span id="r-v-area-count">529.0× the audio area</span></div>
+      <div class="size-overview" id="v-size-overview">
+	<svg id="v-size-grid" width="100%" height="140" role="img" aria-labelledby="v-size-title v-size-desc" focusable="false">
+	  <title id="v-size-title">Audio and video data sizes as proportional square areas</title>
+	  <desc id="v-size-desc">The green square is one minute of CD audio; orange is one minute of the selected raw video. The dashed square marks 1080p video for comparison.</desc>
+	  <defs><pattern id="v-size-pattern" patternUnits="userSpaceOnUse"><path id="v-size-gridline" fill="none" stroke="var(--s2)" stroke-width="0.65"/></pattern></defs>
+	  <rect id="v-size-video" fill="var(--s2)" fill-opacity="0.24" stroke="var(--s2)"/>
+	  <rect id="v-size-cells" fill="url(#v-size-pattern)"/>
+	  <rect id="v-size-reference" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"/>
+	  <rect id="v-size-audio" fill="var(--s3)"/>
+	  <text id="v-size-audio-label" text-anchor="middle">Audio</text>
+	  <text id="v-size-video-label" text-anchor="middle">Video</text>
+	</svg>
+      </div>
+      <div class="size-scale"><span class="size-reference">1080p reference · 30 fps, 8-bit 4:2:0 · 5.60 GB</span>
+	<span id="r-v-area-scale">Zoom: 100%</span></div>
+      <p id="r-v-area-note" role="status" aria-live="polite">Both squares use the same scale. Their areas, rather than their side lengths, represent data size.</p>
+    </div>
+    <div class="verdict bad" id="r-v-verdict"><span class="ic">!</span><span id="r-v-msg"></span></div>
+    <figcaption>The green square represents one minute of CD audio; the orange square represents
+    one minute of the selected raw video. An area 100 times larger has sides 10 times longer.
+    The dashed 1080p reference keeps the comparison visible as you change settings. SD, 1080p and
+    4K presets at 8-bit 4:2:0 share a fixed scale; higher data rates zoom all three squares out together, with
+    the scale shown above. Grid cells group audio-sized squares when individual cells would be too
+    small to see. At the same bit depth, 4:2:0 chroma subsampling halves the data rate relative to
+    4:4:4. A later section shows how reducing colour resolution affects the image.</figcaption>
+  </figure>
+</section>
+
+</section>
+
+<hr class="rule">
+
 <section id="more">
   <div class="prose">
     <p class="kicker">To be continued</p>
-    <h2>The rest of the primer</h2>
-    <p>This page is being published a part at a time. What is here covers sampled audio through
-    companding. The sections below are written and will appear here as they are reviewed.</p>
+    <h2>The rest of Part II</h2>
+    <p>This page is being published a part at a time. Part I is complete, and Part II so far covers
+    sampling in space and time. The sections below are written and will appear here as they are
+    reviewed.</p>
     <div class="note">
       <div class="t">Still to come</div>
       <ol style="margin:0;padding-left:20px">
-        <li><strong>Reconstruction</strong> — rebuilding a continuous signal from samples, and why
-        the stair-step picture of digital audio is wrong.</li>
-        <li><strong>Video sampling</strong> — the same theory applied to space and time rather than
-        time alone.</li>
-        <li><strong>Pixel aspect ratio</strong> — why pixels are not always square, and what that
-        does to stored dimensions.</li>
-        <li><strong>Interlacing</strong> — fields, field order, and the timing that comes with
+        <li><strong>Pixel aspect ratio</strong> &mdash; why pixels are not always square, and what
+        that does to stored dimensions.</li>
+        <li><strong>Interlacing</strong> &mdash; fields, field order, and the timing that comes with
         them.</li>
-        <li><strong>Gamma</strong> — why stored brightness values are not proportional to light,
-        and what breaks when that is ignored.</li>
-        <li><strong>Luma and chroma</strong> — separating brightness from colour, and subsampling
-        the colour channels.</li>
-        <li><strong>Pixel formats and containers</strong> — fourccs, plane layouts, and what a
+        <li><strong>Gamma</strong> &mdash; why stored brightness values are not proportional to
+        light, and what breaks when that is ignored.</li>
+        <li><strong>Luma and chroma</strong> &mdash; separating brightness from colour, and
+        subsampling the colour channels.</li>
+        <li><strong>Pixel formats and containers</strong> &mdash; fourccs, plane layouts, and what a
         container does and does not tell you.</li>
+        <li><strong>Summary</strong> &mdash; the whole primer in one table.</li>
       </ol>
     </div>
     <p>In the meantime, <a href="../sampling/">the sampling theorem page</a> is complete, and it
-    covers the theory that the reconstruction section here depends on.</p>
+    covers the theory that Part I depends on.</p>
   </div>
 </section>
 
@@ -1034,19 +1432,32 @@ function fftMag(re, im) {
 }
 var AC = null;
 function audioCtx() {
-  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
-  if (AC.state === "suspended") AC.resume();
+  if (!AC || AC.state === "closed") AC = new (window.AudioContext || window.webkitAudioContext)();
   return AC;
 }
-var playingNode = null;
+var playingNode = null, playingGain = null;
+function stopPlayback() {
+  if (!playingNode) return;
+  var node = playingNode, gain = playingGain, now = AC.currentTime;
+  playingNode = playingGain = null;
+  gain.gain.cancelScheduledValues(now);
+  gain.gain.setTargetAtTime(0, now, 0.005);
+  try { node.stop(now + 0.03); } catch (e) {}
+}
 function playBuffer(data, sr) {
   var ctx = audioCtx();
-  if (playingNode) { try { playingNode.stop(); } catch (e) {} playingNode = null; }
+  stopPlayback();
   var buf = ctx.createBuffer(1, data.length, sr);
   buf.getChannelData(0).set(data);
-  var n = ctx.createBufferSource(); n.buffer = buf; n.connect(ctx.destination);
-  n.onended = function () { if (playingNode === n) playingNode = null; };
-  playingNode = n; n.start();
+  var n = ctx.createBufferSource(), gain = ctx.createGain();
+  n.buffer = buf; n.connect(gain); gain.connect(ctx.destination);
+  n.onended = function () {
+    n.disconnect(); gain.disconnect();
+    if (playingNode === n) playingNode = playingGain = null;
+  };
+  playingNode = n; playingGain = gain; n.start();
+  if (ctx.state === "suspended") ctx.resume().catch(function () { if (playingNode === n) stopPlayback(); });
+  return n;
 }
 function quantise(x, step, dith, rnd) {
   var v = x;
@@ -1248,6 +1659,109 @@ function quantise(x, step, dith, rnd) {
 })();
 
 /* ================================================================
+   Clipping demonstration — integer PCM limits
+   ================================================================ */
+(function () {
+  var P = new Plot("c-clip", { l: 48, r: 18, t: 18, b: 40 });
+  if (!P.cv) return;
+  var gain = 2, nb = 16, TONE = 440;
+  var audioNode = null, audioKind = null, audioToken = 0;
+  function source(t) { return 0.75 * gain * Math.sin(2 * PI * TONE * t); }
+  function pcm(x) {
+    var scale = Math.pow(2, nb - 1);
+    var q = Math.sign(x) * Math.round(Math.abs(x) * scale);
+    return clamp(q, -scale, scale - 1) / scale;
+  }
+  function draw() {
+    var peak = 0.75 * gain, ymax = Math.max(1.25, peak * 1.15);
+    P.clear(); P.dom(0, 6, -ymax, ymax);
+    P.gridX([0, 2, 4, 6]);
+    P.clipPlot();
+    P.curve(function () { return 1; }, C.muted, 1, [5, 4]);
+    P.curve(function () { return -1; }, C.muted, 1, [5, 4]);
+    P.curve(function (ms) { return source(ms / 1000); }, C.s1, 2.5);
+    P.curve(function (ms) { return pcm(source(ms / 1000)); }, C.s2, 1.8);
+    P.unclip();
+    P.axisX([0, 2, 4, 6], function (v) { return v + " ms"; }, "time");
+    P.axisY([-1, 0, 1], function (v) { return String(v); }, "amplitude");
+  }
+  function update() {
+    txt("v-c-gain", fmt(gain, 1));
+    txt("r-c-peak", fmt(0.75 * gain));
+    var scale = Math.pow(2, nb - 1), over = 0, count = 12000;
+    for (var i = 0; i < count; i++) {
+      var x = source(i / (TONE * count));
+      if (x < -1 || x > (scale - 1) / scale) over++;
+    }
+    txt("r-c-over", fmt(100 * over / count, 1) + "%");
+    txt("r-c-limits", "−" + scale.toLocaleString("en-US") + " to " + (scale - 1).toLocaleString("en-US"));
+    $("seg-clip-bits").querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.dataset.v === nb));
+    });
+    draw();
+  }
+  function sound(kind, sr) {
+    var count = Math.round(sr * 3), out = new Float32Array(count);
+    for (var i = 0; i < count; i++) {
+      var x = source(i / sr);
+      if (kind === "clipped") x = pcm(x);
+      var envelope = Math.min(1, i / (sr * 0.02), (count - 1 - i) / (sr * 0.03));
+      // Attenuate after the demonstration's clipping stage; peak <= 0.36 at every setting.
+      out[i] = x * 0.12 * envelope;
+    }
+    return out;
+  }
+  function audioUI(message) {
+    ["original", "clipped"].forEach(function (kind) {
+      var b = $("b-c-" + kind), active = audioKind === kind;
+      b.classList.toggle("on", active); b.setAttribute("aria-pressed", String(active));
+    });
+    $("b-c-stop").disabled = !audioKind;
+    txt("r-c-audio", message);
+  }
+  function stopTone(message) {
+    audioToken++;
+    if (audioNode && playingNode === audioNode) stopPlayback();
+    audioNode = null; audioKind = null;
+    audioUI(message || "Stopped.");
+  }
+  async function playTone(kind) {
+    stopTone();
+    var token = audioToken;
+    audioKind = kind; audioUI("Preparing audio…");
+    try {
+      var ctx = audioCtx();
+      await ctx.resume();
+      if (token !== audioToken) return;
+      var node = playBuffer(sound(kind, ctx.sampleRate), ctx.sampleRate);
+      audioNode = node;
+      audioUI("Playing " + kind + " · gain ×" + fmt(gain, 1) + " · " + nb + "-bit PCM.");
+      node.addEventListener("ended", function () {
+	if (audioNode !== node) return;
+	audioNode = null; audioKind = null;
+	audioUI("Choose a version to hear it again.");
+      });
+    } catch (e) {
+      if (token === audioToken) stopTone("Audio could not start. Press a play button to try again.");
+    }
+  }
+  on("s-c-gain", "input", function (e) {
+    gain = +e.target.value; stopTone("Gain changed. Choose a version to hear it."); update();
+  });
+  segment("seg-clip-bits", function (v) {
+    nb = +v; stopTone("Format changed. Choose a version to hear it."); update();
+  });
+  ["original", "clipped"].forEach(function (kind) { on("b-c-" + kind, "click", function () { playTone(kind); }); });
+  on("b-c-stop", "click", function () { stopTone(); });
+  ["b-q-ref", "b-q-q", "b-y-true", "b-y-stair", "b-y-lines"].forEach(function (id) {
+    on(id, "click", function () { stopTone(); });
+  });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) stopTone(); });
+  window.addEventListener("pagehide", function () { stopTone(); });
+  register(P, draw); update();
+})();
+
+/* ================================================================
    FIGURE 3 — companding
    ================================================================ */
 (function () {
@@ -1281,25 +1795,31 @@ function quantise(x, step, dith, rnd) {
       P.curve(function (u) { return muInv(u); }, C.s3, 2.2);
       P.curve(function (u) { return aInv(u); }, C.s1, 2.2, [6, 4]);
       /* Linear ticks at left; separate µ-law and A-law columns at right. */
-      var L = levels() / 2, i, x0 = P.X(0), x1 = P.X(1);
-      for (i = 0; i <= L; i++) {
-        var u = i / L;
-        g.strokeStyle = rgba(C.s2, 0.75); g.lineWidth = 1;
-        g.beginPath(); g.moveTo(x0 + 2, P.Y(u)); g.lineTo(x0 + 14, P.Y(u)); g.stroke();
-        g.strokeStyle = rgba(C.s3, 0.75);
-        g.beginPath(); g.moveTo(x1 - 14, P.Y(muInv(u))); g.lineTo(x1 - 2, P.Y(muInv(u))); g.stroke();
-	g.strokeStyle = rgba(C.s1, 0.75);
-	g.beginPath(); g.moveTo(x1 - 30, P.Y(aInv(u))); g.lineTo(x1 - 18, P.Y(aInv(u))); g.stroke();
+      var L = levels() / 2, x0 = P.X(0), x1 = P.X(1);
+      function ticks(fn, color, left, right) {
+	var lastY = null;
+	g.strokeStyle = rgba(color, 0.75); g.lineWidth = 1; g.beginPath();
+	for (var i = 0; i <= L; i++) {
+	  var y = Math.round(P.Y(fn(i / L))) + 0.5;
+	  if (y === lastY) continue; // draw each screen row once, even at 16 bits
+	  g.moveTo(left, y); g.lineTo(right, y); lastY = y;
+	}
+	g.stroke();
       }
+      ticks(function (u) { return u; }, C.s2, x0 + 2, x0 + 14);
+      ticks(muInv, C.s3, x1 - 14, x1 - 2);
+      ticks(aInv, C.s1, x1 - 30, x1 - 18);
       P.unclip();
       P.axisX([0, 0.5, 1], function (v) { return v === 0 ? "0" : v === 1 ? "max" : "" ; }, "code value");
       P.axisY([0, 0.5, 1], function (v) { return fmt(v, 1); }, "amplitude");
-      P.tag("linear", 0.62, 0.62, C.s2, "left");
+      P.tag("linear PCM", 0.62, 0.62, C.s2, "left");
       P.tag("µ-law", 0.42, muInv(0.42), C.s3, "left", -12);
       P.tag("A-law", 0.73, aInv(0.73), C.s1, "left", -16);
     } else {
-      P.dom(-70, 0, 0, 60);
-      P.gridY([15, 30, 45, 60]); P.gridX([-60, -40, -20]);
+      var top = Math.max(60, Math.ceil(snrLin(1) / 20) * 20), yticks = [];
+      for (var ytick = 0; ytick <= top; ytick += 20) yticks.push(ytick);
+      P.dom(-70, 0, 0, top);
+      P.gridY(yticks.slice(1)); P.gridX([-60, -40, -20]);
       P.clipPlot();
       P.curve(function (d) { return snrLin(fromDb(d)); }, C.s2, 2.2);
       P.curve(function (d) { return snrMu(fromDb(d)); }, C.s3, 2.2);
@@ -1308,8 +1828,8 @@ function quantise(x, step, dith, rnd) {
       g.beginPath(); g.moveTo(P.m.l, P.Y(20)); g.lineTo(P.W - P.m.r, P.Y(20)); g.stroke(); g.setLineDash([]);
       P.unclip();
       P.axisX([-70, -50, -30, -10, 0], function (v) { return v + " dB"; }, "how loud the signal is");
-      P.axisY([0, 20, 40, 60], function (v) { return v + " dB"; }, "quality");
-      P.tag("linear", -14, snrLin(fromDb(-14)), C.s2, "right", -11);
+      P.axisY(yticks, function (v) { return v + " dB"; }, "quality");
+      P.tag("linear PCM", -14, snrLin(fromDb(-14)), C.s2, "right", -11);
       P.tag("µ-law", -52, snrMu(fromDb(-52)), C.s3, "left", -11);
       P.tag("A-law", -26, snrA(fromDb(-26)), C.s1, "left", 14);
       P.tag("usable floor", -69, 20, C.muted, "left", -11);
@@ -1319,6 +1839,13 @@ function quantise(x, step, dith, rnd) {
   function update() {
     txt("v-m-bits", String(nb));
     txt("r-m-lev", String(levels()));
+    $("b-m-pcm").classList.toggle("on", nb === 16);
+    $("b-m-pcm").setAttribute("aria-pressed", String(nb === 16));
+    txt("r-m-format", nb === 16
+      ? "16-bit linear PCM: a common modern audio format, used for CD audio and playback. It stores 65,536 levels in two bytes per sample. The 16-bit µ-law and A-law curves are illustrative; telephone companding uses 8 bits."
+      : nb === 8
+      ? "8-bit comparison: µ-law and A-law are used in telephony. Modern linear PCM commonly uses 16 or 24 bits per sample."
+      : nb + "-bit illustration. Modern linear PCM commonly uses 16 or 24 bits per sample; telephone µ-law and A-law use 8 bits.");
     var eq = nb + extraBits(), aEq = nb + aExtraBits();
     txt("r-m-lin", fmt(6.02 * nb + 1.76, 0) + " dB");
     txt("r-m-mu", fmt(6.02 * eq + 1.76, 0) + " dB");
@@ -1328,6 +1855,7 @@ function quantise(x, step, dith, rnd) {
     draw();
   }
   on("s-m-bits", "input", function (e) { nb = +e.target.value; update(); });
+  on("b-m-pcm", "click", function () { nb = 16; $("s-m-bits").value = String(nb); update(); });
   segment("seg-mu", function (v) { view = v; update(); });
   register(P, draw); update();
 })();
@@ -1338,18 +1866,15 @@ function quantise(x, step, dith, rnd) {
 (function () {
   var P = new Plot("c-myth", { l: 40, r: 34, t: 18, b: 32 });
   if (!P.cv) return;
-  var show = "stair", spc = 3;
+  var show = "stair", spc = 3, TONE = 440;
+  var audioKind = null, audioNode = null, audioToken = 0, restartTimer = null;
+  var NAMES = { stair: "staircase", lines: "straight lines", true: "reconstruction" };
 
   function x(t) { return Math.sin(2 * PI * t + 0.6); }
   function samples() {
     var T = 1 / spc, out = [];
-    for (var n = -3; n * T <= 3.2; n++) out.push([n * T, x(n * T)]);
+    for (var n = -1; n <= Math.ceil(3 * spc) + 1; n++) out.push([n * T, x(n * T)]);
     return out;
-  }
-  function recon(t) {
-    var T = 1 / spc, S = samples(), s = 0;
-    for (var i = 0; i < S.length; i++) s += S[i][1] * sinc((t - S[i][0]) / T);
-    return s;
   }
 
   function draw() {
@@ -1368,12 +1893,13 @@ function quantise(x, step, dith, rnd) {
       g.stroke();
     }
     if (show === "lines" || show === "all") {
-      g.strokeStyle = show === "all" ? rgba(C.s4, 0.9) : C.muted;
+      g.strokeStyle = show === "all" ? rgba(C.s4, 0.9) : C.s4;
       g.lineWidth = 2; g.beginPath();
       for (i = 0; i < S.length; i++) { var px = P.X(S[i][0]), py = P.Y(S[i][1]); if (i === 0) g.moveTo(px, py); else g.lineTo(px, py); }
       g.stroke();
     }
-    if (show === "true" || show === "all") P.curve(recon, C.s1, 2.6);
+    // Every offered rate exceeds two samples/cycle: the ideal sinc sum is exactly this sine.
+    if (show === "true" || show === "all") P.curve(x, C.s1, 2.6);
     P.dots(S, C.s3, 4.4);
     P.unclip();
     P.axisX([0, 1, 2, 3], function (v) { return v + " cycle" + (v === 1 ? "" : "s"); }, "");
@@ -1387,6 +1913,7 @@ function quantise(x, step, dith, rnd) {
 
   function update() {
     txt("v-y-fs", fmt(spc, 1));
+    txt("v-y-rate", Math.round(TONE * spc).toLocaleString("en-US"));
     var kind = "ok", msg;
     if (show === "stair") msg = "Zero-order hold keeps each sample value until the next sample. The resulting discontinuities introduce high-frequency components. A converter using a hold stage filters these components during reconstruction.";
     else if (show === "lines") msg = "Linear interpolation connects adjacent samples with straight lines. Changes in slope at the sample points introduce additional high-frequency components.";
@@ -1396,29 +1923,187 @@ function quantise(x, step, dith, rnd) {
     verdict("r-y-verdict", "r-y-msg", kind, msg);
     draw();
   }
-  on("s-y-fs", "input", function (e) { spc = +e.target.value; update(); });
-  segment("seg-myth", function (v) { show = v; update(); });
+
+  /* Synthesise the audible part of each continuous reconstruction. Sampling a sine creates
+     signed-frequency copies at 440 + k*fs. A causal hold weights them by sinc(f/fs) with a
+     half-sample delay; linear interpolation weights them by sinc²(f/fs), without that delay.
+     See https://www.dsprelated.com/freebooks/pasp/Linear_Interpolation_Frequency_Response.html
+     Omit copies above the output Nyquist limit so they cannot alias back into the audio. */
+  function sound(kind, sr) {
+    var fs = TONE * spc, count = Math.round(sr * 3), out = new Float32Array(count);
+    var limit = sr * 0.48;
+    var first = kind === "true" ? 0 : Math.ceil((-limit - TONE) / fs);
+    var last = kind === "true" ? 0 : Math.floor((limit - TONE) / fs);
+    for (var k = first; k <= last; k++) {
+      var f = TONE + k * fs, u = f / fs, w = sinc(u);
+      var amp = kind === "true" ? 1 : kind === "stair" ? w : w * w;
+      var phase = 0.6 - (kind === "stair" ? PI * u : 0);
+      var s = Math.sin(phase), c = Math.cos(phase);
+      var ds = Math.sin(2 * PI * f / sr), dc = Math.cos(2 * PI * f / sr);
+      // Oscillator recurrence avoids a trigonometric call for every output sample.
+      for (var i = 0; i < count; i++) {
+	out[i] += amp * s;
+	var next = s * dc + c * ds;
+	c = c * dc - s * ds; s = next;
+      }
+    }
+    for (var j = 0; j < count; j++) {
+      var envelope = Math.min(1, j / (sr * 0.02), (count - 1 - j) / (sr * 0.03));
+      out[j] *= 0.18 * envelope; // shared gain, with fades at the start and end
+    }
+    return out;
+  }
+
+  function audioUI(message) {
+    Object.keys(NAMES).forEach(function (kind) {
+      var b = $("b-y-" + kind), active = audioKind === kind;
+      b.classList.toggle("on", active);
+      b.setAttribute("aria-pressed", String(active));
+    });
+    $("b-y-stop").disabled = !audioKind;
+    txt("r-y-audio", message);
+  }
+  function stopTone(message) {
+    audioToken++; clearTimeout(restartTimer);
+    if (audioNode && playingNode === audioNode) stopPlayback();
+    audioNode = null; audioKind = null;
+    audioUI(message || "Stopped.");
+  }
+  async function playTone(kind) {
+    stopTone();
+    var token = audioToken;
+    audioKind = kind;
+    if (show !== "all") {
+      show = kind;
+      $("seg-myth").querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === show); });
+      update();
+    }
+    audioUI("Preparing " + NAMES[kind] + "…");
+    try {
+      var ctx = audioCtx();
+      await ctx.resume();
+      if (token !== audioToken) return;
+      var node = playBuffer(sound(kind, ctx.sampleRate), ctx.sampleRate);
+      audioNode = node;
+      audioUI("Playing " + NAMES[kind] + " · " + Math.round(TONE * spc).toLocaleString("en-US") + " samples/s.");
+      node.addEventListener("ended", function () {
+	if (audioNode !== node) return;
+	audioNode = null; audioKind = null;
+	audioUI("Choose a reconstruction to hear it again.");
+      });
+    } catch (e) {
+      if (token === audioToken) stopTone("Audio could not start. Press a play button to try again.");
+    }
+  }
+  on("s-y-fs", "input", function (e) {
+    spc = +e.target.value; update();
+    if (audioKind) {
+      var kind = audioKind;
+      stopTone(); audioKind = kind;
+      audioUI("Updating sample rate…");
+      restartTimer = setTimeout(function () { playTone(kind); }, 100);
+    }
+  });
+  segment("seg-myth", function (v) {
+    show = v; update();
+    if (audioKind && v !== "all") playTone(v);
+  });
+  Object.keys(NAMES).forEach(function (kind) { on("b-y-" + kind, "click", function () { playTone(kind); }); });
+  on("b-y-stop", "click", function () { stopTone(); });
+  // Another figure's playback cancels a pending restart as well as the current clip.
+  ["b-q-ref", "b-q-q", "b-c-original", "b-c-clipped"].forEach(function (id) { on(id, "click", function () { stopTone(); }); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) stopTone(); });
+  window.addEventListener("pagehide", function () { stopTone(); });
   register(P, draw); update();
 })();
 
 /* ================================================================
-   FIGURE 5 — raw video bitrate
+   FIGURE 5 — raw video bitrate and equal-area comparison
    ================================================================ */
 (function () {
   if (!$("n-v-w")) return;
-  var css = "420";
+  var css = "420", ratio = 0;
+  var AUDIO_BYTES_PER_SECOND = 44100 * 2 * 2; // signed 16-bit stereo PCM
+  // Fit the default 4K / 60 fps / 8-bit / 4:2:0 preset so the audio unit is visibly square.
+  // Higher data rates zoom all areas together instead of reserving that space in advance.
+  var BASE_RATIO = 3840 * 2160 * 60 * 1.5 / AUDIO_BYTES_PER_SECOND;
+  var overview = $("v-size-overview"), svg = $("v-size-grid");
   var PRESETS = { sd: [720, 480, 30], hd: [1920, 1080, 30], uhd: [3840, 2160, 60] };
   function factor() { return css === "444" ? 3 : css === "422" ? 2 : 1.5; }
+  function square(id, x, y, side) {
+    var el = $(id);
+    el.setAttribute("x", x); el.setAttribute("y", y);
+    el.setAttribute("width", side); el.setAttribute("height", side);
+  }
+  function positionText(id, x, y) {
+    $(id).setAttribute("x", x); $(id).setAttribute("y", y);
+  }
+  function drawSquares() {
+    var width = overview.clientWidth;
+    if (!width) return;
+    var valid = Number.isFinite(ratio) && ratio > 0;
+    svg.hidden = !valid;
+    svg.style.display = valid ? "block" : "none";
+    if (!valid) {
+      txt("r-v-area-scale", "Zoom: —");
+      txt("r-v-area-note", "Enter smaller dimensions or a lower frame rate to calculate the comparison.");
+      return;
+    }
+    var referenceRatio = 1920 * 1080 * 30 * 1.5 / AUDIO_BYTES_PER_SECOND;
+    var maxSide = Math.min(320, Math.max(24, width - 96));
+    var fitRatio = Math.max(BASE_RATIO, ratio);
+    var unit = maxSide / Math.sqrt(fitRatio), zoom = Math.sqrt(BASE_RATIO / fitRatio);
+    var videoSide = Math.sqrt(ratio) * unit, referenceSide = Math.sqrt(referenceRatio) * unit;
+    var plotSide = Math.max(videoSide, referenceSide, unit), baseline = plotSide + 24;
+    var x = (width - plotSide - 80) / 2 + 80;
+    svg.setAttribute("height", baseline + 36);
+    svg.setAttribute("viewBox", "0 0 " + width + " " + (baseline + 36));
+    square("v-size-video", x, baseline - videoSide, videoSide);
+    square("v-size-cells", x, baseline - videoSide, videoSide);
+    square("v-size-reference", x, baseline - referenceSide, referenceSide);
+    square("v-size-audio", x - 64, baseline - unit, unit);
+    positionText("v-size-audio-label", x - 64 + unit / 2, baseline + 21);
+    positionText("v-size-video-label", x + Math.max(20, videoSide) / 2, baseline + 21);
+    // Grid lines are only a guide: the filled area always represents the full, uncapped ratio.
+    // Group cells by powers of 10 per side when single audio units become too small to resolve.
+    var groupSide = unit >= 3 ? 1 : Math.pow(10, Math.ceil(Math.log10(12 / unit)));
+    var group = groupSide * groupSide, pitch = unit * groupSide;
+    var pattern = $("v-size-pattern");
+    pattern.setAttribute("x", x); pattern.setAttribute("y", baseline - videoSide);
+    pattern.setAttribute("width", pitch); pattern.setAttribute("height", pitch);
+    $("v-size-gridline").setAttribute("d", "M " + pitch + " 0 H 0 V " + pitch);
+    var percent = zoom * 100;
+    txt("r-v-area-scale", zoom === 1 ? "Zoom: 100% · base scale" : "Zoom: " + (percent < 0.1 ? percent.toExponential(1) : fmt(percent, 1)) + "% · zoomed out");
+    var note = "Both squares use the same scale; area represents data size.";
+    if (group === 1) note += " Each grid cell equals one audio square.";
+    else note += " Each grid cell represents " + (group >= 1e6 ? group.toExponential(0) : group.toLocaleString("en-US")) + " audio squares.";
+    note += " Partial edge cells count proportionally.";
+    if (zoom < 1) note += " All squares, including the dashed 1080p reference, have been reduced together to fit.";
+    if (unit < 1) note += " The audio square is now smaller than one screen pixel; use the numerical ratio above.";
+    txt("r-v-area-note", note);
+    txt("v-size-desc", "Green: one minute of CD audio, 10.584 MB. Orange: " + $("r-v-area-count").textContent + ". Dashed outline: one minute of 1080p, 30 fps, 8-bit 4:2:0 video. " + note);
+  }
   function update() {
     var w = Math.max(16, +$("n-v-w").value || 16), h = Math.max(16, +$("n-v-h").value || 16);
     var f = Math.max(1, +$("n-v-f").value || 1), b = clamp(+$("n-v-b").value || 8, 6, 16);
     var perFrame = w * h * factor() * (b / 8);
-    var bps = perFrame * f * 8;
+    var bps = perFrame * f * 8, perMinute = perFrame * f * 60;
+    if (!Number.isFinite(perMinute)) {
+      ratio = null; drawSquares();
+      ["r-v-fr", "r-v-br", "r-v-min", "r-v-x", "r-v-area-size", "r-v-area-count"].forEach(function (id) { txt(id, "—"); });
+      txt("r-v-area-note", "Enter smaller dimensions or a lower frame rate to calculate the comparison.");
+      verdict("r-v-verdict", "r-v-msg", "edge", "These values are too large to calculate. Reduce the dimensions or frame rate.");
+      return;
+    }
     txt("r-v-fr", bytes(perFrame));
     txt("r-v-br", bits(bps));
-    txt("r-v-min", bytes(perFrame * f * 60));
-    var x = bps / 1411200;
-    txt("r-v-x", (x >= 100 ? Math.round(x) : fmt(x, 1)) + "×");
+    txt("r-v-min", bytes(perMinute));
+    ratio = perMinute / (AUDIO_BYTES_PER_SECOND * 60);
+    txt("r-v-x", (ratio >= 100 ? Math.round(ratio) : fmt(ratio, 1)) + "×");
+    txt("r-v-area-size", bytes(perMinute));
+    var decimals = ratio < 0.1 ? 4 : ratio < 1 ? 3 : 1;
+    txt("r-v-area-count", ratio.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + "× the audio area");
+    drawSquares();
     var hours = 1e12 / (perFrame * f) / 3600;
     verdict("r-v-verdict", "r-v-msg", bps > 2e8 ? "bad" : bps > 3e7 ? "edge" : "ok",
       "At " + bits(bps) + " uncompressed, a terabyte holds " + fmt(hours, 1) + " hours. A gigabit network link " +
@@ -1430,7 +2115,14 @@ function quantise(x, step, dith, rnd) {
     update();
   });
   segment("seg-css", function (v) { css = v; update(); });
-  ["n-v-w", "n-v-h", "n-v-f", "n-v-b"].forEach(function (id) { on(id, "input", update); });
+  ["n-v-w", "n-v-h", "n-v-f", "n-v-b"].forEach(function (id) {
+    on(id, "input", function () {
+      $("seg-fmt").querySelectorAll("button").forEach(function (btn) { btn.classList.toggle("on", btn.dataset.v === "custom"); });
+      update();
+    });
+  });
+  if (window.ResizeObserver) new ResizeObserver(drawSquares).observe(overview);
+  else window.addEventListener("resize", drawSquares);
   update();
 })();
 
