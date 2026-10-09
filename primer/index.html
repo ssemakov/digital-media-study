@@ -314,6 +314,7 @@ footer a{color:var(--ink-2)}
       <a href="#myth">Reconstruction</a>
       <a href="#part-video">II · Video</a>
       <a href="#video">Sampling</a>
+      <a href="#pixels">Pixels</a>
       <a href="#more">More to come</a>
     </div>
     <a class="iconbtn" href="https://github.com/ssemakov/digital-media-study" title="Source on GitHub" aria-label="Source on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
@@ -331,8 +332,8 @@ footer a{color:var(--ink-2)}
     <p class="lede">A media file stores sampled audio and video together with information needed to interpret and
     play them. <a href="#part-audio">Part I: Audio</a> covers PCM, bit depth, companding, and signal
     reconstruction. <a href="#part-video">Part II: Video</a> so far covers sampling in space
-    and time; pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and
-    containers are listed at the end and will follow.</p>
+    and time and pixel aspect ratio; interlacing, gamma, colour representation, pixel formats
+    and containers are listed at the end and will follow.</p>
 
     <div class="theorem">
       <div class="lab">Based on</div>
@@ -342,7 +343,7 @@ footer a{color:var(--ink-2)}
       formats.</p>
     </div>
 
-    <p>This part contains five numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is
+    <p>This part contains six numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is
     synthesised at runtime, and colour-space calculations run in the browser. Additional
     derivations appear in <strong>Go deeper</strong> panels, which can be read independently of the
     main text.</p>
@@ -1031,8 +1032,8 @@ console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
 <section id="part-video" class="part" aria-labelledby="video-title">
   <header class="prose part-head">
     <h2 id="video-title">Part II · Video</h2>
-    <p>Video adds two spatial dimensions to sampling in time. The section below describes how video is sampled in space and time. The remaining sections
-        follow.</p>
+    <p>Video adds two spatial dimensions to sampling in time. The sections below describe how video is sampled in space and time and why
+        pixels are not always square. The remaining sections follow.</p>
   </header>
 
 <section id="video">
@@ -1110,6 +1111,63 @@ console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
   </figure>
 </section>
 
+<hr class="rule">
+
+<section id="pixels">
+  <div class="prose">
+    <p class="kicker">§2.2</p>
+    <h3 class="topic-title">Pixel aspect ratio</h3>
+    <p>An image's displayed shape depends on its pixel dimensions and its <strong>pixel aspect
+    ratio</strong>. Computer graphics commonly use square pixels. Several broadcast and disc-video
+    formats use rectangular pixels.</p>
+
+    <p>Analogue television scanned in <em>lines</em>. The standard fixed the vertical line count, and
+    each line carried a continuous horizontal signal. Digitisation chose a horizontal sample count
+    based on that signal's bandwidth. The resulting samples can correspond to rectangular pixels,
+    depending on the format.</p>
+
+    <p>For example, a 4:3 NTSC DVD can store <strong>704×480</strong> pixels with a pixel aspect ratio
+    of <strong>10:11</strong>. Applying that ratio gives a displayed width of 640 at a height of
+    480. Displaying the stored grid with square pixels changes the image's proportions.</p>
+  </div>
+
+  <figure id="fig-par">
+    <div class="head">
+      <div class="n">Figure 6 · live</div>
+      <h4>Stored shape versus displayed shape</h4>
+      <p>Toggle pixel aspect correction to compare the stored grid with the intended display
+      proportions.</p>
+    </div>
+    <div class="imgrow">
+      <div class="imgcell">
+        <canvas id="c-par-a" width="300" height="220" aria-label="Frame as stored, with non-square pixels"></canvas>
+        <div class="cap"><span>as stored in the file</span><b id="r-par-store">704×480</b></div>
+      </div>
+      <div class="imgcell">
+        <canvas id="c-par-b" width="300" height="220" aria-label="Frame as displayed after pixel aspect correction"></canvas>
+        <div class="cap"><span id="r-par-lab">as displayed on screen</span><b id="r-par-disp">640×480</b></div>
+      </div>
+    </div>
+    <div class="ctl">
+      <div style="flex:0 0 auto"><span class="fieldlab">format</span>
+        <div class="seg" id="seg-par">
+          <button data-v="ntsc" class="on">NTSC DVD</button><button data-v="pal">PAL DVD</button><button data-v="dv">NTSC DV</button><button data-v="hd">1080p</button><button data-v="ana">anamorphic 16:9</button>
+        </div></div>
+      <label class="chk" style="flex:0 0 auto;padding-bottom:4px"><input type="checkbox" id="k-par-fix" checked> apply pixel aspect correction</label>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="k">Stored size</div><div class="v" id="r-par-2">704×480</div></div>
+      <div class="cell"><div class="k">Pixel aspect</div><div class="v" id="r-par-3">10:11</div></div>
+      <div class="cell"><div class="k">Display aspect</div><div class="v" id="r-par-4">4:3</div></div>
+      <div class="cell"><div class="k">Shape error</div><div class="v" id="r-par-5">none</div></div>
+    </div>
+    <div class="verdict ok" id="r-par-verdict"><span class="ic">✓</span><span id="r-par-msg"></span></div>
+    <figcaption>An anamorphic 16:9 image can use the same 704×480 grid with a different declared aspect ratio.
+    The player uses that information to display a widescreen picture. Incorrect aspect-ratio
+    metadata stretches or compresses the displayed image.</figcaption>
+  </figure>
+</section>
+
 </section>
 
 <hr class="rule">
@@ -1119,13 +1177,11 @@ console.log(<span class="s">&quot;sign exponent fraction:&quot;</span>,
     <p class="kicker">To be continued</p>
     <h2>The rest of Part II</h2>
     <p>This page is being published a part at a time. Part I is complete, and Part II so far covers
-    sampling in space and time. The sections below are written and will appear here as they are
-    reviewed.</p>
+    sampling in space and time and pixel aspect ratio. The sections below are written and will
+    appear here as they are reviewed.</p>
     <div class="note">
       <div class="t">Still to come</div>
       <ol style="margin:0;padding-left:20px">
-        <li><strong>Pixel aspect ratio</strong> &mdash; why pixels are not always square, and what
-        that does to stored dimensions.</li>
         <li><strong>Interlacing</strong> &mdash; fields, field order, and the timing that comes with
         them.</li>
         <li><strong>Gamma</strong> &mdash; why stored brightness values are not proportional to

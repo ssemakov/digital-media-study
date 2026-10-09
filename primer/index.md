@@ -4,13 +4,13 @@
 
 # Digital audio and video represent signals as *arrays of samples*.
 
-A media file stores sampled audio and video together with information needed to interpret and play them. Part I: Audio covers PCM, bit depth, companding, and signal reconstruction. Part II: Video so far covers sampling in space and time; pixel aspect ratio, interlacing, gamma, colour representation, pixel formats and containers are listed at the end and will follow.
+A media file stores sampled audio and video together with information needed to interpret and play them. Part I: Audio covers PCM, bit depth, companding, and signal reconstruction. Part II: Video so far covers sampling in space and time and pixel aspect ratio; interlacing, gamma, colour representation, pixel formats and containers are listed at the end and will follow.
 
 Xiph.Org's *A Digital Media Primer for Geeks* by Christopher "Monty" Montgomery (2010), adapted here with interactive figures.
 
 The primer introduces the concepts and engineering constraints behind common audio and video formats.
 
-This part contains five numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
+This part contains six numbered figures and an additional clipping demonstration. Images are generated procedurally, audio is synthesised at runtime, and colour-space calculations run in the browser. Additional derivations appear in **Go deeper** panels, which can be read independently of the main text.
 
 ---
 
@@ -260,7 +260,7 @@ A staircase has discontinuities, whose spectra extend to arbitrarily high freque
 
 ## Part II · Video
 
-Video adds two spatial dimensions to sampling in time. The section below describes how video is sampled in space and time. The remaining sections follow.
+Video adds two spatial dimensions to sampling in time. The sections below describe how video is sampled in space and time and why pixels are not always square. The remaining sections follow.
 
 *§2.1*
 
@@ -280,20 +280,39 @@ Video requires substantially higher data rates than audio. Raw CD audio is about
 
 ---
 
+*§2.2*
+
+### Pixel aspect ratio
+
+An image's displayed shape depends on its pixel dimensions and its **pixel aspect ratio**. Computer graphics commonly use square pixels. Several broadcast and disc-video formats use rectangular pixels.
+
+Analogue television scanned in *lines*. The standard fixed the vertical line count, and each line carried a continuous horizontal signal. Digitisation chose a horizontal sample count based on that signal's bandwidth. The resulting samples can correspond to rectangular pixels, depending on the format.
+
+For example, a 4:3 NTSC DVD can store **704×480** pixels with a pixel aspect ratio of **10:11**. Applying that ratio gives a displayed width of 640 at a height of 480. Displaying the stored grid with square pixels changes the image's proportions.
+
+> **Figure 6 · live — Stored shape versus displayed shape**
+>
+> Toggle pixel aspect correction to compare the stored grid with the intended display proportions.
+>
+> An anamorphic 16:9 image can use the same 704×480 grid with a different declared aspect ratio. The player uses that information to display a widescreen picture. Incorrect aspect-ratio metadata stretches or compresses the displayed image.
+>
+> *(interactive figure — see the web page)*
+
+---
+
 *To be continued*
 
 ## The rest of Part II
 
-This page is being published a part at a time. Part I is complete, and Part II so far covers sampling in space and time. The sections below are written and will appear here as they are reviewed.
+This page is being published a part at a time. Part I is complete, and Part II so far covers sampling in space and time and pixel aspect ratio. The sections below are written and will appear here as they are reviewed.
 
 > **Still to come**
 >
-> 1. **Pixel aspect ratio** — why pixels are not always square, and what that does to stored dimensions.
-> 2. **Interlacing** — fields, field order, and the timing that comes with them.
-> 3. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
-> 4. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
-> 5. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
-> 6. **Summary** — the whole primer in one table.
+> 1. **Interlacing** — fields, field order, and the timing that comes with them.
+> 2. **Gamma** — why stored brightness values are not proportional to light, and what breaks when that is ignored.
+> 3. **Luma and chroma** — separating brightness from colour, and subsampling the colour channels.
+> 4. **Pixel formats and containers** — fourccs, plane layouts, and what a container does and does not tell you.
+> 5. **Summary** — the whole primer in one table.
 
 In the meantime, [the sampling theorem page](../sampling/) is complete, and it covers the theory that Part I depends on.
 
